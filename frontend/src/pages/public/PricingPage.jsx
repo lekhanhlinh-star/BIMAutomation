@@ -1,0 +1,30 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Check, CreditCard, Loader2, ShieldCheck, Star } from 'lucide-react';
+import { publicApi, customerApi } from '../../api/services';
+import { useAuthStore } from '../../store/useAuthStore';
+import { savePendingIntent } from '../../utils/pendingIntent';
+import AccessibleDialog from '../../components/AccessibleDialog';
+
+export default function PricingPage(){
+  const {data:plans=[],isLoading}=useQuery({queryKey:['plans'],queryFn:publicApi.getPlans});
+  const authenticated=useAuthStore(s=>s.isAuthenticated); const navigate=useNavigate(); const [params,setParams]=useSearchParams();
+  const [selected,setSelected]=useState(null); const [authPrompt,setAuthPrompt]=useState(false); const [checkout,setCheckout]=useState(false);
+  const [order,setOrder]=useState(null); const [qr,setQr]=useState(null); const [busy,setBusy]=useState(false); const [error,setError]=useState('');
+  const choose=useCallback((plan)=>{setSelected(plan);setError('');if(!authenticated){setAuthPrompt(true)}else{setCheckout(true)}},[authenticated]);
+  useEffect(()=>{const planId=params.get('plan');if(authenticated&&params.get('checkout')==='1'&&plans.length&&planId){const plan=plans.find(p=>String(p.id)===planId);if(plan){choose(plan);setParams({}, {replace:true})}}},[authenticated,plans,params,choose,setParams]);
+  useEffect(()=>{if(!order?.id||order.status==='PAID')return;const id=setInterval(async()=>{try{const next=await customerApi.getOrder(order.id);setOrder(next)}catch{}},3000);return()=>clearInterval(id)},[order?.id,order?.status]);
+  const auth=(path)=>{savePendingIntent({type:'checkout',planId:selected.id,returnTo:'/pricing'});navigate(path)};
+  const create=async()=>{setBusy(true);setError('');try{const created=(await customerApi.createOrder(selected.id)).data;setOrder(created);setQr(await customerApi.getOrderQr(created.id))}catch(e){setError(e.response?.data?.detail||'Không thể tạo đơn hàng. Vui lòng thử lại.')}finally{setBusy(false)}};
+  const close=()=>{setAuthPrompt(false);setCheckout(false);setOrder(null);setQr(null);setError('')};
+  return <div className="page-shell py-14 pb-20">
+    <header className="max-w-xl"><h1 className="text-4xl sm:text-5xl font-extrabold text-white text-balance">Chọn gói phù hợp với nhịp làm việc của bạn</h1><p className="mt-5 text-slate-400">Mọi gói đều có bản cập nhật trong thời hạn sử dụng và có thể quản lý trực tiếp trong tài khoản BIMAutomation.</p></header>
+    {isLoading?<p className="py-20 text-slate-400">Đang tải bảng giá…</p>:<div className="mt-12 grid md:grid-cols-3 border-t border-l border-[var(--line)] items-stretch">{plans.map(plan=><article key={plan.id} className="relative p-7 flex flex-col border-r border-b border-[var(--line)]">{plan.isPopular&&<span className="absolute top-0 left-7 -translate-y-1/2 bg-cyan-400 text-[#04121b] px-2.5 py-1 text-[11px] font-bold flex items-center gap-1"><Star size={12} fill="currentColor"/> Được chọn nhiều</span>}<h2 className="text-xl font-bold text-white">{plan.name}</h2><p className="mt-2 min-h-12 text-sm text-slate-400">{plan.description}</p><div className="mt-6 pt-6 border-t border-[var(--line-soft)]"><strong className="text-3xl font-mono text-white">{plan.price}</strong><span className="text-sm text-slate-400"> {plan.period}</span></div><ul className="mt-6 grid gap-3 flex-1">{plan.features.map(x=><li key={x} className="flex gap-2 text-sm text-slate-300"><Check size={17} className="text-cyan-300 shrink-0"/>{x}</li>)}</ul><button onClick={()=>choose(plan)} className={plan.isPopular?'primary-button mt-8 w-full':'secondary-button mt-8 w-full'}>Chọn {plan.name}</button></article>)}</div>}
+    <p className="mt-8 text-xs text-slate-500">Thanh toán bằng chuyển khoản VietQR · License chỉ được cấp sau khi hệ thống xác nhận đã thanh toán</p>
+    <AccessibleDialog open={authPrompt} onClose={close} title={`Tiếp tục với ${selected?.name||'gói đã chọn'}`} description="Đăng nhập hoặc tạo tài khoản để thanh toán. Gói đã chọn sẽ được giữ lại."><div className="grid gap-3"><button onClick={()=>auth('/login')} className="primary-button">Đăng nhập để tiếp tục</button><button onClick={()=>auth('/register')} className="secondary-button">Tạo tài khoản mới</button></div></AccessibleDialog>
+    <AccessibleDialog open={checkout} onClose={close} title={order?.status==='PAID'?'Thanh toán thành công':'Thanh toán đơn hàng'} description={!order?`${selected?.name} · ${selected?.price}`:undefined}>
+      {order?.status==='PAID'?<div className="text-center"><ShieldCheck size={54} className="mx-auto text-emerald-400"/><p className="mt-4 text-slate-300">Đơn hàng đã được xác nhận và License đã được cấp.</p><button onClick={()=>navigate('/account/licenses')} className="primary-button mt-6">Xem License của tôi</button></div>:!order?<div><div className="border border-[var(--line)] p-4 flex justify-between text-sm"><span className="text-slate-400">Tổng thanh toán</span><strong className="font-mono text-cyan-300">{selected?.price}</strong></div>{error&&<p role="alert" className="mt-3 text-sm text-rose-300">{error}</p>}<button onClick={create} disabled={busy} className="primary-button mt-5 w-full">{busy?<Loader2 className="animate-spin"/>:<CreditCard size={18}/>} Tạo mã thanh toán</button></div>:<div className="text-center"><p className="status-tag status-tag--pending justify-center">Đang chờ thanh toán</p>{qr&&<><div className="bg-white p-3 w-56 h-56 mx-auto mt-5"><img className="w-full h-full object-contain" src={qr.qr_code_url} alt={`Mã QR thanh toán đơn ${qr.order_code}`}/></div><p className="mt-4 text-sm text-slate-300">Nội dung: <strong className="font-mono text-white">{qr.payment_content}</strong></p><p className="mt-1 text-sm text-slate-400">Số tiền: {Number(qr.amount).toLocaleString('vi-VN')}đ</p></>}<p className="mt-5 text-xs text-slate-500">Trang tự kiểm tra trạng thái mỗi 3 giây. Chỉ đóng khi đã hoàn tất chuyển khoản.</p></div>}
+    </AccessibleDialog>
+  </div>;
+}
