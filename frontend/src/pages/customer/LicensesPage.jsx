@@ -1,80 +1,93 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { customerApi } from '../../api/services';
-import { Key, Copy, Check, Monitor, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Monitor, CheckCircle2, Sparkles, ExternalLink, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function LicensesPage() {
   const { data: licenses = [], isLoading } = useQuery({
     queryKey: ['myLicenses'],
-    queryFn: customerApi.getLicenses
+    queryFn: customerApi.getLicenses,
   });
-
-  const [copiedKey, setCopiedKey] = useState(null);
-
-  const handleCopyKey = (key) => {
-    navigator.clipboard.writeText(key);
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2000);
-  };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-white">License bản quyền đã mua</h2>
-        <p className="text-xs text-slate-400 mt-1">Sao chép Key và nhập vào Ribbon Add-in trên Revit để kích hoạt.</p>
+        <h2 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-[var(--brand)]" /> Bản quyền RevitAI đã kích hoạt
+        </h2>
+        <p className="text-xs text-[var(--text-secondary)] mt-1">
+          Hệ thống cấp quyền tự động theo Tài khoản Google (Account-Based). Không cần nhập mã kích hoạt trong Revit.
+        </p>
+      </div>
+
+      {/* Guide Banner */}
+      <div className="p-5 rounded-[var(--radius-panel)] bg-[var(--brand-soft)]/30 border border-[var(--brand)]/30 flex items-start gap-3.5 shadow-xs">
+        <Sparkles className="w-5 h-5 text-[var(--brand)] shrink-0 mt-0.5" />
+        <div className="text-xs text-[var(--text-secondary)] space-y-1.5 leading-relaxed">
+          <p className="font-bold text-[var(--text-primary)] text-sm">Cách kích hoạt trên Autodesk Revit:</p>
+          <p>1. Mở phần mềm Autodesk Revit trên máy tính của bạn.</p>
+          <p>2. Trên thanh Ribbon BIMAutomation, bấm <strong>"Đăng nhập Google"</strong>.</p>
+          <p>3. Add-in sẽ tự động nhận diện bản quyền từ tài khoản Google và mở khóa toàn bộ tính năng Full Suite.</p>
+        </div>
       </div>
 
       {isLoading ? (
-        <div className="py-12 text-slate-400">Đang tải danh sách bản quyền...</div>
+        <div className="py-12 flex items-center gap-2.5 text-[var(--text-secondary)]">
+          <Loader2 className="animate-spin" size={20} /> Đang tải thông tin bản quyền...
+        </div>
       ) : licenses.length === 0 ? (
-        <div className="panel p-8 text-center space-y-3">
-          <Key className="w-9 h-9 text-slate-600 mx-auto" />
-          <p className="text-sm font-semibold text-white">Bạn chưa sở hữu License Key nào.</p>
-          <p className="text-xs text-slate-400">Hãy mua gói bản quyền Add-in Revit để nhận License Key tự động.</p>
+        <div className="panel p-8 text-center space-y-3 bg-[var(--surface-raised)] border border-[var(--line)] rounded-[var(--radius-panel)] shadow-xs">
+          <ShieldCheck className="w-10 h-10 text-[var(--text-muted)] mx-auto" />
+          <p className="text-base font-bold text-[var(--text-primary)]">Chưa có gói bản quyền trả phí nào được kích hoạt.</p>
+          <p className="text-xs text-[var(--text-secondary)]">
+            Bạn có thể đăng ký dùng thử 14 ngày miễn phí hoặc mua gói bản quyền để liên kết tự động vào tài khoản.
+          </p>
+          <div className="pt-2">
+            <Link to="/pricing" className="primary-button inline-flex items-center gap-2 text-xs font-bold">
+              Xem bảng giá các gói <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
           {licenses.map((lic) => (
-            <div key={lic.id} className="panel p-6 space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-4 border-b border-[var(--line)]">
+            <div key={lic.id} className="panel p-6 space-y-4 bg-[var(--surface-raised)] border border-[var(--line)] rounded-[var(--radius-panel)] shadow-xs">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-[var(--line)]">
                 <div>
                   <div className="flex items-center gap-2.5">
-                    <span className="text-base font-bold text-white">{lic.planName}</span>
-                    <span className={`status-tag ${lic.status === 'ACTIVE' ? 'status-tag--ok' : 'status-tag--off'}`}>{lic.status}</span>
+                    <span className="text-base font-bold text-[var(--text-primary)]">{lic.planName}</span>
+                    <span className={`status-tag ${lic.status === 'ACTIVE' ? 'status-tag--ok' : 'status-tag--off'}`}>
+                      {lic.status === 'ACTIVE' ? 'Đang hoạt động' : lic.status}
+                    </span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5">Kích hoạt: {lic.activatedAt} · Hết hạn: {lic.expiresAt}</p>
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">
+                    Ngày bắt đầu: <span className="text-[var(--text-primary)] font-medium">{lic.activatedAt || 'Hôm nay'}</span> · Hạn sử dụng: <span className="text-[var(--brand)] font-bold">{lic.expiresAt}</span>
+                  </p>
                 </div>
 
-                <button
-                  onClick={() => alert(`Đã gửi yêu cầu Reset thiết bị cho Key ${lic.key}`)}
-                  className="secondary-button !min-h-9 !py-1.5 text-xs"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" /> Reset thiết bị
-                </button>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Google Account Linked
+                  </span>
+                </div>
               </div>
 
-              {/* Key display box */}
-              <div className="p-3 bg-[var(--surface)] border border-[var(--line)] flex items-center justify-between gap-4 font-mono">
-                <span className="text-cyan-300 font-bold text-sm sm:text-base tracking-widest truncate">{lic.key}</span>
-                <button
-                  onClick={() => handleCopyKey(lic.key)}
-                  className="secondary-button !min-h-9 !py-1.5 text-xs shrink-0"
-                >
-                  {copiedKey === lic.key ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" /> Đã copy
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" /> Copy Key
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Monitor className="w-3.5 h-3.5 text-slate-500" />
-                <span>Thiết bị đang gắn: <strong className="text-slate-200 font-mono">{lic.hardwareId}</strong> ({lic.activeDevices}/{lic.maxDevices} máy)</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3.5 bg-[var(--surface-subtle)] border border-[var(--line)] rounded-[var(--radius-control)] flex items-center gap-3">
+                  <Monitor className="w-4 h-4 text-[var(--brand)] shrink-0" />
+                  <div>
+                    <span className="text-[var(--text-muted)] block text-[11px]">Thiết bị kích hoạt</span>
+                    <span className="font-bold text-[var(--text-primary)]">{lic.activeDevices || 1} / {lic.maxDevices || 1} máy tính</span>
+                  </div>
+                </div>
+                <div className="p-3.5 bg-[var(--surface-subtle)] border border-[var(--line)] rounded-[var(--radius-control)] flex items-center gap-3">
+                  <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                  <div>
+                    <span className="text-[var(--text-muted)] block text-[11px]">Quyền lợi tính năng</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">Mở khóa Full Suite (13 Tính năng)</span>
+                  </div>
+                </div>
               </div>
             </div>
           ))}

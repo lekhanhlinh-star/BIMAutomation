@@ -20,21 +20,25 @@ export default function FeedbackPage() {
   };
 
   return (
-    <div className="page-shell py-12 max-w-2xl space-y-8">
+    <div className="page-shell py-14 max-w-2xl space-y-8">
       <div className="flex items-center gap-3">
-        <MessageSquare className="w-6 h-6 text-cyan-300" />
-        <h1 className="text-3xl font-extrabold text-white">Gửi góp ý & phản hồi</h1>
+        <div className="w-10 h-10 rounded-[var(--radius-control)] bg-[var(--brand-soft)] flex items-center justify-center text-[var(--brand)]">
+          <MessageSquare className="w-5 h-5" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Gửi góp ý & phản hồi</h1>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">
+            Đóng góp ý kiến của bạn giúp BIMAutomation hoàn thiện hơn mỗi ngày.
+          </p>
+        </div>
       </div>
-      <p className="text-slate-400 text-sm -mt-4">
-        Đóng góp ý kiến của bạn giúp BIMAutomation phát triển hoàn thiện hơn mỗi ngày.
-      </p>
 
       <div className="border-t border-[var(--line)] pt-8">
         {!submitted ? (
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 panel p-6 lg:p-8 bg-[var(--surface-raised)] border border-[var(--line)] rounded-[var(--radius-panel)] shadow-xs">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300">Họ và tên</label>
+                <label className="text-xs font-bold text-[var(--text-primary)]">Họ và tên</label>
                 <input
                   type="text"
                   required
@@ -46,7 +50,7 @@ export default function FeedbackPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300">Email liên hệ</label>
+                <label className="text-xs font-bold text-[var(--text-primary)]">Email liên hệ</label>
                 <input
                   type="email"
                   required
@@ -59,7 +63,7 @@ export default function FeedbackPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-300">Phân loại góp ý</label>
+              <label className="text-xs font-bold text-[var(--text-primary)]">Phân loại góp ý</label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -73,7 +77,7 @@ export default function FeedbackPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-300">Nội dung phản hồi</label>
+              <label className="text-xs font-bold text-[var(--text-primary)]">Nội dung phản hồi</label>
               <textarea
                 required
                 rows={4}
@@ -87,21 +91,21 @@ export default function FeedbackPage() {
             <button
               type="submit"
               disabled={loading}
-              className="primary-button w-full"
+              className="primary-button w-full justify-center"
             >
               <Send className="w-4 h-4" /> {loading ? 'Đang gửi...' : 'Gửi phản hồi'}
             </button>
           </form>
         ) : (
-          <div className="py-8 space-y-4">
-            <CheckCircle2 className="w-10 h-10 text-emerald-400" />
-            <h3 className="text-xl font-bold text-white">Cảm ơn góp ý của bạn.</h3>
-            <p className="text-xs text-slate-400">
-              Đội ngũ phát triển BIMAutomation đã ghi nhận phản hồi và sẽ xem xét trong phiên bản sắp tới.
+          <div className="py-12 text-center space-y-4 panel p-8 bg-[var(--surface-raised)] border border-[var(--line)] rounded-[var(--radius-panel)] shadow-xs">
+            <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
+            <h3 className="text-xl font-bold text-[var(--text-primary)]">Cảm ơn góp ý của bạn!</h3>
+            <p className="text-sm text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
+              Đội ngũ phát triển BIMAutomation đã ghi nhận phản hồi và sẽ xem xét trong phiên bản cập nhật sắp tới.
             </p>
             <button
               onClick={() => setSubmitted(false)}
-              className="secondary-button"
+              className="secondary-button mt-4"
             >
               Gửi góp ý khác
             </button>

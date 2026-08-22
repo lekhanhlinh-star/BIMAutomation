@@ -3,19 +3,27 @@ FROM python:3.12-slim
 WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PORT=8000 \
+    HOST=0.0.0.0
 
-COPY pyproject.toml README.md ./
+# Install curl for container healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
 
-# Pre-install dependencies so Docker caches this layer
-RUN mkdir -p app && touch app/__init__.py && \
-    pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir .
+# Copy and install pre-compiled wheel requirements
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy actual app code and reinstall local package without downloading dependencies
+# Copy application source code and prepare persistent data directory
 COPY app ./app
-RUN pip install --no-cache-dir --no-deps -e .
+RUN mkdir -p /app/data
 
 EXPOSE 8000
+
+# Health check against FastAPI health endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

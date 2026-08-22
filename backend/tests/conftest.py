@@ -1,7 +1,9 @@
 from collections.abc import AsyncGenerator, Generator
+from contextlib import asynccontextmanager
 
 import pytest
 import pytest_asyncio
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
@@ -40,5 +42,5 @@ async def init_test_db() -> AsyncGenerator[None, None]:
 
 @pytest.fixture
 def client() -> Generator[TestClient, None, None]:
-    with TestClient(app) as c:
+    with TestClient(app, base_url="http://testserver") as c:
         yield c

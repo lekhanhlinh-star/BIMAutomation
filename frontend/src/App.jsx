@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
+import { useThemeStore } from './store/useThemeStore';
 
 // Layouts
 import PublicLayout from './layouts/PublicLayout';
@@ -76,10 +77,12 @@ const ProtectedDownloadRoute = ({ children }) => {
 
 export default function App() {
   const { fetchProfile } = useAuthStore();
+  const { initTheme } = useThemeStore();
 
   useEffect(() => {
+    initTheme();
     fetchProfile();
-  }, []);
+  }, [initTheme, fetchProfile]);
 
   return (
     <Routes>

@@ -16,6 +16,7 @@ async def seed_initial_data():
                 logger.info("Seeding initial Product and Plans...")
                 product = Product(
                     name="BIMAutomation Revit Add-in",
+                    code="revitapp",
                     slug="bimautomation-revit",
                     description="Bộ công cụ tự động hóa Revit BIM hàng đầu",
                     is_active=True

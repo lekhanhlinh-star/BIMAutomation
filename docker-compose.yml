@@ -4,16 +4,24 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: bimautomation_backend
-    restart: always
+    restart: unless-stopped
+    init: true
     env_file:
       - .env
     environment:
-      # Keep SQLite data in the named volume instead of the container layer.
-      DATABASE_URL: sqlite+aiosqlite:///./data/app.db
+      # Keep SQLite database in the persistent named volume
+      - DATABASE_URL=${DATABASE_URL:-sqlite+aiosqlite:///./data/app.db}
+      - PYTHONUNBUFFERED=1
     ports:
       - "${PORT:-8000}:8000"
     volumes:
       - backend_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - bimautomation_net
 
@@ -22,19 +30,40 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: bimautomation_frontend
-    restart: always
-    env_file:
-      - .env
+    restart: unless-stopped
+    init: true
     ports:
       - "${FRONTEND_PORT:-80}:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - bimautomation_net
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: bimautomation_tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:-eyJhIjoiYmY3Y2EzZDZmYjg5ODNlNWFiNjVkNzlkOTViZTg0OWYiLCJ0IjoiZTM2ODc2MjctOGE0Yy00MDA4LTg1OTYtMzViZDVlMzc2MGM3IiwicyI6IllqWmpOekV5TlRJdFpUTXlaQzAwWW1ZMExXSmlZakl0TjJVMVl6UmtZV0V6WmpJMSJ9}
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
     networks:
       - bimautomation_net
 
 networks:
   bimautomation_net:
+    name: bimautomation_net
     driver: bridge
 
 volumes:
   backend_data:
+    name: bimautomation_backend_data

@@ -1,9 +1,12 @@
 from datetime import datetime
+from typing import Any
 import uuid
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.device_trial import DeviceTrialStatus
 from app.models.license import LicenseStatus
+from app.models.user import UserRole, UserStatus
 from app.schemas.plan import PlanRead
 
 
@@ -26,18 +29,107 @@ class AdminUserSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class AdminUserRead(BaseModel):
+    id: uuid.UUID
+    email: str
+    name: str | None = None
+    display_name: str | None = None
+    phone: str | None = None
+    job_title: str | None = None
+    revit_version: str | None = None
+    use_case: str | None = None
+    is_trial_registered: bool = False
+    trial_registered_at: datetime | None = None
+    role: str
+    status: str
+    is_active: bool
+    created_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AdminDeviceRead(BaseModel):
+    id: uuid.UUID
+    installation_id: str
+    fingerprint_hash: str
+    display_name: str
+    platform: str
+    revit_version: str
+    app_version: str
+    first_seen_at: datetime
+    last_seen_at: datetime
+    revoked_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class AdminLicenseRead(BaseModel):
     id: uuid.UUID
     license_key: str
-    device_id: str | None
-    status: str
-    activated_at: datetime | None
-    expires_at: datetime | None
-    created_at: datetime
+    user_id: uuid.UUID | None = None
+    device_id: str | None = None
     plan: PlanRead | None = None
+    plan_name: str = "standard"
+    status: str
+    max_devices: int = 2
+    starts_at: datetime | None = None
+    expires_at: datetime | None = None
+    activated_at: datetime | None = None
+    revoked_at: datetime | None = None
+    created_at: datetime
     user: AdminUserSummary | None = None
+    features: list[str] = []
+    devices: list[AdminDeviceRead] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AdminLicenseCreate(BaseModel):
+    user_id: uuid.UUID
+    plan: str = "standard"
+    max_devices: int = 2
+    days_valid: int = 365
+    features: list[str] = []
+
+
+class AdminLicensePatch(BaseModel):
+    plan: str | None = None
+    status: LicenseStatus | None = None
+    max_devices: int | None = None
+    expires_at: datetime | None = None
+
+
+class AdminFeatureToggleRequest(BaseModel):
+    features: list[str]
+
+
+class AdminDeviceTrialRead(BaseModel):
+    id: uuid.UUID
+    fingerprint_hash: str
+    display_name: str
+    platform: str
+    revit_version: str
+    app_version: str
+    first_trial_at: datetime
+    trial_expires_at: datetime
+    status: str
+    reset_count: int
+    initial_user_email: str | None = None
+    last_user_email: str | None = None
+    created_at: datetime
+
+
+class AdminAuditLogRead(BaseModel):
+    id: uuid.UUID
+    actor_user_id: uuid.UUID | None = None
+    actor_email: str | None = None
+    action: str
+    target_type: str
+    target_id: str | None = None
+    ip_address: str | None = None
+    user_agent: str | None = None
+    metadata_json: str | None = None
+    created_at: datetime
 
 
 class AdminOrderRead(BaseModel):
@@ -58,6 +150,10 @@ class AdminCustomerRead(BaseModel):
     name: str | None
     email: str
     phone: str | None
+    job_title: str | None = None
+    revit_version: str | None = None
+    use_case: str | None = None
+    is_trial_registered: bool = False
     is_active: bool
     total_spent: int
     joined_at: datetime | None

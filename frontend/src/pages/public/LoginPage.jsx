@@ -1,13 +1,96 @@
-import React, { useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import React from 'react';
+import { Loader2, ShieldCheck, Clock, Laptop } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { destinationAfterAuth, peekPendingIntent } from '../../utils/pendingIntent';
+import { peekPendingIntent } from '../../utils/pendingIntent';
+import BrandLogo from '../../components/BrandLogo';
 
-export default function LoginPage(){
-  const [values,setValues]=useState({email:'',password:''}); const [errors,setErrors]=useState({}); const refs={email:useRef(),password:useRef()};
-  const {login,loginWithGoogle,isLoading,error}=useAuthStore(); const navigate=useNavigate(); const intent=peekPendingIntent();
-  const submit=async(e)=>{e.preventDefault();const next={};if(!/^\S+@\S+\.\S+$/.test(values.email))next.email='Vui lòng nhập địa chỉ email hợp lệ.';if(!values.password)next.password='Vui lòng nhập mật khẩu.';setErrors(next);const first=Object.keys(next)[0];if(first)return refs[first].current?.focus();const res=await login(values.email,values.password);if(res.success)navigate(destinationAfterAuth(),{replace:true})};
-  const field=(id,label,type='text')=><div><label htmlFor={`login-${id}`} className="block text-sm font-semibold text-slate-300 mb-2">{label}</label><input ref={refs[id]} id={`login-${id}`} type={type} value={values[id]} onChange={e=>setValues({...values,[id]:e.target.value})} aria-invalid={!!errors[id]} aria-describedby={errors[id]?`login-${id}-error`:undefined} className="form-control" autoComplete={id==='password'?'current-password':'email'}/>{errors[id]&&<p id={`login-${id}-error`} className="field-error">{errors[id]}</p>}</div>;
-  return <div className="page-shell min-h-[70vh] py-14 grid place-items-center"><div className="w-full max-w-md panel p-7"><h1 className="text-3xl font-bold text-white">Đăng nhập</h1><p className="mt-2 text-sm text-slate-400">{intent?.type==='checkout'?'Đăng nhập để tiếp tục với gói đã chọn.':intent?.type==='download'?'Đăng nhập để tải bản cài BIMAutomation.':'Quản lý License và đơn hàng của bạn.'}</p>{error&&<p role="alert" className="mt-4 text-sm text-rose-300">{error}</p>}<button onClick={loginWithGoogle} disabled={isLoading} className="secondary-button w-full mt-6">Tiếp tục với Google</button><div className="flex items-center gap-3 my-5 text-xs text-slate-500"><span className="h-px bg-[var(--line)] flex-1"/>hoặc<span className="h-px bg-[var(--line)] flex-1"/></div><form noValidate onSubmit={submit} className="grid gap-4">{field('email','Email','email')}<div>{field('password','Mật khẩu','password')}<Link to="/forgot-password" className="mt-2 inline-flex text-xs text-cyan-300 min-h-0">Quên mật khẩu?</Link></div><button disabled={isLoading} className="primary-button w-full">{isLoading&&<Loader2 size={18} className="animate-spin"/>}Đăng nhập</button></form><p className="mt-6 pt-5 border-t border-[var(--line)] text-center text-sm text-slate-400">Chưa có tài khoản? <Link to="/register" className="text-cyan-300 font-bold">Đăng ký</Link></p></div></div>;
+export default function LoginPage() {
+  const { loginWithGoogle, isLoading, error } = useAuthStore();
+  const intent = peekPendingIntent();
+
+  return (
+    <div className="page-shell min-h-[75vh] py-12 flex items-center justify-center">
+      <div className="w-full max-w-md bg-[var(--surface-raised)] border border-[var(--line)] rounded-[var(--radius-panel)] shadow-md p-8 text-center space-y-6">
+        
+        {/* Brand Logo */}
+        <div className="flex justify-center">
+          <BrandLogo size="lg" />
+        </div>
+
+        {/* Heading */}
+        <div>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+            Đăng nhập hệ thống
+          </h1>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            {intent?.type === 'checkout'
+              ? 'Đăng nhập để hoàn tất đơn hàng và nhận License.'
+              : intent?.type === 'download'
+              ? 'Đăng nhập để tải bộ cài Add-in Autodesk Revit.'
+              : 'Đăng nhập để quản lý bản quyền và kích hoạt dùng thử 14 ngày.'}
+          </p>
+        </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div role="alert" className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-[var(--radius-control)] text-rose-600 dark:text-rose-300 text-sm font-medium">
+            {error}
+          </div>
+        )}
+
+        {/* Google OAuth Button */}
+        <div className="pt-2">
+          <button
+            onClick={loginWithGoogle}
+            disabled={isLoading}
+            className="w-full py-3.5 px-4 bg-[var(--surface)] hover:bg-[var(--surface-subtle)] border border-[var(--line)] text-[var(--text-primary)] font-bold rounded-[var(--radius-control)] shadow-xs transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50"
+          >
+            {isLoading ? (
+              <Loader2 size={20} className="animate-spin text-[var(--brand)]" />
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                />
+              </svg>
+            )}
+            <span>Tiếp tục với Google</span>
+          </button>
+        </div>
+
+        {/* Value Props Badges */}
+        <div className="pt-4 border-t border-[var(--line)] grid grid-cols-3 gap-2 text-center text-xs text-[var(--text-secondary)] font-medium">
+          <div className="flex flex-col items-center gap-1">
+            <ShieldCheck size={18} className="text-[var(--brand)]" />
+            <span>Bảo mật PKCE</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <Clock size={18} className="text-emerald-500" />
+            <span>Dùng thử 14 ngày</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <Laptop size={18} className="text-blue-500" />
+            <span>Đồng bộ Revit</span>
+          </div>
+        </div>
+
+        <p className="text-xs text-[var(--text-muted)]">
+          Bằng việc đăng nhập, bạn đồng ý với Điều khoản dịch vụ và Chính sách bảo vệ dữ liệu của BIMAutomation.
+        </p>
+      </div>
+    </div>
+  );
 }

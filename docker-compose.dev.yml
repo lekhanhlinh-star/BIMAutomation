@@ -1,0 +1,52 @@
+# Development Docker Compose configuration (with live-reloading)
+# Usage: docker compose -f docker-compose.dev.yml up --build
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bimautomation_backend_dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=True
+      - DATABASE_URL=sqlite+aiosqlite:///./data/app.db
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app
+      - backend_data_dev:/app/data
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - bimautomation_dev_net
+
+  frontend:
+    image: node:20-alpine
+    container_name: bimautomation_frontend_dev
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    depends_on:
+      - backend
+    networks:
+      - bimautomation_dev_net
+
+networks:
+  bimautomation_dev_net:
+    name: bimautomation_dev_net
+    driver: bridge
+
+volumes:
+  backend_data_dev:
+    name: bimautomation_backend_data_dev

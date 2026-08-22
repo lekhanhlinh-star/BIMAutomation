@@ -86,11 +86,11 @@ export const publicApi = {
           latestVersion: res.data.version || 'v2.4.1',
           releaseDate: '2026-08-01',
           fileSize: '45.2 MB',
-          revitVersions: `Revit ${res.data.minimum_revit_version || 2021} - ${res.data.maximum_revit_version || 2025}`,
+          revitVersions: `Revit ${res.data.minimum_revit_version || 2022} - ${res.data.maximum_revit_version || 2027}`,
           downloadUrl: res.data.download_url || '#download-link',
           changelog: [
             res.data.release_notes || 'Tối ưu tốc độ xử lý Auto Dimension nhanh hơn 40%',
-            'Sửa lỗi tương thích với Revit 2025',
+            'Hỗ trợ chính thức Autodesk Revit 2027 & 2026',
             'Thêm tính năng tự động ghi nhớ cấu hình Parameter'
           ]
         };
@@ -98,14 +98,14 @@ export const publicApi = {
       throw new Error("No release");
     } catch {
       return {
-        latestVersion: 'v2.4.1',
-        releaseDate: '2026-08-01',
-        fileSize: '45.2 MB',
-        revitVersions: 'Revit 2021, 2022, 2023, 2024, 2025',
+        latestVersion: 'v2.5.0',
+        releaseDate: '2026-08-15',
+        fileSize: '48.6 MB',
+        revitVersions: 'Revit 2022, 2023, 2024, 2025, 2026, 2027',
         downloadUrl: '#download-link',
         changelog: [
+          'Hỗ trợ chính thức Autodesk Revit 2027 & 2026',
           'Tối ưu tốc độ xử lý Auto Dimension nhanh hơn 40%',
-          'Sửa lỗi tương thích với Revit 2025',
           'Thêm tính năng tự động ghi nhớ cấu hình Parameter',
           'Cải tiến giao diện Ribbon trực quan hơn'
         ]
@@ -210,6 +210,10 @@ export const adminApi = {
       fullName: c.name || 'Chưa cập nhật',
       email: c.email,
       phone: c.phone || '—',
+      jobTitle: c.job_title || '—',
+      revitVersion: c.revit_version || '—',
+      useCase: c.use_case || '—',
+      isTrialRegistered: !!c.is_trial_registered,
       totalSpent: typeof c.total_spent === 'number' ? `${c.total_spent.toLocaleString('vi-VN')}đ` : '0đ',
       status: c.is_active ? 'Active' : 'Inactive',
       joinedAt: c.joined_at ? new Date(c.joined_at).toLocaleDateString('vi-VN') : '—'
@@ -224,12 +228,42 @@ export const adminApi = {
       key: lic.license_key,
       customer: lic.user?.name || 'Chưa cập nhật',
       email: lic.user?.email || '—',
-      plan: lic.plan?.name || 'Gói BIMAutomation',
+      plan: lic.plan_name || lic.plan?.name || 'Gói BIMAutomation',
       expiresAt: lic.expires_at ? new Date(lic.expires_at).toLocaleDateString('vi-VN') : 'Vĩnh viễn',
       status: lic.status,
       device: lic.device_id || 'Chưa liên kết máy'
     }));
   },
+
+  getDeviceTrials: async () => {
+    const res = await axiosClient.get('/admin/device-trials');
+    if (!Array.isArray(res.data)) return [];
+    return res.data.map(t => {
+      const expires = new Date(t.trial_expires_at);
+      const now = new Date();
+      const remainingDays = Math.max(0, Math.ceil((expires - now) / (1000 * 60 * 60 * 24)));
+      return {
+        id: t.id,
+        fingerprintHash: t.fingerprint_hash,
+        displayName: t.display_name || 'PC-BIM',
+        platform: t.platform || 'Windows',
+        revitVersion: t.revit_version || 'Revit',
+        appVersion: t.app_version || 'v2.4.1',
+        firstTrialAt: t.first_trial_at ? new Date(t.first_trial_at).toLocaleDateString('vi-VN') : '—',
+        trialExpiresAt: t.trial_expires_at ? new Date(t.trial_expires_at).toLocaleDateString('vi-VN') : '—',
+        remainingDays,
+        status: t.status,
+        resetCount: t.reset_count || 0,
+        userEmail: t.last_user_email || t.initial_user_email || '—'
+      };
+    });
+  },
+
+  resetDeviceTrial: async (trialId, days = 14) =>
+    (await axiosClient.post(`/admin/device-trials/${trialId}/reset?days=${days}`)).data,
+
+  blockDeviceTrial: async (trialId) =>
+    (await axiosClient.post(`/admin/device-trials/${trialId}/block`)).data,
 
   resetLicenseDevice: async (licenseId) =>
     (await axiosClient.post(`/admin/licenses/${licenseId}/reset-device`)).data,

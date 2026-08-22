@@ -122,6 +122,20 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  registerTrial: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await axiosClient.post('/account/trial-register', data);
+      await get().fetchProfile();
+      set({ isLoading: false });
+      return { success: true, data: response.data };
+    } catch (err) {
+      const msg = err.response?.data?.detail || 'Đăng ký dùng thử không thành công. Vui lòng kiểm tra lại.';
+      set({ isLoading: false, error: msg });
+      return { success: false, error: msg };
+    }
+  },
+
   logout: () => {
     localStorage.removeItem('bimautomation_token');
     set({ user: null, token: null, isAuthenticated: false, error: null });

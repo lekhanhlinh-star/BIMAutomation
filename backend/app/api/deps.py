@@ -22,8 +22,10 @@ def get_current_admin_user(user: User = Depends(current_active_user)) -> User:
     return user
 
 
+from app.core.dependencies import get_current_admin_user, get_current_user_flexible
+
 SettingsDep = Annotated[Settings, Depends(get_settings)]
-CurrentUserDep = Annotated[User, Depends(current_active_user)]
+CurrentUserDep = Annotated[User, Depends(get_current_user_flexible)]
 OptionalCurrentUserDep = Annotated[User | None, Depends(current_optional_user)]
 CurrentAdminUserDep = Annotated[User, Depends(get_current_admin_user)]
 

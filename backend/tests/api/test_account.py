@@ -102,3 +102,41 @@ async def test_get_latest_release(client: TestClient) -> None:
     assert data["version"] == "1.0.0"
     assert "BIMPilot_v1.0.0.exe" in data["download_url"]
     assert data["minimum_revit_version"] == 2021
+
+
+@pytest.mark.asyncio
+async def test_trial_registration_flow(client: TestClient) -> None:
+    client.post("/api/v1/auth/register", json={"email": "engineer_trial@example.com", "password": "strongpassword123"})
+    login = client.post("/api/v1/auth/jwt/login", data={"username": "engineer_trial@example.com", "password": "strongpassword123"})
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    # Initial status -> not trial registered
+    status_res = client.get("/api/v1/account/trial-status", headers=headers)
+    assert status_res.status_code == 200
+    assert status_res.json()["isTrialRegistered"] is False
+
+    # Submit Trial Onboarding Form (Personal Engineer info)
+    reg_res = client.post(
+        "/api/v1/account/trial-register",
+        headers=headers,
+        json={
+            "name": "Nguyễn Văn Kỹ Sư",
+            "phone": "0987654321",
+            "job_title": "Kỹ sư Kết cấu (Structural Engineer)",
+            "revit_version": "2025",
+            "use_case": "Bố trí cốt thép tự động",
+            "terms_accepted": True,
+        },
+    )
+    assert reg_res.status_code == 200
+    assert reg_res.json()["is_trial_registered"] is True
+
+    # Check updated status
+    status_after = client.get("/api/v1/account/trial-status", headers=headers)
+    assert status_after.status_code == 200
+    data = status_after.json()
+    assert data["isTrialRegistered"] is True
+    assert data["name"] == "Nguyễn Văn Kỹ Sư"
+    assert data["phone"] == "0987654321"
+    assert data["jobTitle"] == "Kỹ sư Kết cấu (Structural Engineer)"
+    assert data["revitVersion"] == "2025"

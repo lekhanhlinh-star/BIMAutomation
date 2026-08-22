@@ -181,4 +181,4 @@ def test_smtp_password_reset_message(monkeypatch) -> None:
     ))
     assert sent is True
     assert ("tls",) in events
-    assert ("send", "member@example.com", "Đặt lại mật khẩu BIMPilot") in events
+    assert ("send", "member@example.com", "Đặt lại mật khẩu BIMAutomation") in events
