@@ -1,12 +1,41 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Loader2, ShieldCheck, Clock, Laptop } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { peekPendingIntent } from '../../utils/pendingIntent';
+import { peekPendingIntent, destinationAfterAuth } from '../../utils/pendingIntent';
 import BrandLogo from '../../components/BrandLogo';
 
 export default function LoginPage() {
-  const { loginWithGoogle, isLoading, error } = useAuthStore();
+  const { loginWithGoogle, login, isLoading, error } = useAuthStore();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [formError, setFormError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
   const intent = peekPendingIntent();
+
+  const handleEmailLogin = async (e) => {
+    e.preventDefault();
+    if (!email.trim() || !password) {
+      setFormError('Vui lòng nhập đầy đủ email và mật khẩu.');
+      return;
+    }
+    setFormError('');
+    setIsSubmitting(true);
+    try {
+      const res = await login(email.trim(), password);
+      if (res.success) {
+        const dest = destinationAfterAuth();
+        navigate(dest, { replace: true });
+      } else {
+        setFormError(res.error || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      }
+    } catch (err) {
+      setFormError('Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="page-shell min-h-[75vh] py-12 flex items-center justify-center">
@@ -31,7 +60,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Error Alert */}
+        {/* Global Error Alert */}
         {error && (
           <div role="alert" className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-[var(--radius-control)] text-rose-600 dark:text-rose-300 text-sm font-medium">
             {error}
@@ -41,8 +70,9 @@ export default function LoginPage() {
         {/* Google OAuth Button */}
         <div className="pt-2">
           <button
+            type="button"
             onClick={loginWithGoogle}
-            disabled={isLoading}
+            disabled={isLoading || isSubmitting}
             className="w-full py-3.5 px-4 bg-[var(--surface)] hover:bg-[var(--surface-subtle)] border border-[var(--line)] text-[var(--text-primary)] font-bold rounded-[var(--radius-control)] shadow-xs transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50"
           >
             {isLoading ? (
@@ -71,6 +101,68 @@ export default function LoginPage() {
           </button>
         </div>
 
+        {/* Divider */}
+        <div className="relative flex py-1 items-center">
+          <div className="flex-grow border-t border-[var(--line)]" />
+          <span className="shrink mx-4 text-xs text-[var(--text-muted)] font-medium">hoặc</span>
+          <div className="flex-grow border-t border-[var(--line)]" />
+        </div>
+
+        {/* Fallback Email/Password Sign-in Form */}
+        <form onSubmit={handleEmailLogin} className="space-y-4 text-left">
+          <div>
+            <label htmlFor="login-email" className="block text-xs font-bold text-[var(--text-primary)] mb-1.5">
+              Email
+            </label>
+            <input
+              id="login-email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@example.com"
+              className="form-control text-sm"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="login-password" className="block text-xs font-bold text-[var(--text-primary)]">
+                Mật khẩu
+              </label>
+              <Link to="/forgot-password" className="text-xs font-semibold text-[var(--brand)] hover:underline">
+                Quên mật khẩu?
+              </Link>
+            </div>
+            <input
+              id="login-password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="form-control text-sm"
+            />
+          </div>
+
+          {formError && (
+            <p className="field-error text-xs" role="alert">
+              {formError}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting || isLoading}
+            className="primary-button w-full justify-center text-sm font-bold"
+          >
+            {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : null}
+            <span>Đăng nhập với Email</span>
+          </button>
+        </form>
+
         {/* Value Props Badges */}
         <div className="pt-4 border-t border-[var(--line)] grid grid-cols-3 gap-2 text-center text-xs text-[var(--text-secondary)] font-medium">
           <div className="flex flex-col items-center gap-1">
@@ -87,8 +179,17 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="text-xs text-[var(--text-muted)]">
-          Bằng việc đăng nhập, bạn đồng ý với Điều khoản dịch vụ và Chính sách bảo vệ dữ liệu của BIMAutomation.
+        {/* Clickable Terms & Privacy Policy Notice */}
+        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+          Bằng việc đăng nhập, bạn đồng ý với{' '}
+          <Link to="/feedback" className="text-[var(--brand)] hover:underline">
+            Điều khoản dịch vụ
+          </Link>{' '}
+          và{' '}
+          <Link to="/feedback" className="text-[var(--brand)] hover:underline">
+            Chính sách bảo vệ dữ liệu
+          </Link>{' '}
+          của BIMAutomation.
         </p>
       </div>
     </div>

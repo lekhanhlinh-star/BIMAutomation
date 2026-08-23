@@ -1,142 +1,170 @@
-# BIMAutomation (BIMPilot)
+# RevitAPP — Nền Tảng Tự Động Hóa BIM & AI Vẽ Cốt Thép Thông Minh
 
-Nền tảng website bán và quản lý bản quyền cho **Add-in BIM/Revit** — cho phép khách hàng xem tính năng, bảng giá, thanh toán qua VietQR/SePay, tự động nhận License, và kích hoạt Add-in trên Revit. Có kèm hệ thống Admin để quản lý khách hàng, đơn hàng, thanh toán, license và doanh thu.
-
-> Luồng lõi của MVP: **Khách hàng → Chọn gói → Thanh toán → Nhận License → Kích hoạt Add-in.**
+> **Khẩu hiệu cốt lõi (USP):** *"Gõ một câu. Revit tự vẽ xong hệ thép."*  
+> Trợ lý AI và hệ thống **57 công cụ chuẩn MCP** kết nối trực tiếp vào Autodesk Revit (2022–2027). Tự động đọc bảng tính Excel, áp dụng preset thiết kế, mô hình hóa cốt thép 3D hoàn chỉnh và tự động triển khai bản vẽ lên Sheet — kèm cơ chế xem trước và xác nhận an toàn trước khi thay đổi mô hình.
 
 ---
 
-## 1. Kiến trúc tổng quan
+## 1. Điểm Bán Hàng Độc Nhất (USP) & Tính Năng Nổi Bật
 
-Dự án gồm 2 phần chạy độc lập, giao tiếp qua REST API:
+1. **5 Công Cụ AI Vẽ Thép Cốt Lõi:**
+   - **Cột (`CR`):** Thép chủ, đai bao, đai lồng, đai C chống phình, nối thép so le 50% qua tầng theo TCVN 5574:2018.
+   - **Dầm (`BR`):** Đọc bảng thép Excel hoặc Preset, dầm liên tục đa nhịp, thép gối $L/3$, thép nhịp $L/2$, đai gia cường $a100$.
+   - **Móng (`FR`):** Móng đơn, móng băng, móng bè, lưới thép đáy/trên, chân chó Bar Chair $\Phi 12/\Phi 14$, đai bo đài.
+   - **Vách (`WR`):** Lưới thép 2 lớp đứng/ngang, đai C, cột biên ẩn đầu vách, gia cường mép lỗ mở cửa.
+   - **Sàn (`SR`):** Thép sàn 2 lớp, thép mũ gối trên đỉnh dầm, gia cường góc $45^\circ$ lỗ mở hộp gen.
+2. **Chuỗi Triển Khai Bản Vẽ Liên Tục Lên Sheet (Continuous Sheet Generation Pipeline):**
+   - Tự động cắt mặt cắt dọc trục và các mặt cắt ngang gối/nhịp.
+   - Tự động tạo Sheet mới, chèn Khung tên Titleblock, dàn trang Viewport thẳng hàng.
+   - Tự động gắn Rebar Tag và xuất bảng thống kê uốn thép (Rebar Schedule) chuẩn xác.
+3. **Hub 57 MCP Tools Chuẩn Hóa (Spec `2025-11-25`):**
+   - Phủ rộng 8 nhóm chức năng: Vẽ thép (12), Đọc mô hình (5), Xử lý Excel (4), Dịch thuật Việt/Trung (2), Thao tác cấu kiện (11), Tag & Khối lượng (5), Điều khiển Ribbon (15), Thực thi C# động an toàn & Tiện ích (3).
+   - Tích hợp 1-click với **Claude Desktop** (`claude_desktop_config.json`) và **Cursor IDE** (`.cursor/mcp.json`).
+4. **Hệ Thống 18 Lệnh Ribbon Trực Quan Trên Tab `LDL-STRUCTURAL`:**
+   - Phân bổ khoa học thành 4 Panels: `Rebar` (5 lệnh), `Drawing Rebar` (5 lệnh), `CAD Tools` (4 lệnh), `Commands` (4 lệnh).
+5. **Kiến Trúc An Toàn Tuyệt Đối (Why AI Can Draw Rebar):**
+   - Gọi trực tiếp vào Native Engine C# .NET qua hàng đợi `IExternalEventHandler` / `ExternalEvent` luồng đơn (STA).
+   - Đóng gói trong `Transaction` độc lập có định danh, tự động `RollBack()` khi gặp xung đột.
+   - Hộp thoại xác nhận an toàn trong Revit trước khi commit dữ liệu mô hình.
+6. **Bộ Cài Đặt Thông Minh `RevitAPP.Installer.exe` & Kích Hoạt 1-Click Google OAuth PKCE:**
+   - 1 installer duy nhất tự động nhận diện Autodesk Revit 2022, 2023, 2024, 2025, 2026, 2027.
+   - Kích hoạt không cần nhớ key thông qua Google OAuth 2.0 PKCE và kiểm tra quyền Server-Authoritative (`POST /api/v1/entitlements/check`) tại `https://bimautomation.myminiserver.info`.
+   - Dùng thử 14 ngày Full tính năng trên máy mới (Anti-Trial-Abuse qua mã băm SHA-256 phần cứng).
+
+---
+
+## 2. Kiến Trúc Hệ Thống Tổng Thể
+
+Hệ thống bao gồm 3 phân hệ chính giao tiếp đồng bộ:
 
 ```text
-BIMPilot_Project/
-├── backend/          # FastAPI (Python) — API, database, xử lý thanh toán, license
-├── frontend/         # React + Vite — giao diện web (public / account / admin)
-├── docker-compose.yml
-├── .env               # Biến môi trường dùng chung khi chạy bằng Docker Compose
-└── .env.example
+BIMAutomation / RevitAPP
+├── backend/          # FastAPI (Python 3.11+) — Server-Authoritative Licensing, Google OAuth PKCE, Webhook SePay/VietQR
+├── frontend/         # React 18 + Vite 6 + Tailwind CSS v4 — Web platform, Interactive Hero Prompt, 57 MCP Tools Hub
+├── docs/             # Tài liệu kỹ thuật chi tiết
+│   ├── revit_mcp.md  # Đặc tả giao thức MCP Server & Danh bạ 57 Tools
+│   └── revit_addin_integration.md # Hướng dẫn tích hợp C# Add-in với OAuth & License
+└── installer/        # RevitAPP.Installer.exe — Bộ cài đặt tự động cho Revit 2022-2027
 ```
 
-### Tech stack thực tế
+### Tech Stack Chi Tiết
 
-| Thành phần | Công nghệ |
+| Phân Hệ | Công Nghệ Sử Dụng |
 |---|---|
-| Backend | FastAPI, SQLAlchemy (async), aiosqlite, fastapi-users (auth + OAuth) |
-| Database | SQLite (file `app.db`, có thể đổi qua `DATABASE_URL`) |
-| Frontend | React 18, Vite, React Router, TanStack Query, Zustand, Tailwind CSS |
-| Xác thực | Email/Password + Google OAuth |
-| Thanh toán | VietQR (chuyển khoản ngân hàng) + Webhook SePay |
-| Triển khai | Docker Compose (2 container: `backend`, `frontend` + Nginx) |
-
-> Ghi chú: tài liệu đặc tả sản phẩm ban đầu ([BIMPilot MVP — Product Scope v1.0.md](backend/BIMPilot%20MVP%20—%20Product%20Scope%20v1.0.md)) đề xuất Next.js/PostgreSQL/Supabase, nhưng bản triển khai thực tế dùng FastAPI + React + SQLite như mô tả ở trên.
+| **Revit Add-in** | C# (.NET Framework 4.8 / .NET 8), Revit API 2022–2027, Roslyn C# Compiler, Loopback HttpListener |
+| **MCP Server** | Model Context Protocol (Spec `2025-11-25`), Streamable HTTP tại `http://127.0.0.1:8765/mcp`, Bearer Token 256-bit |
+| **Backend API** | Python FastAPI, SQLAlchemy (Async), SQLite / PostgreSQL, Authlib OAuth 2.0 PKCE, Pydantic |
+| **Frontend Web** | React 18, Vite 6, Tailwind CSS v4, Zustand, TanStack Query, Lucide Icons |
+| **Thanh Toán** | Chuyển khoản VietQR, Webhook SePay tự động kích hoạt license tức thì |
+| **Triển Khai** | Docker Compose (Backend, Frontend Nginx) |
 
 ---
 
-## 2. Chức năng chính
+## 3. Hệ Thống 18 Lệnh Ribbon Trên Tab `LDL-STRUCTURAL`
 
-### Khách truy cập (chưa đăng nhập)
-- Xem trang chủ, tính năng, bảng giá, hướng dẫn, giới thiệu.
-- Gửi góp ý (`/feedback`).
-- Đăng ký / đăng nhập (email hoặc Google).
-
-### Khách hàng (đã đăng nhập) — `/account`
-- Xem license đã mua, ngày kích hoạt/hết hạn, copy License Key.
-- Tải Add-in, xem lịch sử đơn hàng, gia hạn bản quyền.
-
-### Admin — `/admin`
-- Dashboard doanh thu, đơn hàng, license.
-- Quản lý khách hàng, đơn hàng, thanh toán, license (reset thiết bị, gia hạn, khóa, thu hồi).
-- Quản lý góp ý và phiên bản phát hành (releases).
-
----
-
-## 3. Luồng mua hàng & cấp License
-
-```text
-Chọn gói (Pricing)
-   ↓
-Tạo Order  →  POST /api/v1/orders
-   ↓
-Hiển thị QR thanh toán  →  GET /api/v1/orders/{order_id}/qr
-   ↓
-SePay gửi Webhook xác nhận thanh toán  →  POST /api/v1/payments/webhook
-   ↓
-Order chuyển trạng thái: PENDING → PAID
-   ↓
-Hệ thống tự động sinh License Key (vd: BP7X-XXXX-XXXX-XXXX)
-   ↓
-Khách hàng kích hoạt Add-in bằng License Key + Device ID
-```
-
-Webhook SePay được xác thực qua header:
-```text
-Authorization: Apikey <SEPAY_API_KEY>
-```
+| Panel | Lệnh Ribbon | Mã Feature Code | Phím Tắt | Mô Tả |
+|---|---|---|:---:|---|
+| **Rebar** | Column Rebar | `column-rebar` | `CR` | Bố trí thép cột tự động theo TCVN 5574:2018 |
+| **Rebar** | Beam Rebar | `beam-rebar` | `BR` | Bố trí thép dầm liên tục từ Excel/Preset |
+| **Rebar** | Footing Rebar | `footing-rebar` | `FR` | Bố trí thép móng đơn, móng băng, móng bè |
+| **Rebar** | Wall Rebar | `wall-rebar` | `WR` | Bố trí thép vách và gia cường lỗ mở |
+| **Rebar** | Slab Rebar | `utility-tools` | `SR` | Bố trí thép sàn 2 lớp và thép mũ gối |
+| **Drawing Rebar** | Beam Drawing | `beam-drawing` | `BD` | Tự động tạo Sheet và trích xuất chi tiết dầm |
+| **Drawing Rebar** | Footing Drawing | `footing-drawing` | `FD` | Tự động tạo Sheet và mặt cắt chi tiết móng |
+| **Drawing Rebar** | Column Drawing | `beam-drawing` | `CD` | Khai triển chi tiết mặt cắt cột các tầng |
+| **Drawing Rebar** | Wall Drawing | `beam-drawing` | `WD` | Khai triển mặt bằng và mặt cắt diện vách |
+| **Drawing Rebar** | Rebar Schedule & Tag | `utility-tools` | `RS` | Đánh số thanh thép, gắn Tag và xuất bảng uốn |
+| **CAD Tools** | Model from CAD | `model-from-cad` | `MC` | Dựng mô hình 3D từ 2D CAD *(Y/c AutoCAD Full 2016+)* |
+| **CAD Tools** | DWG Export | `dwg-export` | `DE` | Xuất hồ sơ DWG chuẩn layer *(Y/c AutoCAD Full 2016+)* |
+| **CAD Tools** | Link CAD Manager | `model-from-cad` | `LM` | Quản lý và căn chỉnh file CAD liên kết |
+| **CAD Tools** | Layer Clean & Map | `model-from-cad` | `LC` | Làm sạch layer rác và ánh xạ layer sang Revit |
+| **Commands** | Chat AI Assistant | `chat-ai` | `AI` | Trợ lý AI tích hợp trò chuyện và ra lệnh trực tiếp |
+| **Commands** | License & Account | *(Free/Public)* | `LA` | Đăng nhập Google OAuth PKCE và kiểm tra bản quyền |
+| **Commands** | Settings & Presets | `utility-tools` | `ST` | Cấu hình tham số, lớp bảo vệ và quản lý preset |
+| **Commands** | MCP Server Status | `mcp-read` | `MS` | Quản lý dịch vụ MCP kết nối AI ngoài qua cổng 8765 |
 
 ---
 
-## 4. Cấu trúc mã nguồn
+## 4. Ma Trận 12 Feature Codes & Phân Bậc 5 Gói Bản Quyền
 
-### Backend (`backend/app`)
-```text
-app/
-├── api/v1/endpoints/   # auth, users, plans, orders, payments, licenses,
-│                       # account, admin, download, feedback, public, health
-├── core/               # Settings, logging, security, exception handling
-├── db/                 # Async SQLAlchemy session/engine
-├── models/             # User, Product, Plan, Order, Payment, License, Feedback, Release, OAuth
-├── repositories/        # Data-access layer theo từng model
-├── schemas/             # Pydantic request/response contracts
-├── services/             # Business logic (CheckoutService, LicenseService, ...)
-└── main.py               # FastAPI entrypoint
-```
-
-### Frontend (`frontend/src`)
-```text
-src/
-├── api/            # axios client + services gọi API backend
-├── store/          # Zustand store (auth, ...)
-├── layouts/        # PublicLayout, CustomerLayout, AdminLayout
-├── pages/
-│   ├── public/     # Home, Features, Pricing, Tutorials, About, Feedback, Download,
-│   │               # Login, Register, ForgotPassword, ResetPassword, GoogleCallback
-│   ├── customer/   # AccountDashboard, Licenses, Orders, Profile
-│   └── admin/      # AdminDashboard, Customers, Orders, Payments, Licenses,
-│                   # Revenue, Feedback, Releases
-└── components/     # Component dùng chung (AccessibleDialog, BrandLogo, ...)
-```
+| Mã Feature Code | Tên Tính Năng | Dùng Thử 14 Ngày | Cốt Thép (Manual) | Cốt Thép + AI | Full Suite | Doanh Nghiệp |
+|---|---|:---:|:---:|:---:|:---:|:---:|
+| `column-rebar` | Bố trí thép cột tự động |  |  |  |  |  |
+| `beam-rebar` | Bố trí thép dầm tự động |  |  |  |  |  |
+| `footing-rebar` | Bố trí thép móng tự động |  |  |  |  |  |
+| `wall-rebar` | Bố trí thép vách tự động |  |  |  |  |  |
+| `beam-drawing` | Triển khai bản vẽ dầm |  |  |  |  |  |
+| `footing-drawing` | Triển khai bản vẽ móng |  |  |  |  |  |
+| `chat-ai` | Trợ lý AI tích hợp |  | ❌ |  |  |  |
+| `utility-tools` | Tiện ích mô hình & tham số |  | ❌ |  |  |  |
+| `mcp-read` & `mcp-write` | Kết nối 57 MCP Tools |  | ❌ |  |  |  |
+| `model-from-cad` | Dựng hình từ CAD *(AutoCAD Full)* |  | ❌ | ❌ |  |  |
+| `dwg-export` | Xuất CAD hàng loạt *(AutoCAD Full)* |  | ❌ | ❌ |  |  |
+| `point-cloud` | Scan to BIM đám mây điểm |  | ❌ | ❌ |  |  |
 
 ---
 
-## 5. Chạy dự án
+## 5. Kết Nối MCP Server Với Claude Desktop & Cursor
 
-### Cách 1 — Docker Compose (khuyến nghị, giống production)
+### Cấu Hình Claude Desktop (`%APPDATA%\Claude\claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "revitapp": {
+      "url": "http://127.0.0.1:8765/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_TOKEN_FROM_LOCALAPPDATA_REVITAPP_MCP_ACCESS_TOKEN_TXT"
+      }
+    }
+  }
+}
+```
+
+### Cấu Hình Cursor IDE (`.cursor/mcp.json`):
+```json
+{
+  "mcpServers": {
+    "revitapp": {
+      "url": "http://127.0.0.1:8765/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_TOKEN_FROM_LOCALAPPDATA_REVITAPP_MCP_ACCESS_TOKEN_TXT"
+      }
+    }
+  }
+}
+```
+
+> Chi tiết toàn bộ 57 công cụ và tham số xem tại [Tài liệu kỹ thuật RevitAPP MCP (docs/revit_mcp.md)](docs/revit_mcp.md).
+
+---
+
+## 6. Hướng Dẫn Cài Đặt & Khởi Chạy Dự Án
+
+### Cách 1 — Chạy Bằng Docker Compose (Production Ready)
 
 ```bash
-cp .env.example .env   # điền các giá trị thật (SECRET_KEY, Google OAuth, SePay, ngân hàng...)
-docker compose up --build
+# 1. Sao chép và cấu hình biến môi trường
+cp .env.example .env
+
+# 2. Khởi chạy toàn bộ hệ thống
+docker compose up --build -d
 ```
+- Web Application: `http://localhost:80` (hoặc cổng cấu hình `FRONTEND_PORT`)
+- Backend REST API: `http://localhost:8000`
+- API Documentation: `http://localhost:8000/docs`
 
-- Frontend: `http://localhost:${FRONTEND_PORT:-80}`
-- Backend API: `http://localhost:${PORT:-8000}`
-- Dữ liệu SQLite được lưu ở Docker volume `backend_data` (không mất khi rebuild container).
+### Cách 2 — Khởi Chạy Môi Trường Phát Triển (Development)
 
-### Cách 2 — Chạy riêng từng phần (dev)
-
-**Backend:**
+**1. Khởi động Backend (FastAPI):**
 ```bash
 cd backend
-source .venv/bin/activate      # hoặc tạo venv mới: python -m venv .venv
+python -m venv .venv
+source .venv/bin/activate  # Trên Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
-cp .env.example .env           # chỉnh sửa theo môi trường dev
 python -m uvicorn app.main:app --reload --port 8000
 ```
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
 
-**Frontend:**
+**2. Khởi động Frontend (React + Vite):**
 ```bash
 cd frontend
 npm install
@@ -145,31 +173,15 @@ npm run dev
 
 ---
 
-## 6. Biến môi trường quan trọng (`.env`)
+## 7. Kiểm Thử Hệ Thống (Automated Testing)
 
-| Nhóm | Biến | Mô tả |
-|---|---|---|
-| App | `APP_NAME`, `ENVIRONMENT`, `DEBUG`, `PORT`, `HOST`, `SECRET_KEY` | Cấu hình chung & khóa bảo mật |
-| Database | `DATABASE_URL` | Chuỗi kết nối SQLAlchemy (mặc định SQLite) |
-| Google OAuth | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Đăng nhập bằng Google |
-| Email | `FRONTEND_RESET_URL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_SENDER`, `SMTP_USE_TLS` | Gửi email reset mật khẩu |
-| Thanh toán | `SEPAY_CLIENT_ID`, `SEPAY_CLIENT_SECRET`, `SEPAY_API_KEY`, `VIETQR_TEMPLATE` | Xác thực webhook & tạo mã QR |
-| Ngân hàng | `BANK_CODE`, `BANK_ACCOUNT`, `BANK_HOLDER` | Thông tin hiển thị trên QR chuyển khoản |
-| Frontend | `FRONTEND_PORT` | Cổng phục vụ frontend khi chạy Docker |
-
-> **Không commit file `.env` thật lên git** — chỉ dùng `.env.example` làm mẫu tham khảo.
-
----
-
-## 7. Kiểm thử
-
-**Backend** (17 test integration/unit với pytest):
+**Chạy kiểm thử Backend:**
 ```bash
 cd backend
 PYTHONPATH=. pytest
 ```
 
-**Frontend** (Vitest + Testing Library):
+**Chạy kiểm thử Frontend:**
 ```bash
 cd frontend
 npm run test
@@ -177,51 +189,8 @@ npm run test
 
 ---
 
-## 8. Mô hình dữ liệu (rút gọn)
+## 8. Tài Liệu Kỹ Thuật Liên Quan
 
-```text
-users        → id, name, email, phone, password_hash, role (USER/ADMIN)
-products     → id, name, slug, description, is_active
-plans        → id, product_id, name, duration_months, price
-orders       → id, order_code, user_id, plan_id, amount, status (PENDING/PAID/CANCELLED/FAILED)
-payments     → id, order_id, provider, transaction_id, amount, status, raw_payload
-licenses     → id, license_key, user_id, order_id, plan_id, device_id,
-               status (PENDING/ACTIVE/EXPIRED/SUSPENDED/REVOKED), activated_at, expires_at
-feedback     → id, user_id, name, email, type, title, content, status
-releases     → id, version, download_url, release_notes, min/max_revit_version, is_active
-```
-
----
-
-## 9. API kích hoạt & kiểm tra License (dùng bởi Add-in Revit)
-
-**Kích hoạt:**
-```http
-POST /api/licenses/activate
-{ "licenseKey": "BP7X-82DK-P9L2-6QAW", "deviceId": "DEVICE-FINGERPRINT-001" }
-```
-
-**Kiểm tra (Add-in gọi định kỳ, ví dụ 1 lần/24h):**
-```http
-POST /api/licenses/verify
-{ "licenseKey": "BP7X-82DK-P9L2-6QAW", "deviceId": "DEVICE-FINGERPRINT-001" }
-```
-
----
-
-## 10. Tài liệu liên quan
-
-- [backend/README.md](backend/README.md) — hướng dẫn chi tiết chạy backend, luồng webhook SePay/VietQR.
-- [backend/BIMPilot MVP — Product Scope v1.0.md](backend/BIMPilot%20MVP%20—%20Product%20Scope%20v1.0.md) — đặc tả sản phẩm đầy đủ (sitemap, UI, bảo mật, kế hoạch triển khai 2 tuần, tiêu chí hoàn thành MVP).
-
----
-
-## 11. Yêu cầu bảo mật tối thiểu (theo Product Scope)
-
-- Hash mật khẩu, không lưu plain text.
-- HTTPS + JWT/session bảo mật.
-- Kiểm tra quyền (role) ở cả frontend lẫn backend, không chỉ ẩn menu Admin.
-- Xác thực chữ ký (signature) của webhook thanh toán.
-- Rate limit cho License API.
-- Validate Device ID khi kích hoạt license.
-- Audit log cho thao tác revoke/reset license.
+- [docs/revit_mcp.md](docs/revit_mcp.md) — Đặc tả toàn diện giao thức MCP Server, 57 công cụ, pipeline dầm/móng và xử lý sự cố.
+- [docs/revit_addin_integration.md](docs/revit_addin_integration.md) — Hướng dẫn tích hợp C# .NET Add-in với Google OAuth PKCE và Server-Authoritative Licensing.
+- [backend/README.md](backend/README.md) — Hướng dẫn cấu hình cổng thanh toán VietQR / SePay Webhook.

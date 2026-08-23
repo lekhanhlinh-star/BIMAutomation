@@ -14,10 +14,10 @@ export default function LicensesPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-[var(--brand)]" /> Bản quyền RevitAI đã kích hoạt
+          <ShieldCheck className="w-5 h-5 text-[var(--brand)]" /> Bản quyền BIMAutomation đã kích hoạt
         </h2>
         <p className="text-xs text-[var(--text-secondary)] mt-1">
-          Hệ thống cấp quyền tự động theo Tài khoản Google (Account-Based). Không cần nhập mã kích hoạt trong Revit.
+          Hệ thống cấp quyền Server-Authoritative theo Tài khoản Google OAuth PKCE. Không cần nhập mã kích hoạt trong Revit.
         </p>
       </div>
 
@@ -27,8 +27,8 @@ export default function LicensesPage() {
         <div className="text-xs text-[var(--text-secondary)] space-y-1.5 leading-relaxed">
           <p className="font-bold text-[var(--text-primary)] text-sm">Cách kích hoạt trên Autodesk Revit:</p>
           <p>1. Mở phần mềm Autodesk Revit trên máy tính của bạn.</p>
-          <p>2. Trên thanh Ribbon BIMAutomation, bấm <strong>"Đăng nhập Google"</strong>.</p>
-          <p>3. Add-in sẽ tự động nhận diện bản quyền từ tài khoản Google và mở khóa toàn bộ tính năng Full Suite.</p>
+          <p>2. Trên thanh Ribbon <strong>LDL-STRUCTURAL</strong>, bấm <strong>"Đăng nhập Google"</strong>.</p>
+          <p>3. Add-in sẽ tự động nhận diện bản quyền từ tài khoản Google và mở khóa các tính năng tương ứng theo gói.</p>
         </div>
       </div>
 

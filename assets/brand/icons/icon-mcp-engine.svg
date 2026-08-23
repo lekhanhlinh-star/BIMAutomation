@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Central MCP Hexagon Hub -->
+  <polygon points="24,4 42,14 42,34 24,44 6,34 6,14" fill="#0F172A" stroke="#2563EB" stroke-width="2" />
+  
+  <!-- Inner Data Core -->
+  <polygon points="24,12 34,18 34,30 24,36 14,30 14,18" fill="url(#mcpGradient)" />
+  
+  <!-- Lightning Bolt AI Stream -->
+  <path d="M25 15 L19 24 L24 24 L23 33 L29 23 L24 23 Z" fill="#FFFFFF" />
+
+  <!-- Node Connection Dots -->
+  <circle cx="24" cy="4" r="3" fill="#06B6D4" />
+  <circle cx="42" cy="14" r="3" fill="#06B6D4" />
+  <circle cx="42" cy="34" r="3" fill="#06B6D4" />
+  <circle cx="24" cy="44" r="3" fill="#06B6D4" />
+  <circle cx="6" cy="34" r="3" fill="#06B6D4" />
+  <circle cx="6" cy="14" r="3" fill="#06B6D4" />
+
+  <defs>
+    <linearGradient id="mcpGradient" x1="14" y1="12" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB" />
+      <stop offset="1" stop-color="#06B6D4" />
+    </linearGradient>
+  </defs>
+</svg>

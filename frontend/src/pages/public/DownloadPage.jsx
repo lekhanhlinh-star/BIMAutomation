@@ -34,18 +34,18 @@ function validDownloadUrl(value) {
 const steps = [
   {
     step: '01',
-    title: 'Tải bộ cài đặt',
-    desc: 'Nhấn nút Tải bộ cài (.exe) tương thích cho phiên bản Revit bạn đang sử dụng.'
+    title: 'Tải BIMAutomation.Installer.exe',
+    desc: 'Nhấn nút Tải bộ cài đặt duy nhất (.exe) hỗ trợ toàn bộ các phiên bản Revit từ 2022 đến 2027.'
   },
   {
     step: '02',
-    title: 'Chạy cài đặt 30 giây',
-    desc: 'Tắt phần mềm Revit, nhấp đúp vào file cài đặt và làm theo hướng dẫn trên màn hình.'
+    title: 'Chạy cài đặt tự động 30 giây',
+    desc: 'Tắt Revit và chạy file cài đặt. Hệ thống tự động nạp manifest vào %AppData%\\Autodesk\\Revit\\Addins\\<năm> cho tất cả phiên bản.'
   },
   {
     step: '03',
-    title: 'Mở Revit & Kích hoạt',
-    desc: 'Khởi động Revit, mở Tab BIMAutomation trên thanh Ribbon và đăng nhập tài khoản để trải nghiệm.'
+    title: 'Mở Revit & Đăng nhập Google',
+    desc: 'Khởi động Revit, mở Tab LDL-STRUCTURAL trên thanh Ribbon và bấm Đăng nhập Google để tự động kích hoạt bản quyền Server-Authoritative.'
   }
 ];
 
@@ -83,7 +83,7 @@ export default function DownloadPage() {
           Tải phần mềm BIMAutomation (Revit 2022–2027)
         </h1>
         <p className="mt-4 text-base text-[var(--text-secondary)] leading-relaxed">
-          Tự động tích hợp thanh công cụ Ribbon chuyên nghiệp vào Autodesk Revit. Dùng thử miễn phí 14 ngày với đầy đủ 30+ tiện ích.
+          Tự động tích hợp thanh công cụ Ribbon <strong>LDL-STRUCTURAL</strong> và 57 công cụ chuẩn MCP vào Autodesk Revit. Dùng thử miễn phí 14 ngày trọn bộ tính năng.
         </p>
       </header>
 
@@ -95,7 +95,7 @@ export default function DownloadPage() {
               <Clock className="text-amber-500 w-4 h-4" /> Kích hoạt dùng thử 14 ngày cho đội ngũ
             </h3>
             <p className="text-xs text-[var(--text-secondary)] mt-1">
-              Đăng ký thông tin kỹ sư để mở khóa toàn bộ tính năng và nhận hỗ trợ kỹ thuật trực tiếp.
+              Đăng ký thông tin kỹ sư để mở khóa toàn bộ 13 tính năng và nhận hỗ trợ kỹ thuật trực tiếp.
             </p>
           </div>
           <button
@@ -119,7 +119,7 @@ export default function DownloadPage() {
               <div>
                 <div className="flex items-center gap-2.5">
                   <h2 className="text-2xl font-extrabold text-[var(--text-primary)]">
-                    BIMAutomation Installer
+                    BIMAutomation.Installer.exe
                   </h2>
                   <span className="font-mono text-xs font-extrabold text-[var(--brand)] bg-[var(--brand-soft)] px-2.5 py-1 rounded">
                     {release?.latestVersion}
@@ -131,8 +131,8 @@ export default function DownloadPage() {
               </div>
 
               {ready ? (
-                <a href={release.downloadUrl} className="primary-button shrink-0 font-bold !py-3.5 !px-6 text-sm sm:text-base shadow-md" download>
-                  <Download size={20} /> Tải bộ cài đặt (.exe)
+                <a href={release.downloadUrl} className="primary-button shrink-0 font-bold !py-3.5 !px-6 text-sm sm:text-base shadow-md" download="BIMAutomation.Installer.exe">
+                  <Download size={20} /> Tải BIMAutomation.Installer.exe
                 </a>
               ) : (
                 <button disabled className="secondary-button opacity-50 cursor-not-allowed shrink-0 font-bold">
@@ -144,7 +144,7 @@ export default function DownloadPage() {
             {/* Supported Revit Versions Grid */}
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3">
-                Phiên bản Autodesk Revit hỗ trợ
+                Phiên bản Autodesk Revit hỗ trợ (Tự động nhận diện)
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
                 {supportedVersions.map((v) => (
@@ -167,7 +167,7 @@ export default function DownloadPage() {
       {/* 3-Step Installation Guide */}
       <section className="mt-12">
         <h3 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] text-center">
-          Hướng dẫn cài đặt nhanh trong 3 bước
+          Hướng dẫn cài đặt & Kích hoạt trong 3 bước
         </h3>
         <div className="mt-8 grid md:grid-cols-3 gap-6">
           {steps.map((s) => (
@@ -190,15 +190,15 @@ export default function DownloadPage() {
         {/* Requirements */}
         <div className="p-6 sm:p-7 rounded-[var(--radius-panel)] border border-[var(--line)] bg-[var(--surface-raised)] shadow-xs">
           <h3 className="font-bold text-base text-[var(--text-primary)] flex items-center gap-2 mb-4">
-            <Cpu className="text-[var(--brand)]" size={18} /> Yêu cầu hệ thống & Phần cứng
+            <Cpu className="text-[var(--brand)]" size={18} /> Yêu cầu hệ thống & Phần mềm
           </h3>
           <ul className="space-y-3 text-xs sm:text-sm text-[var(--text-secondary)] font-medium">
             {[
-              'Autodesk Revit 2022, 2023, 2024, 2025, 2026, 2027',
+              'Autodesk Revit 2022, 2023, 2024, 2025, 2026, 2027 (64-bit)',
               'Hệ điều hành Windows 10 hoặc Windows 11 (64-bit)',
-              '.NET Framework 4.8 / .NET 8 Runtime (đã tích hợp sẵn)',
-              'Dung lượng ổ cứng khả dụng tối thiểu 200 MB',
-              'Kết nối Internet để xác thực và cập nhật License'
+              '.NET Framework 4.8 / .NET 8 Runtime (đã tích hợp sẵn trong bộ cài)',
+              'AutoCAD Full 2016+ (Bắt buộc cho tính năng Model from CAD & DWG Export; AutoCAD LT không hỗ trợ)',
+              'Đăng nhập Google OAuth 2.0 PKCE để xác thực bản quyền Server-Authoritative'
             ].map((req) => (
               <li key={req} className="flex items-start gap-2.5">
                 <CheckCircle2 size={15} className="text-emerald-500 shrink-0 mt-0.5" />

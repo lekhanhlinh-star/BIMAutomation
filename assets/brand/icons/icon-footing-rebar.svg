@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Footing Pad Concrete Outline (Bê tông móng đơn) -->
+  <path d="M16 10 L32 10 L32 20 L42 28 L42 40 L6 40 L6 28 L16 20 Z" fill="#1E293B" stroke="#64748B" stroke-width="1.5" stroke-dasharray="3 2" />
+  
+  <!-- Column Starter Bars (Chân râu cột bẻ giò gà) -->
+  <path d="M20 10 L20 36 L12 36" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M28 10 L28 36 L36 36" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Bottom Footing Mesh Rebar (Lưới thép đáy móng) -->
+  <line x1="8" y1="37" x2="40" y2="37" stroke="#06B6D4" stroke-width="3" stroke-linecap="round" />
+  <circle cx="12" cy="37" r="1.5" fill="#22D3EE" />
+  <circle cx="18" cy="37" r="1.5" fill="#22D3EE" />
+  <circle cx="24" cy="37" r="1.5" fill="#22D3EE" />
+  <circle cx="30" cy="37" r="1.5" fill="#22D3EE" />
+  <circle cx="36" cy="37" r="1.5" fill="#22D3EE" />
+</svg>

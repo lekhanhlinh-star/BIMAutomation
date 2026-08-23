@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Concrete Beam Outline -->
+  <rect x="4" y="14" width="40" height="20" rx="3" fill="#1E293B" stroke="#64748B" stroke-width="1.5" stroke-dasharray="3 2" />
+  
+  <!-- Top Longitudinal Rebar -->
+  <line x1="6" y1="18" x2="42" y2="18" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Bottom Longitudinal Rebar -->
+  <line x1="6" y1="30" x2="42" y2="30" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" />
+
+  <!-- Stirrups (Đai dầm) -->
+  <line x1="12" y1="17" x2="12" y2="31" stroke="#06B6D4" stroke-width="2" stroke-linecap="round" />
+  <line x1="18" y1="17" x2="18" y2="31" stroke="#06B6D4" stroke-width="2" stroke-linecap="round" />
+  <line x1="24" y1="17" x2="24" y2="31" stroke="#06B6D4" stroke-width="2" stroke-linecap="round" />
+  <line x1="30" y1="17" x2="30" y2="31" stroke="#06B6D4" stroke-width="2" stroke-linecap="round" />
+  <line x1="36" y1="17" x2="36" y2="31" stroke="#06B6D4" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Reinforcement Indicator (Gia cường gối) -->
+  <path d="M6 18 L18 18" stroke="#22D3EE" stroke-width="3.5" stroke-linecap="round" />
+</svg>

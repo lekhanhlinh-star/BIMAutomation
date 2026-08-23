@@ -1,14 +1,17 @@
-# Tài Liệu Tích Hợp RevitAI Add-In (C# / .NET) với Google OAuth & License Server
+# Tài Liệu Tích Hợp RevitAPP Add-In (C# / .NET) với Google OAuth, License Server & MCP
 
-`
+```text
 BASE_URL=https://bimautomation.myminiserver.info
-`
+```
 
-Tài liệu này hướng dẫn lập trình viên phát triển Revit Add-in (.NET Framework 4.8 / .NET 8) tích hợp với hệ thống xác thực **Google OAuth 2.0 PKCE** và cơ chế cấp phép bản quyền **Server-Authoritative** kèm **Chống gian lận Dùng thử 14 ngày (Anti-Trial-Abuse)**.
+Tài liệu này hướng dẫn lập trình viên phát triển Revit Add-in (.NET Framework 4.8 / .NET 8 cho Autodesk Revit 2022–2027) tích hợp với hệ thống xác thực **Google OAuth 2.0 PKCE**, cơ chế cấp phép bản quyền **Server-Authoritative** kèm **Chống gian lận Dùng thử 14 ngày (Anti-Trial-Abuse)**, và liên kết giao thức **RevitAPP Model Context Protocol (MCP)**.
+
+> **Tài liệu tham khảo chuyên sâu:**  
+> Để tìm hiểu chi tiết về giao thức MCP Server, hướng dẫn cấu hình Claude Desktop / Cursor và danh bạ 57 công cụ tự động hóa, vui lòng xem [Tài liệu kỹ thuật RevitAPP MCP Server (docs/revit_mcp.md)](revit_mcp.md).
 
 ---
 
-## 1. Luồng Tương Tác Giữa RevitAI Add-In và Backend
+## 1. Luồng Tương Tác Giữa RevitAPP Add-In và Backend
 
 ```
 +---------------------------------------------------------------------------------+
@@ -25,7 +28,7 @@ Tài liệu này hướng dẫn lập trình viên phát triển Revit Add-in (.
 |                                                                                 |
 | 4. Người dùng bấm "Đăng nhập với Google"                                        |
 | 5. Nếu tài khoản mới: Hiện Form đăng ký cá nhân tinh gọn ngay trên trình duyệt  |
-| 6. Bấm "Hoàn tất & Kích hoạt RevitAI" -> Server tự động 302 Redirect về:       |
+| 6. Bấm "Hoàn tất & Kích hoạt RevitAPP" -> Server tự động 302 Redirect về:      |
 |    http://127.0.0.1:{port}/callback?code=...&state=...                          |
 +----------------------------------------+----------------------------------------+
                                          |
@@ -46,7 +49,7 @@ Tài liệu này hướng dẫn lập trình viên phát triển Revit Add-in (.
 
 ## 2. Mã Nguồn C# Thu Thập Hardware Fingerprint (Anti-Abuse)
 
-Thu thập 4 tín hiệu phần cứng bất biến để tạo mã băm SHA-256:
+Thu thập 4 tín hiệu phần cứng bất biến để tạo mã băm SHA-256 (`smbiosUuid | diskSerial | cpuId | machineGuid`):
 
 ```csharp
 using System;
@@ -110,7 +113,7 @@ public static class HardwareFingerprint
 
 ---
 
-## 3. Trọn Bộ Mã Nguồn C# Đăng Nhập & Kiểm Tra Bản Quyền RevitAI
+## 3. Trọn Bộ Mã Nguồn C# Đăng Nhập & Kiểm Tra Bản Quyền RevitAPP
 
 ```csharp
 using System;
@@ -186,7 +189,7 @@ public class RevitAuthClient
             }
 
             // Gửi trang thành công đẹp mắt về trình duyệt
-            byte[] successBytes = Encoding.UTF8.GetBytes("<html><body style='font-family:sans-serif;text-align:center;padding:50px;background:#090d16;color:#38bdf8;'><h2>Đăng nhập thành công!</h2><p style='color:#94a3b8;'>Đã xác thực bản quyền với RevitAI. Bạn có thể đóng tab này và quay lại Autodesk Revit.</p><script>setTimeout(() => window.close(), 2500);</script></body></html>");
+            byte[] successBytes = Encoding.UTF8.GetBytes("<html><body style='font-family:sans-serif;text-align:center;padding:50px;background:#090d16;color:#38bdf8;'><h2>Đăng nhập thành công!</h2><p style='color:#94a3b8;'>Đã xác thực bản quyền với RevitAPP. Bạn có thể đóng tab này và quay lại Autodesk Revit.</p><script>setTimeout(() => window.close(), 2500);</script></body></html>");
             resp.ContentType = "text/html; charset=utf-8";
             resp.OutputStream.Write(successBytes, 0, successBytes.Length);
             resp.Close();
@@ -331,22 +334,37 @@ public class EntitlementResult
 
 ---
 
-## 4. Danh Sách 13 Feature Codes Trả Về Từ Server
+## 4. Danh Sách 13 Feature Codes & Ma Trận Phân Quyền
 
-Khi gọi `CheckLicenseAndTrialAsync()`, danh sách các tính năng được phép dùng sẽ được trả về trong mảng `Features`:
+Khi gọi `CheckLicenseAndTrialAsync()`, danh sách các tính năng được phép sử dụng sẽ được trả về trong mảng `Features`:
 
-| Feature Code | Tên tính năng | Quyền hạn trong Dùng thử 14 ngày |
-|---|---|---|
-| `utility-tools` | Bộ tiện ích mô hình hóa Revit | Khả dụng (Full) |
-| `model-from-cad` | Dựng mô hình Revit tự động từ file CAD | Khả dụng (Full) |
-| `dwg-export` | Xuất bản vẽ và hồ sơ CAD tự động | Khả dụng (Full) |
-| `beam-rebar` | Bố trí cốt thép dầm tự động | Khả dụng (Full) |
-| `column-rebar` | Bố trí cốt thép cột tự động | Khả dụng (Full) |
-| `footing-rebar` | Bố trí cốt thép móng tự động | Khả dụng (Full) |
-| `wall-rebar` | Bố trí cốt thép vách tự động | Khả dụng (Full) |
-| `beam-drawing` | Tạo bản vẽ chi tiết thép dầm | Khả dụng (Full) |
-| `footing-drawing` | Tạo bản vẽ chi tiết móng | Khả dụng (Full) |
-| `point-cloud` | Xử lý đám mây điểm (Scan to BIM) | Khả dụng (Full) |
-| `chat-ai` | Trợ lý AI trao đổi trực tiếp trong Revit | Khả dụng (Full) |
-| `mcp-read` | Đọc thông số và dữ liệu mô hình qua giao thức MCP | Khả dụng (Full) |
-| `mcp-write` | Tự động tạo và sửa đổi phần tử mô hình qua MCP | Khả dụng (Full) |
+| Feature Code | Tên Tính Năng | Quyền Hạn Dùng Thử 14 Ngày | Gói Cốt Thép (Manual) | Gói Cốt Thép + AI | Gói Full Suite |
+|---|---|:---:|:---:|:---:|:---:|
+| `column-rebar` | Bố trí cốt thép cột tự động | Khả dụng (Full) | Khả dụng | Khả dụng | Khả dụng |
+| `beam-rebar` | Bố trí cốt thép dầm tự động | Khả dụng (Full) | Khả dụng | Khả dụng | Khả dụng |
+| `footing-rebar` | Bố trí cốt thép móng tự động | Khả dụng (Full) | Khả dụng | Khả dụng | Khả dụng |
+| `wall-rebar` | Bố trí cốt thép vách tự động | Khả dụng (Full) | Khả dụng | Khả dụng | Khả dụng |
+| `beam-drawing` | Tạo bản vẽ chi tiết thép dầm | Khả dụng (Full) | Khả dụng | Khả dụng | Khả dụng |
+| `footing-drawing` | Tạo bản vẽ chi tiết móng | Khả dụng (Full) | Khả dụng | Khả dụng | Khả dụng |
+| `chat-ai` | Trợ lý AI trao đổi trực tiếp trong Revit | Khả dụng (Full) | ❌ | Khả dụng | Khả dụng |
+| `utility-tools` | Bộ tiện ích mô hình hóa & tham số | Khả dụng (Full) | ❌ | Khả dụng | Khả dụng |
+| `mcp-read` | Đọc thông số mô hình qua MCP | Khả dụng (Full) | ❌ | Khả dụng | Khả dụng |
+| `mcp-write` | Thay đổi/tạo mới cấu kiện qua MCP | Khả dụng (Full) | ❌ | Khả dụng | Khả dụng |
+| `model-from-cad` | Dựng mô hình từ CAD *(Y/c AutoCAD Full)* | Khả dụng (Full) | ❌ | ❌ | Khả dụng |
+| `dwg-export` | Xuất bản vẽ CAD tự động *(Y/c AutoCAD Full)* | Khả dụng (Full) | ❌ | ❌ | Khả dụng |
+| `point-cloud` | Xử lý đám mây điểm Scan to BIM | Khả dụng (Full) | ❌ | ❌ | Khả dụng |
+
+---
+
+## 5. Bộ Cài Đặt Độc Lập `RevitAPP.Installer.exe` & Cấu Hình Môi Trường
+
+1. **Bộ cài đặt thông minh:** 1 file cài duy nhất `RevitAPP.Installer.exe` tự động quét và nhận diện các phiên bản **Autodesk Revit 2022, 2023, 2024, 2025, 2026 và 2027** đã cài đặt trên máy tính.
+2. **Ghi tệp Addin Manifest:** Tự động tạo tệp `RevitAPP.addin` trong đường dẫn người dùng:
+   ```text
+   %AppData%\Autodesk\Revit\Addins\<năm>\RevitAPP.addin
+   ```
+3. **Cài đặt thư viện MCP:** Khởi tạo thư mục làm việc và sinh Bearer Token 256-bit an toàn tại:
+   ```text
+   %LocalAppData%\RevitAPP\mcp-access-token.txt
+   ```
+4. **Yêu cầu hệ thống CAD:** Các tính năng `model-from-cad` và `dwg-export` yêu cầu máy trạm có cài đặt **AutoCAD bản Full phiên bản từ 2016 trở lên** để thực thi tự động hóa thông qua COM API.

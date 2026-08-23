@@ -27,3 +27,4 @@ __pycache__/
 
 # Misc project tooling
 .gstack/
+.codex-audit/

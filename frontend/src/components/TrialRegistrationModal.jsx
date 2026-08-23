@@ -69,7 +69,7 @@ export default function TrialRegistrationModal({ isOpen, onClose, onSuccess }) {
             <BrandLogo size="md" />
           </div>
           <h2 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
-            Đăng ký dùng thử RevitAPP
+            Đăng ký dùng thử BIMAutomation
           </h2>
           <p className="mt-1 text-sm text-[var(--brand)] font-semibold">
             Trải nghiệm miễn phí 14 ngày đầy đủ tính năng tự động hóa BIM

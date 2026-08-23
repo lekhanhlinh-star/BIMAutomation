@@ -13,7 +13,7 @@ async def seed_initial_data():
             prod_res = await db.execute(select(Product))
             product = prod_res.scalar_one_or_none()
             if not product:
-                logger.info("Seeding initial Product and Plans...")
+                logger.info("Seeding initial Product...")
                 product = Product(
                     name="BIMAutomation Revit Add-in",
                     code="revitapp",
@@ -24,28 +24,26 @@ async def seed_initial_data():
                 db.add(product)
                 await db.flush()
 
-                p1 = Plan(
-                    product_id=product.id,
-                    name="Gói Tháng (Monthly)",
-                    duration_months=1,
-                    price=290000,
-                    is_active=True
-                )
-                p2 = Plan(
-                    product_id=product.id,
-                    name="Gói Năm (Pro Annual)",
-                    duration_months=12,
-                    price=2490000,
-                    is_active=True
-                )
-                p3 = Plan(
-                    product_id=product.id,
-                    name="Gói Vĩnh Viễn (Enterprise)",
-                    duration_months=120,
-                    price=6900000,
-                    is_active=True
-                )
-                db.add_all([p1, p2, p3])
+            plans_res = await db.execute(select(Plan).where(Plan.product_id == product.id))
+            plans_by_duration = {plan.duration_months: plan for plan in plans_res.scalars().all()}
+            personal_plans = [
+                (1, "Gói Cá nhân Tháng (Monthly)", 250000),
+                (12, "Gói Cá nhân Năm (Annual)", 2500000),
+            ]
+            for duration_months, name, price in personal_plans:
+                plan = plans_by_duration.get(duration_months)
+                if plan:
+                    plan.name = name
+                    plan.price = price
+                    plan.is_active = True
+                else:
+                    db.add(Plan(
+                        product_id=product.id,
+                        name=name,
+                        duration_months=duration_months,
+                        price=price,
+                        is_active=True,
+                    ))
 
             rel_res = await db.execute(select(Release))
             release = rel_res.scalar_one_or_none()

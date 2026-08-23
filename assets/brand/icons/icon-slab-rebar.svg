@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Slab Concrete Section -->
+  <rect x="4" y="10" width="40" height="28" rx="2" fill="#1E293B" stroke="#64748B" stroke-width="1.5" stroke-dasharray="3 2" />
+  
+  <!-- Top Layer Grid (Lớp thép trên) -->
+  <line x1="8" y1="16" x2="40" y2="16" stroke="#2563EB" stroke-width="2" stroke-linecap="round" />
+  <circle cx="14" cy="16" r="1.5" fill="#60A5FA" />
+  <circle cx="24" cy="16" r="1.5" fill="#60A5FA" />
+  <circle cx="34" cy="16" r="1.5" fill="#60A5FA" />
+
+  <!-- Bottom Layer Grid (Lớp thép dưới) -->
+  <line x1="8" y1="32" x2="40" y2="32" stroke="#06B6D4" stroke-width="2.5" stroke-linecap="round" />
+  <circle cx="10" cy="32" r="1.8" fill="#22D3EE" />
+  <circle cx="18" cy="32" r="1.8" fill="#22D3EE" />
+  <circle cx="26" cy="32" r="1.8" fill="#22D3EE" />
+  <circle cx="34" cy="32" r="1.8" fill="#22D3EE" />
+
+  <!-- Slab Chair Bar (Con kê thép / Thép mũ) -->
+  <path d="M18 32 L20 16 L28 16 L30 32" stroke="#F59E0B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

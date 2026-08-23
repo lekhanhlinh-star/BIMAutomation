@@ -74,7 +74,7 @@ async def register_trial_onboarding(
         success=True,
         is_trial_registered=True,
         trial_registered_at=current_user.trial_registered_at,
-        message="Đăng ký thông tin dùng thử thành công! Bạn có thể bắt đầu sử dụng RevitAPP.",
+        message="Đăng ký thông tin dùng thử thành công! Bạn có thể bắt đầu sử dụng BIMAutomation.",
     )
 
 

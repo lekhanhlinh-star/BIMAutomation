@@ -1,60 +1,45 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
-import {
-  Award,
-  Building2,
-  Check,
-  CheckCircle2,
-  ChevronDown,
-  Clock,
-  Copy,
-  CreditCard,
-  Headphones,
-  HelpCircle,
-  Laptop,
-  Loader2,
-  ShieldCheck,
-  Sparkles,
-  Star,
-  Users,
-  Zap
-} from 'lucide-react';
+import { ArrowRight, ChevronDown, Copy, CreditCard, Loader2, ShieldCheck } from 'lucide-react';
 import { customerApi, publicApi } from '../../api/services';
 import { useAuthStore } from '../../store/useAuthStore';
 import { savePendingIntent } from '../../utils/pendingIntent';
 import AccessibleDialog from '../../components/AccessibleDialog';
 
+const basePlans = [
+  {
+    id: 'p-trial', durationMonths: 0, name: 'Dùng thử 14 ngày', eyebrow: 'Bắt đầu không rủi ro', price: '0đ', period: '/ 14 ngày',
+    description: 'Dùng trọn bộ BIMAutomation trên công việc thật trước khi quyết định.',
+    features: ['Toàn bộ plugin và workflow AI', 'Không cần thẻ thanh toán', 'Dùng trên 1 máy cá nhân', 'Hỗ trợ cài đặt ban đầu'], cta: 'Bắt đầu dùng thử',
+  },
+  {
+    id: 'p-month', durationMonths: 1, name: 'Gói cá nhân tháng', eyebrow: 'Linh hoạt theo dự án', price: '250.000đ', period: '/ tháng',
+    description: 'Phù hợp khi bạn muốn bắt đầu gọn, thanh toán theo từng tháng.',
+    features: ['Toàn bộ plugin BIMAutomation', 'Kết nối Codex, Claude và Cursor', 'Cập nhật tính năng trong thời hạn', 'Đổi máy làm việc linh hoạt'], cta: 'Chọn gói tháng',
+  },
+  {
+    id: 'p-year', durationMonths: 12, name: 'Gói cá nhân năm', eyebrow: 'Tốt nhất cho người dùng thường xuyên', price: '2.500.000đ', period: '/ năm',
+    equivalent: 'Tương đương 208.000đ/tháng', saving: 'Tiết kiệm 500.000đ',
+    description: 'Một lần thanh toán cho cả năm, đủ thời gian để xây workflow làm việc ổn định.',
+    features: ['Mọi quyền lợi của gói tháng', 'Tiết kiệm tương đương 2 tháng', 'Ưu tiên hỗ trợ qua Zalo', 'Nhận các bản cập nhật mới'], cta: 'Chọn gói năm', isPopular: true,
+  },
+];
+
 const pricingFaqs = [
-  {
-    q: 'Sau khi thanh toán qua VietQR thì mất bao lâu để kích hoạt License?',
-    a: 'Hệ thống tự động quét giao dịch SePay 24/7. Ngay khi tiền vào tài khoản (khoảng 5-10 giây), hệ thống tự động kích hoạt License Key trong trang cá nhân của bạn và gửi email xác nhận.'
-  },
-  {
-    q: 'BIMAutomation có xuất hóa đơn giá trị gia tăng (VAT) điện tử hợp lệ không?',
-    a: 'Có. Chúng tôi hỗ trợ xuất hóa đơn điện tử GTGT đầy đủ và hợp lệ cho tất cả các gói bản quyền theo quy định của Bộ Tài chính.'
-  },
-  {
-    q: 'Tôi có thể chuyển đổi sang máy tính khác sau khi đã kích hoạt không?',
-    a: 'Hoàn toàn được. Trong trang Quản lý License (/account/licenses), bạn có thể tự do bấm "Hủy liên kết thiết bị" để giải phóng License và đăng nhập trên máy tính hoặc laptop mới bất kỳ lúc nào.'
-  },
-  {
-    q: 'Doanh nghiệp mua cho phòng BIM từ 5 đến 50 máy có chính sách gì đặc biệt?',
-    a: 'Chúng tôi có chính sách chiết khấu bậc thang hấp dẫn từ 15% đến 35% cho đơn vị mua số lượng lớn, kèm tài khoản Quản trị Admin phân quyền và chuyên viên hỗ trợ đào tạo 1-1.'
-  },
-  {
-    q: 'Bản quyền có hỗ trợ tất cả các phiên bản Autodesk Revit từ 2022 đến 2027 không?',
-    a: 'Có. Một License Key duy nhất có thể sử dụng đồng thời trên bất kỳ phiên bản Revit nào từ Revit 2022 đến Revit 2027 đã cài đặt trên máy tính của bạn.'
-  }
+  { q: '14 ngày dùng thử có bị giới hạn tính năng không?', a: 'Không. Bạn có thể trải nghiệm trọn bộ plugin và workflow AI của BIMAutomation trên một máy trong 14 ngày, không cần nhập thông tin thẻ.' },
+  { q: 'Gói tháng và gói năm khác nhau ở điểm nào?', a: 'Hai gói có cùng bộ tính năng. Gói tháng linh hoạt hơn; gói năm tiết kiệm 500.000đ và phù hợp nếu bạn dùng BIMAutomation thường xuyên.' },
+  { q: 'Tôi có thể đổi sang máy tính khác không?', a: 'Có. Bạn có thể hủy liên kết thiết bị trong trang quản lý License rồi đăng nhập lại trên máy mới.' },
+  { q: 'Sau khi thanh toán bao lâu thì được sử dụng?', a: 'License được kích hoạt tự động sau khi hệ thống xác nhận giao dịch VietQR, thường chỉ mất vài giây.' },
+  { q: 'Tôi mua cá nhân nhưng cần hóa đơn VAT thì sao?', a: 'BIMAutomation hỗ trợ xuất hóa đơn điện tử hợp lệ. Bạn chỉ cần cung cấp thông tin xuất hóa đơn khi thanh toán.' },
 ];
 
 export default function PricingPage() {
-  const { data: plans = [], isLoading } = useQuery({ queryKey: ['plans'], queryFn: publicApi.getPlans });
-  const authenticated = useAuthStore((s) => s.isAuthenticated);
+  const { data: apiPlans = [], isLoading } = useQuery({ queryKey: ['plans'], queryFn: publicApi.getPlans });
+  const authenticated = useAuthStore((state) => state.isAuthenticated);
   const navigate = useNavigate();
   const outletContext = useOutletContext();
   const onOpenConsultation = outletContext?.onOpenConsultation || (() => {});
-
   const [params, setParams] = useSearchParams();
   const [selected, setSelected] = useState(null);
   const [authPrompt, setAuthPrompt] = useState(false);
@@ -66,40 +51,48 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState(0);
   const [copiedField, setCopiedField] = useState('');
 
+  const plans = useMemo(() => basePlans.map((plan) => {
+    if (plan.durationMonths === 0) return plan;
+    const apiPlan = apiPlans.find((candidate) => candidate.durationMonths === plan.durationMonths)
+      || apiPlans.find((candidate) => candidate.period === plan.period);
+    return { ...plan, checkoutId: apiPlan?.id || plan.id };
+  }), [apiPlans]);
+
   const choose = useCallback((plan) => {
     setSelected(plan);
     setError('');
-    if (!authenticated) {
-      setAuthPrompt(true);
-    } else {
-      setCheckout(true);
+    if (plan.durationMonths === 0) {
+      if (!authenticated) {
+        savePendingIntent({ type: 'download', returnTo: '/download' });
+        navigate('/login');
+      } else navigate('/download');
+      return;
     }
-  }, [authenticated]);
+    if (!authenticated) setAuthPrompt(true);
+    else setCheckout(true);
+  }, [authenticated, navigate]);
 
   useEffect(() => {
     const planId = params.get('plan');
-    if (authenticated && params.get('checkout') === '1' && plans.length && planId) {
-      const plan = plans.find((p) => String(p.id) === planId);
+    if (authenticated && params.get('checkout') === '1' && planId) {
+      const plan = plans.find((item) => String(item.checkoutId || item.id) === planId);
       if (plan) {
         choose(plan);
         setParams({}, { replace: true });
       }
     }
-  }, [authenticated, plans, params, choose, setParams]);
+  }, [authenticated, params, plans, choose, setParams]);
 
   useEffect(() => {
-    if (!order?.id || order.status === 'PAID') return;
-    const id = setInterval(async () => {
-      try {
-        const next = await customerApi.getOrder(order.id);
-        setOrder(next);
-      } catch {}
+    if (!order?.id || order.status === 'PAID') return undefined;
+    const intervalId = setInterval(async () => {
+      try { setOrder(await customerApi.getOrder(order.id)); } catch {}
     }, 3000);
-    return () => clearInterval(id);
+    return () => clearInterval(intervalId);
   }, [order?.id, order?.status]);
 
   const auth = (path) => {
-    savePendingIntent({ type: 'checkout', planId: selected.id, returnTo: '/pricing' });
+    savePendingIntent({ type: 'checkout', planId: selected.checkoutId || selected.id, returnTo: '/pricing' });
     navigate(path);
   };
 
@@ -107,314 +100,120 @@ export default function PricingPage() {
     setBusy(true);
     setError('');
     try {
-      const created = (await customerApi.createOrder(selected.id)).data;
+      const created = (await customerApi.createOrder(selected.checkoutId || selected.id)).data;
       setOrder(created);
       setQr(await customerApi.getOrderQr(created.id));
-    } catch (e) {
-      setError(e.response?.data?.detail || 'Không thể tạo đơn hàng. Vui lòng thử lại.');
-    } finally {
-      setBusy(false);
-    }
+    } catch (requestError) {
+      setError(requestError.response?.data?.detail || 'Không thể tạo đơn hàng. Vui lòng thử lại.');
+    } finally { setBusy(false); }
   };
 
   const close = () => {
-    setAuthPrompt(false);
-    setCheckout(false);
-    setOrder(null);
-    setQr(null);
-    setError('');
-    setCopiedField('');
+    setAuthPrompt(false); setCheckout(false); setOrder(null); setQr(null); setError(''); setCopiedField('');
   };
 
-  const copyText = (text, field) => {
-    navigator.clipboard.writeText(text);
+  const copyText = (value, field) => {
+    navigator.clipboard.writeText(value);
     setCopiedField(field);
     setTimeout(() => setCopiedField(''), 2000);
   };
 
   return (
-    <div className="relative overflow-hidden pb-28">
-      {/* Subtle Ambient Radial Glow for Glassmorphism Light Depth */}
-      <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[650px] h-[350px] bg-[var(--brand)]/12 rounded-full blur-3xl pointer-events-none -z-10" />
-
-      <div className="page-shell pt-14 lg:pt-20">
-        {/* Header */}
-        <header className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--surface-raised)] border border-[var(--line)] shadow-xs text-xs font-semibold text-[var(--text-secondary)] mb-6">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Báo giá minh bạch · Kích hoạt tức thì sau thanh toán VietQR</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[var(--text-primary)] tracking-tight text-balance">
-            Bảng giá Bản quyền BIMAutomation
+    <div className="pricing-page pb-24 sm:pb-32">
+      <section className="pricing-hero relative overflow-hidden border-b border-[var(--line)]">
+        <div className="home-grid-pattern absolute inset-0 pointer-events-none" aria-hidden="true" />
+        <div className="page-shell relative py-16 text-center sm:py-24">
+          <span className="home-kicker">Giá đơn giản cho kỹ sư Revit</span>
+          <h1 className="mx-auto mt-6 max-w-4xl text-[clamp(2.75rem,6vw,5.5rem)] font-extrabold leading-[0.98] tracking-[-0.065em] text-balance">
+            Một bộ công cụ. <span className="text-[var(--brand)]">Chọn thời gian phù hợp.</span>
           </h1>
-
-          <p className="mt-5 text-base sm:text-lg text-[var(--text-secondary)] leading-relaxed max-w-2xl mx-auto">
-            Đầu tư một lần, tối ưu hàng trăm giờ mô hình hóa và triển khai hồ sơ mỗi tháng. Tương thích toàn bộ Autodesk Revit 2022–2027.
+          <p className="mx-auto mt-7 max-w-2xl text-base leading-8 text-[var(--text-secondary)] sm:text-lg">
+            Không chia nhỏ tính năng, không bắt bạn chọn module. Mỗi gói cá nhân đều mở toàn bộ plugin BIMAutomation và workflow cùng AI.
           </p>
-        </header>
-
-        {/* Pricing Cards Grid */}
-        {isLoading ? (
-          <div className="py-24 flex justify-center items-center gap-3 text-[var(--text-secondary)]">
-            <Loader2 className="animate-spin text-[var(--brand)]" size={24} /> Đang tải dữ liệu bảng giá…
-          </div>
-        ) : (
-          <div className="mt-14 grid md:grid-cols-3 gap-6 lg:gap-8 items-stretch max-w-6xl mx-auto">
-            {plans.map((plan) => {
-              const isPopular = plan.isPopular;
-              return (
-                <article
-                  key={plan.id}
-                  className={`relative p-8 flex flex-col rounded-[var(--radius-panel)] transition-all duration-300 ${
-                    isPopular
-                      ? 'glass-panel !border-[var(--brand)]/60 shadow-xl ring-2 ring-[var(--brand)]/25 md:-translate-y-2'
-                      : 'glass-panel hover:border-[var(--brand)]/50 shadow-sm'
-                  }`}
-                >
-                  {isPopular && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                      <span className="bg-gradient-to-r from-[var(--brand)] to-cyan-400 text-white px-3.5 py-1 text-[11px] font-extrabold rounded-full flex items-center gap-1 shadow-md tracking-wider uppercase">
-                        <Star size={12} fill="currentColor" /> Được chọn nhiều nhất
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-extrabold text-[var(--text-primary)]">{plan.name}</h2>
-                    {isPopular && (
-                      <span className="text-xs font-mono font-bold text-[var(--brand)] bg-[var(--brand-soft)] border border-[var(--brand)]/30 px-2.5 py-0.5 rounded-full">
-                        Tiết kiệm 30%
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="mt-2 min-h-10 text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
-                    {plan.description}
-                  </p>
-                  
-                  <div className="mt-6 pt-6 border-t border-[var(--line)]">
-                    <div className="flex items-baseline gap-1.5">
-                      <strong className="text-3xl lg:text-4xl font-mono font-extrabold text-[var(--text-primary)]">
-                        {plan.price}
-                      </strong>
-                      <span className="text-xs sm:text-sm font-medium text-[var(--text-muted)]"> {plan.period}</span>
-                    </div>
-                    {isPopular && (
-                      <p className="text-xs text-[var(--brand)] font-semibold mt-1">
-                        ~207.000đ / tháng (tiết kiệm hơn 1.000.000đ)
-                      </p>
-                    )}
-                  </div>
-
-                  <ul className="mt-7 space-y-3 flex-1">
-                    {plan.features.map((featureItem) => (
-                      <li key={featureItem} className="flex items-start gap-2.5 text-xs sm:text-sm text-[var(--text-primary)] font-medium">
-                        <div className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
-                          <Check size={13} strokeWidth={2.5} />
-                        </div>
-                        <span>{featureItem}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button
-                    onClick={() => choose(plan)}
-                    className={
-                      isPopular
-                        ? 'primary-button mt-8 w-full justify-center !py-3.5 text-sm font-bold shadow-md'
-                        : 'secondary-button mt-8 w-full justify-center !py-3.5 text-sm font-bold'
-                    }
-                  >
-                    Chọn gói {plan.name}
-                  </button>
-                </article>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Glass Trust & Guarantee Strip */}
-        <div className="mt-14 max-w-4xl mx-auto glass-panel p-5 rounded-[var(--radius-panel)] flex flex-wrap items-center justify-around gap-6 text-xs text-[var(--text-secondary)] font-semibold shadow-xs">
-          <div className="flex items-center gap-2">
-            <ShieldCheck size={18} className="text-emerald-500" />
-            <span>Thanh toán quét mã VietQR bảo mật</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 size={18} className="text-emerald-500" />
-            <span>Cấp License tự động sau 10 giây</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Award size={18} className="text-amber-500" />
-            <span>Xuất hóa đơn GTGT điện tử hợp lệ</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Laptop size={18} className="text-blue-500" />
-            <span>Tương thích Revit 2022–2027</span>
+          <div className="mt-8 inline-flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-[var(--text-secondary)]">
+            <span className="pricing-assurance">Không cần thẻ khi dùng thử</span>
+            <span className="pricing-assurance">Gia hạn khi bạn cần</span>
+            <span className="pricing-assurance">Revit 2022–2027</span>
           </div>
         </div>
+      </section>
 
-        {/* Custom Enterprise Quote Callout (Glass Card) */}
-        <section className="mt-16 max-w-5xl mx-auto glass-panel p-8 lg:p-12 rounded-[var(--radius-panel)] shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-[var(--brand)] mb-2.5">
-              <Building2 size={16} /> Gói Doanh nghiệp & Studio lớn
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
-              Trang bị cho phòng BIM từ 5 đến 50+ máy tính?
-            </h3>
-            <p className="mt-2.5 text-sm text-[var(--text-secondary)] leading-relaxed">
-              Liên hệ với chúng tôi để nhận bảng báo giá chiết khấu riêng (15% - 35%), tùy biến bộ tiện ích theo chuẩn công ty và hỗ trợ đào tạo chuyển giao trực tiếp cho kỹ sư.
-            </p>
+      <div className="page-shell">
+        {isLoading ? (
+          <div className="flex items-center justify-center gap-3 py-24 text-sm text-[var(--text-secondary)]"><Loader2 className="animate-spin text-[var(--brand)]" size={22} /> Đang chuẩn bị bảng giá…</div>
+        ) : (
+          <section className="pricing-personal-grid" aria-label="Các gói BIMAutomation dành cho cá nhân">
+            {plans.map((plan) => (
+              <article key={plan.id} className={`pricing-personal-card ${plan.isPopular ? 'is-popular' : ''}`}>
+                {plan.isPopular && <div className="pricing-popular-label">Đáng chọn nhất</div>}
+                <div>
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--brand)]">{plan.eyebrow}</span>
+                  <h2 className="mt-3 text-xl font-extrabold tracking-[-0.03em]">{plan.name}</h2>
+                  <p className="mt-3 min-h-14 text-sm leading-6 text-[var(--text-secondary)]">{plan.description}</p>
+                </div>
+                <div className="mt-7 border-y border-[var(--line)] py-6">
+                  <div className="flex flex-wrap items-end gap-2"><strong className="font-mono text-3xl font-extrabold tracking-[-0.06em] sm:text-4xl">{plan.price}</strong><span className="pb-1 text-xs text-[var(--text-muted)]">{plan.period}</span></div>
+                  {plan.equivalent && <p className="mt-2 text-xs font-semibold text-[var(--text-secondary)]">{plan.equivalent}</p>}
+                  {plan.saving && <span className="mt-3 inline-flex bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{plan.saving}</span>}
+                </div>
+                <ul className="mt-7 flex-1 space-y-3">
+                  {plan.features.map((feature) => <li key={feature} className="pricing-feature-item">{feature}</li>)}
+                </ul>
+                <button onClick={() => choose(plan)} className={plan.isPopular ? 'primary-button mt-8 w-full justify-center' : 'secondary-button mt-8 w-full justify-center'}>{plan.cta} <ArrowRight size={16} /></button>
+              </article>
+            ))}
+          </section>
+        )}
+
+        <section className="pricing-solo-proof">
+          <div>
+            <span className="home-kicker">Được thiết kế cho một người làm việc hiệu quả hơn</span>
+            <h2 className="mt-5 max-w-2xl text-3xl font-extrabold leading-tight tracking-[-0.045em] sm:text-5xl text-balance">Không cần mua từng plugin. Không cần tự ghép từng công cụ.</h2>
           </div>
-          <button
-            onClick={onOpenConsultation}
-            className="primary-button shrink-0 text-sm sm:text-base font-bold !py-3.5 !px-7 shadow-md"
-          >
-            <Building2 size={17} /> Nhận báo giá Doanh nghiệp
-          </button>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[[ 'Một tài khoản cá nhân', 'Đăng nhập và quản lý license của bạn ở một nơi.'], ['Một bộ cài', 'Dùng cùng các phiên bản Revit 2022 đến 2027 trên máy.'], ['Có người hỗ trợ', 'Nhận trợ giúp khi cài đặt hoặc chuyển sang workflow mới.']].map(([title, description]) => (
+              <article key={title}><h3>{title}</h3><p>{description}</p></article>
+            ))}
+          </div>
         </section>
 
-        {/* Pricing FAQs (Glass Accordion) */}
-        <section className="mt-20 max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
-              Câu hỏi thường gặp về Bảng giá & Thanh toán
-            </h3>
+        <section className="pricing-faq-grid">
+          <div>
+            <span className="home-kicker">Cần biết trước khi bắt đầu</span>
+            <h2 className="mt-5 text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl">Câu hỏi về gói cá nhân</h2>
+            <p className="mt-4 max-w-md text-sm leading-7 text-[var(--text-secondary)]">Nếu công việc của bạn có yêu cầu riêng, hãy gửi một file mẫu để đội ngũ BIMAutomation tư vấn đúng workflow.</p>
+            <button onClick={onOpenConsultation} className="home-arrow-link mt-6">Trao đổi với chúng tôi <ArrowRight size={16} /></button>
           </div>
-
-          <div className="space-y-3.5">
-            {pricingFaqs.map((faq, idx) => {
-              const isOpen = openFaq === idx;
-              return (
-                <div
-                  key={faq.q}
-                  className="rounded-[var(--radius-panel)] border border-[var(--line)] bg-[var(--surface-raised)] overflow-hidden transition-all"
-                >
-                  <button
-                    onClick={() => setOpenFaq(isOpen ? -1 : idx)}
-                    className="w-full p-4 sm:p-5 text-left font-bold text-sm text-[var(--text-primary)] flex items-center justify-between gap-4 cursor-pointer"
-                  >
-                    <span>{faq.q}</span>
-                    <ChevronDown
-                      size={18}
-                      className={`shrink-0 text-[var(--text-muted)] transition-transform duration-200 ${
-                        isOpen ? 'rotate-180 text-[var(--brand)]' : ''
-                      }`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="px-4 sm:px-5 pb-5 pt-1 text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed border-t border-[var(--line)]">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              );
+          <div className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
+            {pricingFaqs.map((faq, index) => {
+              const isOpen = openFaq === index;
+              return <article key={faq.q}>
+                <button onClick={() => setOpenFaq(isOpen ? -1 : index)} className="flex w-full items-center justify-between gap-5 py-5 text-left text-sm font-bold"><span>{faq.q}</span><ChevronDown size={17} className={`shrink-0 transition-transform ${isOpen ? 'rotate-180 text-[var(--brand)]' : 'text-[var(--text-muted)]'}`} /></button>
+                {isOpen && <p className="pb-6 pr-8 text-sm leading-7 text-[var(--text-secondary)]">{faq.a}</p>}
+              </article>;
             })}
           </div>
         </section>
 
-        {/* Auth Prompt Dialog */}
-        <AccessibleDialog
-          open={authPrompt}
-          onClose={close}
-          title={`Tiếp tục với ${selected?.name || 'gói đã chọn'}`}
-          description="Đăng nhập hoặc tạo tài khoản để thanh toán. Gói đã chọn sẽ được giữ lại."
-        >
-          <div className="grid gap-3 pt-2">
-            <button onClick={() => auth('/login')} className="primary-button justify-center font-bold !py-3">
-              Đăng nhập bằng Google
-            </button>
-            <button onClick={() => auth('/register')} className="secondary-button justify-center font-semibold !py-3">
-              Tạo tài khoản mới
-            </button>
-          </div>
-        </AccessibleDialog>
-
-        {/* Checkout Dialog */}
-        <AccessibleDialog
-          open={checkout}
-          onClose={close}
-          title={order?.status === 'PAID' ? 'Thanh toán thành công' : 'Thanh toán đơn hàng'}
-          description={!order ? `${selected?.name} · ${selected?.price}` : undefined}
-        >
-          {order?.status === 'PAID' ? (
-            <div className="text-center py-4">
-              <ShieldCheck size={56} className="mx-auto text-emerald-500 animate-fade-in" />
-              <h3 className="mt-4 font-bold text-lg text-[var(--text-primary)]">Giao dịch thành công!</h3>
-              <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                Đơn hàng đã được xác nhận và License đã được kích hoạt trong tài khoản của bạn.
-              </p>
-              <button onClick={() => navigate('/account/licenses')} className="primary-button mt-6 w-full justify-center !py-3 font-bold">
-                Xem License của tôi
-              </button>
-            </div>
-          ) : !order ? (
-            <div className="pt-2">
-              <div className="border border-[var(--line)] bg-[var(--surface-subtle)] p-4 rounded-[var(--radius-panel)] flex justify-between items-center text-sm">
-                <span className="text-[var(--text-secondary)] font-medium">Tổng thanh toán</span>
-                <strong className="font-mono text-lg font-bold text-[var(--brand)]">{selected?.price}</strong>
-              </div>
-              {error && (
-                <p role="alert" className="mt-3 text-sm text-rose-500 font-medium">
-                  {error}
-                </p>
-              )}
-              <button onClick={create} disabled={busy} className="primary-button mt-5 w-full justify-center !py-3 text-sm font-bold">
-                {busy ? <Loader2 className="animate-spin" /> : <CreditCard size={18} />} Tạo mã thanh toán VietQR
-              </button>
-            </div>
-          ) : (
-            <div className="text-center pt-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold mb-3">
-                <Loader2 size={13} className="animate-spin" /> Đang chờ quét mã thanh toán VietQR
-              </div>
-
-              {qr && (
-                <>
-                  <div className="bg-white p-3 w-56 h-56 mx-auto mt-2 rounded-xl border border-[var(--line)] shadow-md">
-                    <img
-                      className="w-full h-full object-contain"
-                      src={qr.qr_code_url}
-                      alt={`Mã QR thanh toán đơn ${qr.order_code}`}
-                    />
-                  </div>
-
-                  <div className="mt-4 p-3.5 rounded-[var(--radius-panel)] bg-[var(--surface-subtle)] border border-[var(--line)] text-left space-y-2 text-xs sm:text-sm">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[var(--text-secondary)]">Số tiền:</span>
-                      <strong className="font-mono font-extrabold text-[var(--brand)] text-base">
-                        {Number(qr.amount).toLocaleString('vi-VN')} đ
-                      </strong>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-[var(--text-secondary)]">Nội dung CK:</span>
-                      <div className="flex items-center gap-1.5">
-                        <strong className="font-mono font-bold text-[var(--text-primary)]">{qr.payment_content}</strong>
-                        <button
-                          onClick={() => copyText(qr.payment_content, 'memo')}
-                          className="text-[var(--brand)] hover:opacity-80 p-1 cursor-pointer"
-                          title="Sao chép nội dung"
-                        >
-                          <Copy size={14} />
-                        </button>
-                      </div>
-                    </div>
-                    {copiedField === 'memo' && (
-                      <p className="text-[11px] text-emerald-500 font-semibold text-right">Đã sao chép nội dung!</p>
-                    )}
-                  </div>
-                </>
-              )}
-
-              <p className="mt-5 text-xs text-[var(--text-muted)] font-medium">
-                Hệ thống tự động kích hoạt License ngay khi nhận được tiền (5–10 giây).
-              </p>
-            </div>
-          )}
-        </AccessibleDialog>
+        <section className="pricing-team-note">
+          <div><strong>Mua cho đội BIM hoặc doanh nghiệp?</strong><span>Chúng tôi vẫn có chính sách nhiều máy, đào tạo và hỗ trợ riêng.</span></div>
+          <button onClick={onOpenConsultation}>Nhận báo giá đội nhóm <ArrowRight size={15} /></button>
+        </section>
       </div>
+
+      <AccessibleDialog open={authPrompt} onClose={close} title={`Tiếp tục với ${selected?.name || 'gói đã chọn'}`} description="Đăng nhập hoặc tạo tài khoản để thanh toán. Gói đã chọn sẽ được giữ lại.">
+        <div className="grid gap-3 pt-2"><button onClick={() => auth('/login')} className="primary-button justify-center font-bold !py-3">Đăng nhập bằng Google</button><button onClick={() => auth('/register')} className="secondary-button justify-center font-semibold !py-3">Tạo tài khoản mới</button></div>
+      </AccessibleDialog>
+
+      <AccessibleDialog open={checkout} onClose={close} title={order?.status === 'PAID' ? 'Thanh toán thành công' : 'Thanh toán đơn hàng'} description={!order ? `${selected?.name} · ${selected?.price}` : undefined}>
+        {order?.status === 'PAID' ? (
+          <div className="py-4 text-center"><ShieldCheck size={56} className="mx-auto text-emerald-500" /><h3 className="mt-4 text-lg font-bold">Giao dịch thành công!</h3><p className="mt-2 text-sm text-[var(--text-secondary)]">License đã được kích hoạt trong tài khoản của bạn.</p><button onClick={() => navigate('/account/licenses')} className="primary-button mt-6 w-full justify-center">Xem License của tôi</button></div>
+        ) : !order ? (
+          <div className="pt-2"><div className="flex items-center justify-between border border-[var(--line)] bg-[var(--surface-subtle)] p-4 text-sm"><span className="text-[var(--text-secondary)]">Tổng thanh toán</span><strong className="font-mono text-lg text-[var(--brand)]">{selected?.price}</strong></div>{error && <p role="alert" className="mt-3 text-sm font-medium text-rose-500">{error}</p>}<button onClick={create} disabled={busy} className="primary-button mt-5 w-full justify-center">{busy ? <Loader2 className="animate-spin" /> : <CreditCard size={18} />} Tạo mã thanh toán VietQR</button></div>
+        ) : (
+          <div className="pt-2 text-center"><div className="mb-3 inline-flex items-center gap-2 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-600"><Loader2 size={13} className="animate-spin" /> Đang chờ thanh toán VietQR</div>{qr && <><div className="mx-auto mt-2 h-56 w-56 border border-[var(--line)] bg-white p-3"><img className="h-full w-full object-contain" src={qr.qr_code_url} alt={`Mã QR thanh toán đơn ${qr.order_code}`} /></div><div className="mt-4 space-y-2 border border-[var(--line)] bg-[var(--surface-subtle)] p-3.5 text-left text-sm"><div className="flex items-center justify-between"><span className="text-[var(--text-secondary)]">Số tiền:</span><strong className="font-mono text-[var(--brand)]">{Number(qr.amount).toLocaleString('vi-VN')}đ</strong></div><div className="flex items-center justify-between"><span className="text-[var(--text-secondary)]">Nội dung CK:</span><div className="flex items-center gap-1"><strong className="font-mono">{qr.payment_content}</strong><button onClick={() => copyText(qr.payment_content, 'memo')} title="Sao chép nội dung"><Copy size={14} /></button></div></div>{copiedField === 'memo' && <p className="text-right text-[11px] font-semibold text-emerald-500">Đã sao chép!</p>}</div></>}<p className="mt-5 text-xs text-[var(--text-muted)]">License được kích hoạt tự động ngay khi giao dịch hoàn tất.</p></div>
+        )}
+      </AccessibleDialog>
     </div>
   );
 }

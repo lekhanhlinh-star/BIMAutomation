@@ -1,66 +1,218 @@
 import React from 'react';
-import { Check, HelpCircle, Minus } from 'lucide-react';
+import { Check, Minus, Sparkles, Star } from 'lucide-react';
 
-const categories = [
+const featureCategories = [
   {
-    name: '1. Khai triển Kiến trúc & Bản vẽ',
+    name: '1. Phân hệ Bố trí Cốt thép 3D (Rebar Modeling)',
     items: [
-      { name: 'Ghi kích thước tự động (Auto Dimension cấu kiện)', starter: true, pro: true, enterprise: true, desc: 'Tự động tạo chuỗi dim cho tường, dầm, cột, cửa theo tiêu chuẩn' },
-      { name: 'Đổi tên hàng loạt (Batch Rename Sheet, View, Family)', starter: true, pro: true, enterprise: true, desc: 'Đổi tên tiền tố, hậu tố, số thứ tự với bộ lọc nâng cao' },
-      { name: 'Tự động gắn Tag & Khóa vị trí (Auto Tagging)', starter: 'Cơ bản', pro: 'Nâng cao', enterprise: 'Tùy biến quy tắc', desc: 'Gắn thẻ tên phòng, cấu kiện, cửa theo template' },
-      { name: 'Tạo View & Đặt View lên Sheet tự động', starter: false, pro: true, enterprise: true, desc: 'Tạo hàng trăm Sheet và căn chỉnh Viewport chuẩn tỷ lệ' },
-    ]
+      {
+        code: 'column-rebar',
+        name: 'Bố trí cốt thép Cột (Column Rebar)',
+        desc: 'Tự động rải thép chủ, đai bao, đai C và neo nối so le qua sàn theo TCVN 5574:2018.',
+        trial: true,
+        rebar: true,
+        rebarAi: true,
+        full: true,
+        enterprise: true,
+      },
+      {
+        code: 'beam-rebar',
+        name: 'Bố trí cốt thép Dầm (Beam Rebar)',
+        desc: 'Rải thép chủ chạy suốt, thép tăng cường gối/nhịp và đai dày 2 đầu dầm theo nhịp liên tục.',
+        trial: true,
+        rebar: true,
+        rebarAi: true,
+        full: true,
+        enterprise: true,
+      },
+      {
+        code: 'footing-rebar',
+        name: 'Bố trí cốt thép Móng (Footing Rebar)',
+        desc: 'Bố trí lưới thép đáy, lưới trên, thép chân chó và đai giằng cho đài móng cọc, móng đơn, móng băng.',
+        trial: true,
+        rebar: true,
+        rebarAi: true,
+        full: true,
+        enterprise: true,
+      },
+      {
+        code: 'wall-rebar',
+        name: 'Bố trí cốt thép Vách & Tường (Wall Rebar)',
+        desc: 'Rải lưới thép 2 lớp, thép đai bo viền, thép tăng cường góc và thép chờ liên kết sàn/móng.',
+        trial: true,
+        rebar: true,
+        rebarAi: true,
+        full: true,
+        enterprise: true,
+      },
+    ],
   },
   {
-    name: '2. Kết cấu & Cốt thép',
+    name: '2. Phân hệ Tự động Triển khai Bản vẽ Lên Sheet (Drawing Automation)',
     items: [
-      { name: 'Khống chế & Đánh số cốt thép (Rebar Numbering)', starter: false, pro: true, enterprise: true, desc: 'Đánh số thanh thép theo phân khu và đường kính' },
-      { name: 'Tự động trích xuất bảng thống kê cốt thép', starter: false, pro: true, enterprise: true, desc: 'Bảng thống kê hình dáng thanh thép và tổng trọng lượng' },
-      { name: 'Kiểm tra xung đột hình học kết cấu', starter: false, pro: true, enterprise: true, desc: 'Phát hiện nhanh giao cắt giữa cốt thép, ống luồn và cấu kiện' },
-    ]
+      {
+        code: 'beam-drawing',
+        name: 'Triển khai Bản vẽ Dầm liên tục (Beam Drawing)',
+        desc: 'Tự động cắt mặt cắt dọc/ngang trục dầm, tạo Sheet, đặt Viewport, gắn Tag và bảng thống kê.',
+        trial: true,
+        rebar: true,
+        rebarAi: true,
+        full: true,
+        enterprise: true,
+      },
+      {
+        code: 'footing-drawing',
+        name: 'Triển khai Bản vẽ Móng (Footing Drawing)',
+        desc: 'Tạo mặt bằng định vị móng, trích xuất chi tiết từng đài móng và bảng thống kê uốn thép lên Sheet.',
+        trial: true,
+        rebar: true,
+        rebarAi: true,
+        full: true,
+        enterprise: true,
+      },
+    ],
   },
   {
-    name: '3. Hệ thống Cơ điện MEP',
+    name: '3. Phân hệ AI Assistant & Hệ thống 57 MCP Tools (AI & MCP Protocol)',
     items: [
-      { name: 'Tự động kết nối Ống gió / Ống nước (Auto Routing)', starter: false, pro: true, enterprise: true, desc: 'Tự động tạo co, lơ, tê kết nối thiết bị cơ điện' },
-      { name: 'Quản lý cao độ & Độ dốc đường ống tự động', starter: false, pro: true, enterprise: true, desc: 'Điều chỉnh độ dốc chuẩn kỹ thuật cho hệ thống thoát nước' },
-      { name: 'Tính toán & Xuất tải nhiệt sơ bộ', starter: false, pro: false, enterprise: true, desc: 'Tích hợp công thức tính toán tải HVAC nhanh trong Revit' },
-    ]
+      {
+        code: 'chat-ai',
+        name: 'Trợ lý Chat AI Assistant trong Revit',
+        desc: 'Giao tiếp bằng tiếng Việt tự nhiên ngay trong giao diện Revit để ra lệnh dựng mô hình.',
+        trial: true,
+        rebar: false,
+        rebarAi: true,
+        full: true,
+        enterprise: true,
+      },
+      {
+        code: 'utility-tools',
+        name: 'Bộ tiện ích Mô hình & Xử lý Excel',
+        desc: 'Đọc dữ liệu bảng thép Excel, đồng bộ tham số 2 chiều và công cụ hỗ trợ mô hình hóa.',
+        trial: true,
+        rebar: false,
+        rebarAi: true,
+        full: true,
+        enterprise: true,
+      },
+      {
+        code: 'mcp-read',
+        name: 'Quyền đọc mô hình qua MCP Server (mcp-read)',
+        desc: 'Cho phép AI Client (Claude/Cursor) đọc cấu trúc, truy vấn cấu kiện và tham số qua cổng 8765.',
+        trial: true,
+        rebar: false,
+        rebarAi: true,
+        full: true,
+        enterprise: true,
+      },
+      {
+        code: 'mcp-write',
+        name: 'Quyền sinh thép & can thiệp an toàn qua MCP (mcp-write)',
+        desc: 'Cho phép AI Client trực tiếp tạo cốt thép 3D, cắt mặt cắt và tạo Sheet trong Transaction đơn luồng.',
+        trial: true,
+        rebar: false,
+        rebarAi: true,
+        full: true,
+        enterprise: true,
+      },
+    ],
   },
   {
-    name: '4. Quản lý Dữ liệu & Xuất bản',
+    name: '4. Phân hệ CAD & Dữ liệu Nâng cao (CAD Automation & Point Cloud)',
     items: [
-      { name: 'Đồng bộ tham số 2 chiều Excel (Parameter Sync)', starter: '100 tham số', pro: 'Không giới hạn', enterprise: 'Không giới hạn + API', desc: 'Xuất/Nhập dữ liệu Parameter Revit qua bảng tính Excel' },
-      { name: 'Xuất hàng loạt PDF, DWG, IFC chuẩn đặt tên', starter: 'Tối đa 10 file', pro: 'Không giới hạn', enterprise: 'Không giới hạn + Auto Batch', desc: 'Xuất theo đúng quy chuẩn mã hiệu dự án của chủ đầu tư' },
-      { name: 'Dọn rác & Tối ưu dung lượng Model (File Purge)', starter: true, pro: true, enterprise: true, desc: 'Xóa view thừa, line style rác và nén file mô hình an toàn' },
-    ]
+      {
+        code: 'model-from-cad',
+        name: 'Dựng mô hình Revit từ CAD (Model from CAD)',
+        desc: 'Tự động quét layer và dựng cột, dầm, tường từ file DWG (Yêu cầu AutoCAD Full 2016+).',
+        trial: true,
+        rebar: false,
+        rebarAi: false,
+        full: true,
+        enterprise: true,
+      },
+      {
+        code: 'dwg-export',
+        name: 'Xuất bản vẽ DWG chuẩn layer (DWG Export)',
+        desc: 'Xuất hàng loạt bản vẽ sang AutoCAD theo đúng quy chuẩn layer và màu sắc công ty.',
+        trial: true,
+        rebar: false,
+        rebarAi: false,
+        full: true,
+        enterprise: true,
+      },
+      {
+        code: 'point-cloud',
+        name: 'Xử lý đám mây điểm (Point Cloud Tools)',
+        desc: 'Công cụ hỗ trợ định vị và mô hình hóa từ dữ liệu quét 3D laser scan.',
+        trial: true,
+        rebar: false,
+        rebarAi: false,
+        full: true,
+        enterprise: true,
+      },
+    ],
   },
   {
-    name: '5. Quyền lợi Bản quyền & Hỗ trợ Kỹ thuật',
+    name: '5. Quyền lợi Bản quyền & Dịch vụ Hỗ trợ (License & Support)',
     items: [
-      { name: 'Số thiết bị kích hoạt đồng thời', starter: '1 thiết bị', pro: '1 thiết bị (Đổi linh hoạt)', enterprise: 'Cấp theo gói máy (Team)', desc: 'Chính sách quản lý thiết bị kích hoạt' },
-      { name: 'Hệ thống Quản trị License tập trung (Admin Portal)', starter: false, pro: false, enterprise: true, desc: 'Bảng điều khiển cho Trưởng phòng BIM cấp/thu hồi bản quyền kỹ sư' },
-      { name: 'Kênh Hỗ trợ Kỹ thuật', starter: 'Email (24h)', pro: 'Hotline + Zalo Ưu tiên', enterprise: 'Chuyên viên kỹ thuật 1-1 riêng', desc: 'Thời gian và kênh hỗ trợ xử lý sự cố' },
-      { name: 'Cập nhật phiên bản Revit mới (Revit 2022-2027)', starter: 'Trong thời hạn', pro: 'Miễn phí nâng cấp', enterprise: 'Miễn phí nâng cấp trọn đời', desc: 'Tương thích tức thì khi Autodesk phát hành bản mới' },
-      { name: 'Xuất hóa đơn GTGT (VAT) hợp lệ', starter: true, pro: true, enterprise: true, desc: 'Cung cấp hóa đơn điện tử hợp lệ cho doanh nghiệp thanh toán' },
-    ]
-  }
+      {
+        code: 'devices',
+        name: 'Số thiết bị kích hoạt đồng thời',
+        desc: 'Chính sách quản lý thiết bị kích hoạt bản quyền.',
+        trial: '1 thiết bị',
+        rebar: '1 thiết bị (Đổi máy linh hoạt)',
+        rebarAi: '1 thiết bị (Đổi máy linh hoạt)',
+        full: '1 thiết bị (Đổi máy linh hoạt)',
+        enterprise: 'Đa thiết bị cho Team (5–50+ máy)',
+      },
+      {
+        code: 'portal',
+        name: 'Cổng Quản trị License tập trung (Admin Portal)',
+        desc: 'Bảng điều khiển trực tuyến cấp phát và thu hồi license cho đội ngũ kỹ sư.',
+        trial: false,
+        rebar: false,
+        rebarAi: false,
+        full: false,
+        enterprise: true,
+      },
+      {
+        code: 'customization',
+        name: 'Tùy biến Preset & Quy chuẩn công ty',
+        desc: 'Tùy chỉnh thư viện thông số cốt thép, quy chuẩn khung tên và nét vẽ theo tiêu chuẩn doanh nghiệp.',
+        trial: false,
+        rebar: false,
+        rebarAi: false,
+        full: 'Hỗ trợ cơ bản',
+        enterprise: 'Tùy biến chuyên sâu 1-1',
+      },
+      {
+        code: 'support',
+        name: 'Kênh hỗ trợ kỹ thuật & Đào tạo',
+        desc: 'Thời gian phản hồi và phương thức hỗ trợ xử lý sự cố.',
+        trial: 'Cộng đồng',
+        rebar: 'Email / Zalo (24h)',
+        rebarAi: 'Hotline + Zalo Ưu tiên',
+        full: 'Hotline + UltraViewer 24/7',
+        enterprise: 'Chuyên viên riêng + Đào tạo 1-1',
+      },
+    ],
+  },
 ];
 
 function RenderCell({ value }) {
   if (value === true) {
     return (
       <div className="flex justify-center text-emerald-500">
-        <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 flex items-center justify-center">
-          <Check size={14} />
+        <div className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+          <Check size={13} strokeWidth={3} />
         </div>
       </div>
     );
   }
   if (value === false) {
     return (
-      <div className="flex justify-center text-[var(--text-muted)] opacity-50">
-        <Minus size={16} />
+      <div className="flex justify-center text-[var(--text-muted)] opacity-40">
+        <Minus size={15} />
       </div>
     );
   }
@@ -70,68 +222,91 @@ function RenderCell({ value }) {
     </span>
   );
 }
-
-export default function FeatureComparisonTable({ onSelectPlan }) {
+export default function FeatureComparisonTable() {
   return (
     <div className="mt-16 border border-[var(--line)] rounded-[var(--radius-panel)] bg-[var(--surface-raised)] shadow-sm overflow-hidden">
       <div className="p-6 sm:p-8 bg-[var(--surface-subtle)] border-b border-[var(--line)] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-soft)] text-xs font-bold text-[var(--brand)] mb-2">
+            <Sparkles size={13} /> Ma trận 13 Feature Codes & 5 Gói Bản Quyền
+          </div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)]">
-            Bảng ma trận so sánh chi tiết tính năng
+            Bảng so sánh chi tiết tính năng BIMAutomation
           </h2>
           <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
-            Xem đầy đủ danh sách 20+ công cụ và quyền lợi tương ứng trên từng gói bản quyền.
+            Minh bạch 100% quyền truy cập tính năng theo đúng kiến trúc Server-Authoritative của hệ thống.
           </p>
         </div>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[680px]">
+        <table className="w-full text-left border-collapse min-w-[860px]">
           <thead>
             <tr className="border-b border-[var(--line)] bg-[var(--surface-raised)]">
-              <th className="p-4 sm:p-5 text-sm font-extrabold text-[var(--text-primary)] w-2/5">
-                Tính năng & Phân hệ
+              <th className="p-4 sm:p-5 text-sm font-extrabold text-[var(--text-primary)] w-[32%]">
+                Tính năng / Feature Code
               </th>
-              <th className="p-4 sm:p-5 text-center text-sm font-bold text-[var(--text-primary)] w-1/5 border-l border-[var(--line)]">
-                Gói Tháng
-                <span className="block text-xs font-normal text-[var(--text-muted)]">Cá nhân</span>
+              <th className="p-4 text-center text-xs font-bold text-[var(--text-secondary)] w-[13%] border-l border-[var(--line)]">
+                Dùng thử
+                <span className="block text-[11px] font-normal text-[var(--text-muted)]">14 ngày Free</span>
               </th>
-              <th className="p-4 sm:p-5 text-center text-sm font-bold text-[var(--brand)] w-1/5 border-l border-[var(--line)] bg-[var(--brand-soft)]/20">
-                Gói Năm
-                <span className="block text-xs font-bold text-amber-500">Khuyên dùng ★</span>
+              <th className="p-4 text-center text-xs font-bold text-[var(--text-primary)] w-[13%] border-l border-[var(--line)]">
+                Cốt thép
+                <span className="block text-[11px] font-normal text-[var(--text-muted)]">Rebar Suite</span>
               </th>
-              <th className="p-4 sm:p-5 text-center text-sm font-bold text-[var(--text-primary)] w-1/5 border-l border-[var(--line)]">
-                Gói Doanh nghiệp
-                <span className="block text-xs font-normal text-[var(--text-muted)]">Studio & Doanh nghiệp</span>
+              <th className="p-4 text-center text-xs font-bold text-[var(--brand)] w-[16%] border-l border-[var(--line)] bg-[var(--brand-soft)]/20">
+                <span className="inline-flex items-center gap-1 text-[var(--brand)]">
+                  <Star size={11} fill="currentColor" /> Cốt thép + AI
+                </span>
+                <span className="block text-[11px] font-bold text-amber-500">Khuyên dùng ★</span>
+              </th>
+              <th className="p-4 text-center text-xs font-bold text-[var(--text-primary)] w-[13%] border-l border-[var(--line)]">
+                Full Suite
+                <span className="block text-[11px] font-normal text-[var(--text-muted)]">Rebar + CAD</span>
+              </th>
+              <th className="p-4 text-center text-xs font-bold text-[var(--text-primary)] w-[13%] border-l border-[var(--line)]">
+                Doanh nghiệp
+                <span className="block text-[11px] font-normal text-[var(--text-muted)]">Enterprise</span>
               </th>
             </tr>
           </thead>
           <tbody>
-            {categories.map((cat, catIdx) => (
+            {featureCategories.map((cat) => (
               <React.Fragment key={cat.name}>
                 <tr className="bg-[var(--surface-subtle)] border-y border-[var(--line)] font-bold text-xs text-[var(--text-primary)] uppercase tracking-wider">
-                  <td colSpan={4} className="py-2.5 px-4 sm:px-5">
+                  <td colSpan={6} className="py-2.5 px-4 sm:px-5">
                     {cat.name}
                   </td>
                 </tr>
-                {cat.items.map((item, itemIdx) => (
+                {cat.items.map((item) => (
                   <tr
-                    key={item.name}
+                    key={item.code}
                     className="border-b border-[var(--line-soft)] hover:bg-[var(--surface-subtle)]/50 transition-colors text-sm"
                   >
                     <td className="py-3.5 px-4 sm:px-5">
-                      <p className="font-semibold text-[var(--text-primary)]">{item.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-[var(--text-primary)]">{item.name}</p>
+                        <code className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-[var(--surface-subtle)] text-[var(--text-muted)] border border-[var(--line)]">
+                          {item.code}
+                        </code>
+                      </div>
                       {item.desc && (
                         <p className="text-xs text-[var(--text-secondary)] mt-0.5">{item.desc}</p>
                       )}
                     </td>
-                    <td className="py-3.5 px-3 border-l border-[var(--line)]">
-                      <RenderCell value={item.starter} />
+                    <td className="py-3.5 px-2.5 border-l border-[var(--line)]">
+                      <RenderCell value={item.trial} />
                     </td>
-                    <td className="py-3.5 px-3 border-l border-[var(--line)] bg-[var(--brand-soft)]/10">
-                      <RenderCell value={item.pro} />
+                    <td className="py-3.5 px-2.5 border-l border-[var(--line)]">
+                      <RenderCell value={item.rebar} />
                     </td>
-                    <td className="py-3.5 px-3 border-l border-[var(--line)]">
+                    <td className="py-3.5 px-2.5 border-l border-[var(--line)] bg-[var(--brand-soft)]/10">
+                      <RenderCell value={item.rebarAi} />
+                    </td>
+                    <td className="py-3.5 px-2.5 border-l border-[var(--line)]">
+                      <RenderCell value={item.full} />
+                    </td>
+                    <td className="py-3.5 px-2.5 border-l border-[var(--line)]">
                       <RenderCell value={item.enterprise} />
                     </td>
                   </tr>

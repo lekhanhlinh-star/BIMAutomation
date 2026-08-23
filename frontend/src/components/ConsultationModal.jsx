@@ -10,7 +10,7 @@ export default function ConsultationModal({ isOpen, onClose, defaultTopic = 'Tư
     email: '',
     company: '',
     teamSize: '5-15 kỹ sư',
-    interest: 'Toàn bộ gói công cụ BIMAutomation',
+    interest: 'Toàn bộ gói Full Suite BIMAutomation',
     note: ''
   });
   const [loading, setLoading] = useState(false);
@@ -43,7 +43,7 @@ export default function ConsultationModal({ isOpen, onClose, defaultTopic = 'Tư
       email: '',
       company: '',
       teamSize: '5-15 kỹ sư',
-      interest: 'Toàn bộ gói công cụ BIMAutomation',
+      interest: 'Toàn bộ gói Full Suite BIMAutomation',
       note: ''
     });
     onClose();
@@ -175,11 +175,11 @@ export default function ConsultationModal({ isOpen, onClose, defaultTopic = 'Tư
                 onChange={(e) => setFormData({ ...formData, interest: e.target.value })}
                 className="form-control text-sm w-full"
               >
-                <option value="Toàn bộ gói công cụ BIMAutomation">Trọn bộ tất cả công cụ</option>
-                <option value="Tự động Dim & Khai triển Kiến trúc">Tự động Dim & Khai triển Kiến trúc</option>
-                <option value="Bố trí & Khống chế Thép Kết cấu">Bố trí & Thống kê Cốt thép Kết cấu</option>
-                <option value="Hệ thống Cơ điện MEP">Hệ thống Cơ điện MEP</option>
-                <option value="Quản lý Sheet/View & Xuất file PDF/DWG">Quản lý Sheet/View & Xuất file</option>
+                <option value="Toàn bộ gói Full Suite BIMAutomation">Trọn bộ Full Suite (AI Rebar + CAD + MCP)</option>
+                <option value="Gói Cốt thép + AI (Rebar + AI Suite)">Gói Cốt thép + AI (Rebar + AI Suite)</option>
+                <option value="Gói Cốt thép (Rebar Suite)">Gói Cốt thép (Rebar Suite)</option>
+                <option value="Tích hợp 57 MCP Tools & Claude/Cursor">Tích hợp 57 MCP Tools & Claude/Cursor</option>
+                <option value="Tùy biến Preset thiết kế riêng cho Doanh nghiệp">Tùy biến Preset riêng cho Doanh nghiệp</option>
               </select>
             </div>
           </div>

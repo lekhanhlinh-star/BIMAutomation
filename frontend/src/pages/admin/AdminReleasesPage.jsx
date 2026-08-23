@@ -53,7 +53,7 @@ export default function AdminReleasesPage() {
             <input
               type="text"
               required
-              placeholder="v2.4.2"
+              placeholder="v2.5.0"
               value={version}
               onChange={(e) => setVersion(e.target.value)}
               className="form-control text-sm font-mono"
@@ -65,7 +65,7 @@ export default function AdminReleasesPage() {
             <input
               type="url"
               required
-              placeholder="https://cdn.bimpilot.vn/releases/v2.4.2/setup.exe"
+              placeholder="https://cdn.bimautomation.vn/releases/v2.5.0/BIMAutomation.Installer.exe"
               value={downloadUrl}
               onChange={(e) => setDownloadUrl(e.target.value)}
               className="form-control text-sm font-mono"
