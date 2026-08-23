@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Award, CheckCircle2, Download, Headphones, LogOut, Mail, MapPin, Menu, PhoneCall, ShieldCheck, User, X } from 'lucide-react';
+import { Award, CheckCircle2, Download, Headphones, LogOut, Mail, Menu, PhoneCall, ShieldCheck, User, X } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
 import ThemeToggle from '../components/ThemeToggle';
 import ConsultationModal from '../components/ConsultationModal';
@@ -221,10 +221,6 @@ export default function PublicLayout() {
               </p>
 
               <div className="pt-2 space-y-2 text-xs text-[var(--text-secondary)]">
-                <p className="flex items-start gap-2">
-                  <MapPin size={15} className="text-[var(--brand)] shrink-0 mt-0.5" />
-                  <span>Tòa nhà Công nghệ, số 8 Duy Tân, P. Dịch Vọng Hậu, Q. Cầu Giấy, TP. Hà Nội</span>
-                </p>
                 <p className="flex items-center gap-2">
                   <PhoneCall size={15} className="text-emerald-500 shrink-0" />
                   <span>Hotline: <strong>0904 885 833</strong> (8:00 - 18:00)</span>
