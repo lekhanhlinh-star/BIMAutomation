@@ -231,7 +231,7 @@ export default function PublicLayout() {
                 </p>
                 <p className="flex items-center gap-2">
                   <Mail size={15} className="text-[var(--brand)] shrink-0" />
-                  <span>Hỗ trợ: <strong>hotro@bimautomation.vn</strong></span>
+                  <span>Hỗ trợ: <a href="mailto:linhld.cs@gmail.com" className="hover:text-[var(--brand)] transition-colors font-bold">linhld.cs@gmail.com</a></span>
                 </p>
               </div>
 
