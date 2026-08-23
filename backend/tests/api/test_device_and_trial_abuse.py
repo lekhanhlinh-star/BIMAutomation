@@ -249,3 +249,127 @@ async def test_admin_reset_device_trial(client: TestClient) -> None:
     )
     assert act_resp.status_code == 200
     assert act_resp.json()["isTrial"] is True
+
+
+@pytest.mark.asyncio
+async def test_single_active_device_concurrency_and_takeover(client: TestClient) -> None:
+    """
+    Validates:
+    1. User logs in on Machine A (HWID A) -> Entitlement Allowed (Active device = A)
+    2. User logs in on Machine B (HWID B) -> Takes over active session (Active device = B)
+    3. Machine A sends periodic check / heartbeat -> Rejected with concurrent_session_conflict
+    4. Machine A logs in / reactivates -> Takes back active session (Active device = A)
+    5. Machine B sends heartbeat -> Rejected with concurrent_session_conflict
+    """
+    fp_a = "fp_machine_A_11111111111111111111111111111111"
+    fp_b = "fp_machine_B_22222222222222222222222222222222"
+
+    async with TestSessionLocal() as session:
+        user = User(
+            email="concurrent_engineer@example.com",
+            hashed_password="hash",
+            role=UserRole.USER,
+            is_active=True,
+            is_trial_registered=True,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        user_id = user.id
+
+    token = create_access_token(user_id=user_id, email="concurrent_engineer@example.com")
+
+    # Step 1: Check entitlement from Machine A -> Granted, Active = A
+    res_a1 = client.post(
+        "/api/v1/entitlements/check",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "product_code": "revitapp",
+            "hardware_fingerprint": fp_a,
+            "device_name": "OFFICE-PC-A",
+            "takeover": True,
+        },
+    )
+    assert res_a1.status_code == 200
+    data_a1 = res_a1.json()
+    assert data_a1["allowed"] is True
+
+    # Machine A heartbeat succeeds
+    hb_a1 = client.post(
+        "/api/v1/devices/heartbeat",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"machineFingerprint": fp_a},
+    )
+    assert hb_a1.status_code == 200
+    assert hb_a1.json()["status"] == "ok"
+
+    # Step 2: User opens Revit on Machine B -> Machine B takes over active session
+    res_b1 = client.post(
+        "/api/v1/entitlements/check",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "product_code": "revitapp",
+            "hardware_fingerprint": fp_b,
+            "device_name": "HOME-LAPTOP-B",
+            "takeover": True,
+        },
+    )
+    assert res_b1.status_code == 200
+    data_b1 = res_b1.json()
+    assert data_b1["allowed"] is True
+
+    # Step 3: Machine A sends background heartbeat / periodic check -> REJECTED!
+    hb_a2 = client.post(
+        "/api/v1/devices/heartbeat",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"machineFingerprint": fp_a},
+    )
+    assert hb_a2.status_code == 200
+    data_hb_a2 = hb_a2.json()
+    assert data_hb_a2["status"] == "conflict"
+    assert data_hb_a2["error"] == "concurrent_session_conflict"
+    assert "HOME-LAPTOP-B" in data_hb_a2["message"]
+
+    # Periodic check from Machine A also fails
+    res_a_periodic = client.post(
+        "/api/v1/entitlements/check",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "product_code": "revitapp",
+            "hardware_fingerprint": fp_a,
+            "device_name": "OFFICE-PC-A",
+            "takeover": False,
+            "is_periodic": True,
+        },
+    )
+    assert res_a_periodic.status_code == 200
+    assert res_a_periodic.json()["allowed"] is False
+    assert res_a_periodic.json()["error"] == "concurrent_session_conflict"
+
+    # Step 4: Machine A user clicks "Tiếp tục trên máy này" (Takeover = True) -> Regains access
+    res_a_takeover = client.post(
+        "/api/v1/entitlements/check",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "product_code": "revitapp",
+            "hardware_fingerprint": fp_a,
+            "device_name": "OFFICE-PC-A",
+            "takeover": True,
+            "is_periodic": False,
+        },
+    )
+    assert res_a_takeover.status_code == 200
+    assert res_a_takeover.json()["allowed"] is True
+
+    # Step 5: Machine B heartbeat is now kicked out
+    hb_b2 = client.post(
+        "/api/v1/devices/heartbeat",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"machineFingerprint": fp_b},
+    )
+    assert hb_b2.status_code == 200
+    data_hb_b2 = hb_b2.json()
+    assert data_hb_b2["status"] == "conflict"
+    assert data_hb_b2["error"] == "concurrent_session_conflict"
+    assert "OFFICE-PC-A" in data_hb_b2["message"]
+

@@ -44,6 +44,8 @@ class LicenseCheckRequest(BaseModel):
     revit_version: str | None = Field(None, description="Revit version e.g. 2025")
     installation_id: str | None = Field(None, description="Client installation UUID")
     device_id: str | None = Field(None, description="Existing device activation UUID if any")
+    takeover: bool = Field(True, description="Take over active session for this account if switching devices")
+    is_periodic: bool = Field(False, description="Whether this is a background heartbeat check")
 
 
 class EntitlementResponse(BaseModel):

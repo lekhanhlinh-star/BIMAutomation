@@ -417,6 +417,11 @@ async def get_all_device_trials(
     trials = result.scalars().all()
     output = []
     for t in trials:
+        is_active_device = bool(
+            t.last_user
+            and t.last_user.active_device_fingerprint == t.fingerprint_hash
+            and t.status == DeviceTrialStatus.ACTIVE
+        )
         output.append(
             AdminDeviceTrialRead(
                 id=t.id,
@@ -431,6 +436,7 @@ async def get_all_device_trials(
                 reset_count=t.reset_count,
                 initial_user_email=t.initial_user.email if t.initial_user else None,
                 last_user_email=t.last_user.email if t.last_user else None,
+                is_currently_active=is_active_device,
                 created_at=t.created_at,
             )
         )

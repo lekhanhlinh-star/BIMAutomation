@@ -117,9 +117,12 @@ async def get_entitlement_for_user_and_device(
     fingerprint_hash: str | None = None,
     revit_version: str | None = None,
     display_name: str | None = None,
+    takeover: bool = True,
+    is_periodic: bool = False,
 ) -> dict[str, Any]:
     """
     Computes entitlement response for Revit client.
+    Enforces Single Active Device Concurrency (1 account = 1 active device at a time).
     Handles Paid License, Active Device Trial, Auto-granting 14-day trial, or rejection with error code.
     """
     now = datetime.now(timezone.utc)
@@ -133,7 +136,53 @@ async def get_entitlement_for_user_and_device(
             "serverTime": now.isoformat(),
         }
 
-    # 2. Check Paid License
+    # 2. Enforce Single Active Device Concurrency
+    if fingerprint_hash:
+        if user.active_device_fingerprint is None:
+            # First device registered for this user
+            user.active_device_fingerprint = fingerprint_hash
+            user.active_device_name = display_name or "Revit Workstation"
+            user.active_device_last_seen = now
+            await session.commit()
+        elif user.active_device_fingerprint == fingerprint_hash:
+            # Same device: refresh last seen & name
+            user.active_device_last_seen = now
+            if display_name:
+                user.active_device_name = display_name
+            await session.commit()
+        else:
+            # Account active on another machine
+            if takeover and not is_periodic:
+                prev_name = user.active_device_name or "máy khác"
+                prev_fp = user.active_device_fingerprint
+                user.active_device_fingerprint = fingerprint_hash
+                user.active_device_name = display_name or "Revit Workstation"
+                user.active_device_last_seen = now
+
+                await log_audit_event(
+                    session=session,
+                    action="device_session_takeover",
+                    target_type="user",
+                    target_id=str(user.id),
+                    actor_user_id=user.id,
+                    metadata={
+                        "previous_fingerprint": prev_fp,
+                        "previous_device_name": prev_name,
+                        "new_fingerprint": fingerprint_hash,
+                        "new_device_name": user.active_device_name,
+                    },
+                )
+                await session.commit()
+            else:
+                other_name = user.active_device_name or "thiết bị khác"
+                return {
+                    "allowed": False,
+                    "error": "concurrent_session_conflict",
+                    "message": f"Tài khoản của bạn đã chuyển sang hoạt động trên thiết bị '{other_name}'. Phiên làm việc trên máy này đã tạm ngắt.",
+                    "serverTime": now.isoformat(),
+                }
+
+    # 3. Check Paid License
     active_license = await get_user_active_license(session, user.id, product_code)
     if active_license:
         # Check device if provided
@@ -169,7 +218,7 @@ async def get_entitlement_for_user_and_device(
             "refreshAfterSeconds": 300,
         }
 
-    # 3. Check Device Trial via fingerprint_hash
+    # 4. Check Device Trial via fingerprint_hash
     if fingerprint_hash:
         trial_res = await session.execute(
             select(DeviceTrial).where(DeviceTrial.fingerprint_hash == fingerprint_hash)
@@ -270,7 +319,7 @@ async def get_entitlement_for_user_and_device(
                 "refreshAfterSeconds": 300,
             }
 
-    # 4. No License & No fingerprint provided
+    # 5. No License & No fingerprint provided
     return {
         "allowed": False,
         "error": "fingerprint_required",

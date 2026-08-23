@@ -134,17 +134,28 @@ export default function AdminLicensesPage() {
                         )}
                       </td>
                       <td className="px-4 py-3.5">
-                        <span
-                          className={`status-tag ${
-                            t.status === 'ACTIVE'
-                              ? 'status-tag--ok'
-                              : t.status === 'EXPIRED'
-                              ? 'status-tag--pending'
-                              : 'bg-rose-500/15 text-rose-600 border-rose-500/30'
-                          }`}
-                        >
-                          {t.status}
-                        </span>
+                        {t.status === 'ACTIVE' ? (
+                          t.isCurrentlyActive ? (
+                            <span className="status-tag status-tag--ok flex items-center gap-1.5 font-bold">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                              ONLINE (Active)
+                            </span>
+                          ) : (
+                            <span className="status-tag bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 font-medium" title="Phiên đã được chuyển sang thiết bị khác của tài khoản">
+                              Đã chuyển máy
+                            </span>
+                          )
+                        ) : (
+                          <span
+                            className={`status-tag ${
+                              t.status === 'EXPIRED'
+                                ? 'status-tag--pending'
+                                : 'bg-rose-500/15 text-rose-600 border-rose-500/30'
+                            }`}
+                          >
+                            {t.status}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3.5 flex items-center gap-1.5">
                         <button

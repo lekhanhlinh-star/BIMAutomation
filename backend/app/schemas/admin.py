@@ -116,6 +116,7 @@ class AdminDeviceTrialRead(BaseModel):
     reset_count: int
     initial_user_email: str | None = None
     last_user_email: str | None = None
+    is_currently_active: bool = False
     created_at: datetime
 
 

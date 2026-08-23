@@ -105,6 +105,12 @@ async def activate_device(
             last_seen_at=now,
         )
         session.add(new_device)
+
+        # Set as active device for user
+        user.active_device_fingerprint = fingerprint_hash
+        user.active_device_name = display_name or "Desktop Device"
+        user.active_device_last_seen = now
+
         await session.commit()
         await session.refresh(new_device)
 
@@ -143,6 +149,12 @@ async def activate_device(
             detail=error_code,
         )
 
+    # Set as active device for user
+    user.active_device_fingerprint = fingerprint_hash
+    user.active_device_name = display_name or "Desktop Device"
+    user.active_device_last_seen = now
+    await session.commit()
+
     await log_audit_event(
         session=session,
         action="device_trial_active",
@@ -172,18 +184,25 @@ async def heartbeat_device(
     fingerprint_hash: str | None = None,
 ) -> dict[str, Any]:
     """
-    Heartbeat ping from Revit Add-in. Updates last_seen_at.
+    Heartbeat ping from Revit Add-in. Validates active device concurrency and updates last_seen_at.
     """
     now = datetime.now(timezone.utc)
-    if device_id:
-        dev_res = await session.execute(select(Device).where(Device.id == device_id))
-        dev = dev_res.scalar_one_or_none()
-        if dev:
-            dev.last_seen_at = now
-            await session.commit()
-            return {"status": "ok", "lastSeenAt": now.isoformat()}
 
+    # Validate active device concurrency
     if fingerprint_hash:
+        if user.active_device_fingerprint and user.active_device_fingerprint != fingerprint_hash:
+            other_name = user.active_device_name or "thiết bị khác"
+            return {
+                "status": "conflict",
+                "allowed": False,
+                "error": "concurrent_session_conflict",
+                "message": f"Tài khoản của bạn đã chuyển sang hoạt động trên thiết bị '{other_name}'. Phiên làm việc trên máy này đã tạm ngắt.",
+                "lastSeenAt": now.isoformat(),
+            }
+
+        user.active_device_fingerprint = fingerprint_hash
+        user.active_device_last_seen = now
+
         trial_res = await session.execute(
             select(DeviceTrial).where(DeviceTrial.fingerprint_hash == fingerprint_hash)
         )
@@ -191,6 +210,15 @@ async def heartbeat_device(
         if trial:
             trial.updated_at = now
             await session.commit()
-            return {"status": "ok", "lastSeenAt": now.isoformat()}
+            return {"status": "ok", "allowed": True, "lastSeenAt": now.isoformat()}
 
-    return {"status": "ok", "lastSeenAt": now.isoformat()}
+    if device_id:
+        dev_res = await session.execute(select(Device).where(Device.id == device_id))
+        dev = dev_res.scalar_one_or_none()
+        if dev:
+            dev.last_seen_at = now
+            await session.commit()
+            return {"status": "ok", "allowed": True, "lastSeenAt": now.isoformat()}
+
+    await session.commit()
+    return {"status": "ok", "allowed": True, "lastSeenAt": now.isoformat()}

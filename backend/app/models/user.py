@@ -36,6 +36,15 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # Single Active Device / Concurrency Enforcement
+    active_device_fingerprint: Mapped[str | None] = mapped_column(
+        String(64), nullable=True, index=True
+    )
+    active_device_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    active_device_last_seen: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     role: Mapped[UserRole] = mapped_column(
         SQLEnum(UserRole, native_enum=False),
         default=UserRole.USER,

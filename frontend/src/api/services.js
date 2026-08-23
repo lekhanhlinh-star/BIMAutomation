@@ -325,7 +325,8 @@ export const adminApi = {
         remainingDays,
         status: t.status,
         resetCount: t.reset_count || 0,
-        userEmail: t.last_user_email || t.initial_user_email || '—'
+        userEmail: t.last_user_email || t.initial_user_email || '—',
+        isCurrentlyActive: t.is_currently_active || false,
       };
     });
   },
