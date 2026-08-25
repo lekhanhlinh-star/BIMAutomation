@@ -408,13 +408,16 @@ async def get_entitlement_for_user_and_device(
             if not trial.mac_address and clean_mac:
                 trial.mac_address = clean_mac
 
-            # If user had no recorded trial started, bind user trial to this device trial expiry
-            if user.trial_started_at is None:
-                user.trial_started_at = trial.first_trial_at or now
-                user.trial_expires_at = exp_trial
-            elif user_trial_exp and user_trial_exp < (exp_trial or now):
-                # If user trial expires sooner than device trial, take the minimum
-                exp_trial = user_trial_exp
+            # Account and machine have independent one-time clocks. A used
+            # machine does not reset the account, and it does not shorten the
+            # account's ability to continue on another eligible machine.
+            if user_trial_exp is None:
+                user.trial_started_at = now
+                user.trial_expires_at = now + timedelta(days=14)
+                user_trial_exp = user.trial_expires_at
+
+            if user_trial_exp:
+                exp_trial = min(exp_trial, user_trial_exp)
 
             await session.commit()
 
@@ -484,7 +487,7 @@ async def get_entitlement_for_user_and_device(
                 platform="windows",
                 revit_version=revit_version or user.revit_version or "2025",
                 app_version=app_version or "1.0.0",
-                first_trial_at=user.trial_started_at or now,
+                first_trial_at=now,
                 trial_expires_at=expires_at,
                 initial_user_id=user.id,
                 last_user_id=user.id,

@@ -22,9 +22,9 @@ class Settings(BaseSettings):
     smtp_sender: str = ""
     smtp_use_tls: bool = False
     smtp_use_ssl: bool = True
-    bank_code: str = "MB"
-    bank_account: str = "00000000000"
-    bank_holder: str = "BIMPilot"
+    bank_code: str = "MBBank"
+    bank_account: str = "0911972242"
+    bank_holder: str = "LE KHANH LINH"
     webhook_secret: str = "supersecretwebhookkey"
     sepay_api_key: str = "sepay_secret_api_key_12345"
     license_hmac_secret: str = "bimauto_telemetry_secure_sign_2026"

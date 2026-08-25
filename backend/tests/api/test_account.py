@@ -54,7 +54,7 @@ async def test_get_customer_licenses_and_orders(client: TestClient) -> None:
         json={
             "gateway": "MBBank",
             "amountIn": 1200000,
-            "transactionContent": f"BIMPILOT {order_code}",
+            "transactionContent": order_code,
             "referenceNumber": "MB_FT_123456",
         },
     )

@@ -85,8 +85,9 @@ async def create_order(
     return result.scalar_one()
 
 
+
 def get_qr_payment_info(order: Order, settings: Settings) -> QRPaymentResponse:
-    payment_content = f"BIMPILOT {order.order_code}"
+    payment_content = order.order_code
     encoded_memo = payment_content.replace(" ", "%20")
     qr_code_url = (
         f"https://img.vietqr.io/image/{settings.bank_code}-{settings.bank_account}-compact2.png"

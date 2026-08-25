@@ -81,8 +81,9 @@ async def test_plans_orders_qr_and_webhook_flow(client: TestClient) -> None:
     assert qr_res.status_code == 200
     qr_data = qr_res.json()
     assert qr_data["order_code"] == order_code
-    assert qr_data["payment_content"] == f"BIMPILOT {order_code}"
+    assert qr_data["payment_content"] == order_code
     assert "img.vietqr.io" in qr_data["qr_code_url"]
+    assert f"addInfo={order_code}" in qr_data["qr_code_url"]
 
     # 6. Test POST /api/v1/payments/webhook (SePay Payment confirmation)
     sepay_header = {"Authorization": f"Apikey {settings.sepay_api_key}"}
@@ -90,7 +91,7 @@ async def test_plans_orders_qr_and_webhook_flow(client: TestClient) -> None:
     # Attempt without header -> Expect 401 Unauthorized
     unauth_res = client.post(
         "/api/v1/payments/webhook",
-        json={"transactionContent": f"BIMPILOT {order_code}", "amountIn": 1200000},
+        json={"transactionContent": order_code, "amountIn": 1200000},
     )
     assert unauth_res.status_code == 401
 
@@ -102,7 +103,7 @@ async def test_plans_orders_qr_and_webhook_flow(client: TestClient) -> None:
             "id": 92704,
             "gateway": "MBBank",
             "code": order_code,
-            "content": f"BIMPILOT {order_code}",
+            "content": order_code,
             "transferType": "in",
             "transferAmount": 1200000,
             "referenceCode": "MB_SEPAY_998877",

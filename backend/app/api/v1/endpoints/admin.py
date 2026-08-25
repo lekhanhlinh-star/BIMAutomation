@@ -317,7 +317,7 @@ async def reset_device_trial_endpoint(
         "trialId": str(trial.id),
         "newExpiresAt": trial.trial_expires_at.isoformat(),
         "resetCount": trial.reset_count,
-        "message": f"Đã reset phiên dùng thử cho thiết bị ({days} ngày)",
+        "message": "Đã ngắt phiên thiết bị; thời hạn dùng thử không thay đổi",
     }
 
 
@@ -334,7 +334,7 @@ async def grant_device_trial_endpoint(
         "trialId": str(trial.id),
         "newExpiresAt": trial.trial_expires_at.isoformat(),
         "resetCount": trial.reset_count,
-        "message": f"Đã cấp quyền dùng thử lại cho thiết bị ({days} ngày)",
+        "message": "Đã mở khóa phần thời gian dùng thử đầu tiên còn lại",
     }
 
 
@@ -392,7 +392,7 @@ async def delete_device_trial_endpoint(
     return {
         "status": "ok",
         "trialId": str(trial_id),
-        "message": "Đã xóa bản ghi thiết bị dùng thử thành công",
+        "message": "Đã lưu dấu và khóa thiết bị; lịch sử dùng thử không bị xóa",
     }
 
 

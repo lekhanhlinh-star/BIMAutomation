@@ -103,9 +103,9 @@ async def test_full_e2e_bimpilot_customer_and_admin_journey(client: TestClient) 
         json={
             "gateway": "MBBank",
             "amountIn": 1200000,
-            "transactionContent": f"BIMPILOT {order_code}",
+            "transactionContent": order_code,
             "referenceNumber": "MB_E2E_FT_998877",
-            "body": f"BIMPILOT {order_code}",
+            "body": order_code,
         },
     )
     assert webhook_res.status_code == 200

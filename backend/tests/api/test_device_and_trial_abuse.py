@@ -233,7 +233,7 @@ async def test_admin_reset_device_trial(client: TestClient) -> None:
     assert reset_resp.status_code == 200
     assert reset_resp.json()["resetCount"] == 1
 
-    # Now user activates on this machine -> Succeeds again!
+    # Reset only clears a session; an expired machine never receives a second trial.
     act_resp = client.post(
         "/api/v1/devices/activate",
         headers={"Authorization": f"Bearer {user_token}"},
@@ -247,8 +247,8 @@ async def test_admin_reset_device_trial(client: TestClient) -> None:
             "appVersion": "1.0.0",
         },
     )
-    assert act_resp.status_code == 200
-    assert act_resp.json()["isTrial"] is True
+    assert act_resp.status_code == 403
+    assert act_resp.json()["detail"] == "trial_expired_on_device"
 
 
 @pytest.mark.asyncio
@@ -375,10 +375,10 @@ async def test_single_active_device_concurrency_and_takeover(client: TestClient)
 
 
 @pytest.mark.asyncio
-async def test_second_machine_is_rejected_when_addin_omits_concurrency_flags(
+async def test_explicit_activation_moves_trial_to_second_machine(
     client: TestClient,
 ) -> None:
-    """The current add-in payload omits takeover/is_periodic, so it must fail closed."""
+    """Periodic entitlement checks fail closed, but explicit activation moves the session."""
     async with TestSessionLocal() as session:
         user = User(
             email="strict_single_device@example.com",
@@ -437,8 +437,17 @@ async def test_second_machine_is_rejected_when_addin_omits_concurrency_flags(
             "appVersion": "1.0.0",
         },
     )
-    assert activation_b.status_code == 409
-    assert activation_b.json()["detail"] == "concurrent_session_conflict"
+    assert activation_b.status_code == 200
+    assert activation_b.json()["isTrial"] is True
+
+    heartbeat_a = client.post(
+        "/api/v1/devices/heartbeat",
+        headers=headers,
+        json={"machineFingerprint": "strict_fp_machine_a"},
+    )
+    assert heartbeat_a.status_code == 200
+    assert heartbeat_a.json()["allowed"] is False
+    assert heartbeat_a.json()["error"] == "concurrent_session_conflict"
 
     heartbeat_without_fingerprint = client.post(
         "/api/v1/devices/heartbeat",
@@ -448,6 +457,88 @@ async def test_second_machine_is_rejected_when_addin_omits_concurrency_flags(
     assert heartbeat_without_fingerprint.status_code == 200
     assert heartbeat_without_fingerprint.json()["allowed"] is False
     assert heartbeat_without_fingerprint.json()["error"] == "fingerprint_required"
+
+
+@pytest.mark.asyncio
+async def test_trial_moves_without_resetting_account_clock_and_machine_is_used_once(
+    client: TestClient,
+) -> None:
+    fp_a = "portable_trial_machine_a"
+    fp_b = "portable_trial_machine_b"
+    now = datetime.now(timezone.utc)
+    account_expires_at = now + timedelta(days=5)
+
+    async with TestSessionLocal() as session:
+        user = User(
+            email="portable_trial@example.com",
+            hashed_password="hash",
+            role=UserRole.USER,
+            is_active=True,
+            is_trial_registered=True,
+            trial_started_at=now - timedelta(days=9),
+            trial_expires_at=account_expires_at,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        user_id = user.id
+
+    token = create_access_token(user_id=user_id, email="portable_trial@example.com")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    for fingerprint, name in [(fp_a, "PORTABLE-A"), (fp_b, "PORTABLE-B")]:
+        response = client.post(
+            "/api/v1/devices/activate",
+            headers=headers,
+            json={
+                "productCode": "revitapp",
+                "installationId": str(uuid.uuid4()),
+                "machineFingerprint": fingerprint,
+                "displayName": name,
+                "platform": "windows",
+                "revitVersion": "2025",
+                "appVersion": "1.0.0",
+            },
+        )
+        assert response.status_code == 200
+        assert response.json()["isTrial"] is True
+        returned_expiry = datetime.fromisoformat(response.json()["expiresAt"])
+        assert abs((returned_expiry - account_expires_at).total_seconds()) < 2
+
+    async with TestSessionLocal() as session:
+        trials = (
+            await session.execute(
+                select(DeviceTrial).where(
+                    DeviceTrial.fingerprint_hash.in_([fp_a, fp_b])
+                )
+            )
+        ).scalars().all()
+        assert len(trials) == 2
+        assert all(
+            abs((trial.trial_expires_at.replace(tzinfo=timezone.utc) - account_expires_at).total_seconds()) < 2
+            for trial in trials
+        )
+
+        machine_a = next(t for t in trials if t.fingerprint_hash == fp_a)
+        machine_a.trial_expires_at = now - timedelta(seconds=1)
+        machine_a.status = DeviceTrialStatus.EXPIRED
+        await session.commit()
+
+    reused_machine = client.post(
+        "/api/v1/devices/activate",
+        headers=headers,
+        json={
+            "productCode": "revitapp",
+            "installationId": str(uuid.uuid4()),
+            "machineFingerprint": fp_a,
+            "displayName": "PORTABLE-A",
+            "platform": "windows",
+            "revitVersion": "2025",
+            "appVersion": "1.0.0",
+        },
+    )
+    assert reused_machine.status_code == 403
+    assert reused_machine.json()["detail"] == "trial_expired_on_device"
 
 
 @pytest.mark.asyncio

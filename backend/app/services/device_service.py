@@ -13,7 +13,7 @@ from app.models.license import License, LicenseStatus
 from app.models.user import User
 from app.services.audit_service import log_audit_event
 from app.services.entitlement_service import get_user_active_license
-from app.services.trial_service import check_or_create_device_trial
+from app.services.trial_service import check_or_create_device_trial, ensure_utc
 
 
 async def activate_device(
@@ -30,16 +30,10 @@ async def activate_device(
     """
     Activates a desktop device for a user.
     - If user has active Paid License: Binds to license (concurrency-safe, max_devices enforced, idempotent for same installation_id).
-    - If no Paid License: Enforces 14-day hardware-bound trial policy (blocks expired machines across accounts).
+    - If no Paid License: keeps one account trial clock and one immutable trial history per machine.
     """
     now = datetime.now(timezone.utc)
     clean_fp = fingerprint_hash.strip().lower()
-    active_fp = (user.active_device_fingerprint or "").strip().lower()
-    if active_fp and active_fp != clean_fp:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="concurrent_session_conflict",
-        )
 
     # 1. Check Paid License
     active_license = await get_user_active_license(session, user.id, product_code)
@@ -56,7 +50,7 @@ async def activate_device(
 
         if existing_device:
             # Idempotent reactivation on same installation
-            existing_device.fingerprint_hash = fingerprint_hash
+            existing_device.fingerprint_hash = clean_fp
             existing_device.display_name = display_name or existing_device.display_name
             existing_device.platform = platform or existing_device.platform
             existing_device.revit_version = revit_version or existing_device.revit_version
@@ -106,7 +100,7 @@ async def activate_device(
         new_device = Device(
             license_id=active_license.id,
             installation_id=installation_id,
-            fingerprint_hash=fingerprint_hash,
+            fingerprint_hash=clean_fp,
             display_name=display_name,
             platform=platform,
             revit_version=revit_version,
@@ -117,7 +111,7 @@ async def activate_device(
         session.add(new_device)
 
         # Set as active device for user
-        user.active_device_fingerprint = fingerprint_hash
+        user.active_device_fingerprint = clean_fp
         user.active_device_name = display_name or "Desktop Device"
         user.active_device_last_seen = now
 
@@ -145,8 +139,8 @@ async def activate_device(
     # 2. No Paid License: Check & Enforce Device Trial Policy
     is_allowed, trial, error_code, remaining_seconds = await check_or_create_device_trial(
         session=session,
-        fingerprint_hash=fingerprint_hash,
-        user_id=user.id,
+        fingerprint_hash=clean_fp,
+        user=user,
         display_name=display_name,
         platform=platform,
         revit_version=revit_version,
@@ -159,8 +153,10 @@ async def activate_device(
             detail=error_code,
         )
 
+    assert trial is not None
+
     # Set as active device for user
-    user.active_device_fingerprint = fingerprint_hash
+    user.active_device_fingerprint = clean_fp
     user.active_device_name = display_name or "Desktop Device"
     user.active_device_last_seen = now
     await session.commit()
@@ -171,7 +167,7 @@ async def activate_device(
         target_type="device_trial",
         target_id=str(trial.id),
         actor_user_id=user.id,
-        metadata={"fingerprint_hash": fingerprint_hash, "remaining_seconds": remaining_seconds},
+        metadata={"fingerprint_hash": clean_fp, "remaining_seconds": remaining_seconds},
     )
 
     return {
@@ -180,7 +176,10 @@ async def activate_device(
         "deviceId": str(trial.id),
         "licenseId": None,
         "plan": "trial",
-        "expiresAt": trial.trial_expires_at.isoformat(),
+        "expiresAt": min(
+            ensure_utc(trial.trial_expires_at),
+            ensure_utc(user.trial_expires_at),
+        ).isoformat(),
         "remainingSeconds": remaining_seconds,
         "message": f"Kích hoạt phiên dùng thử thành công ({int(remaining_seconds / 86400)} ngày còn lại)",
     }

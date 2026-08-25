@@ -81,7 +81,7 @@ async def test_admin_portal_full_flow(client: TestClient) -> None:
         json={
             "gateway": "MBBank",
             "amountIn": 1200000,
-            "transactionContent": f"BIMPILOT {order_code}",
+            "transactionContent": order_code,
             "referenceNumber": "MB_FT_ADMIN_TEST",
         },
     )
@@ -179,7 +179,7 @@ async def test_admin_portal_full_flow(client: TestClient) -> None:
     assert del_trial_res.status_code == 200
     assert del_trial_res.json()["status"] == "ok"
 
-    # Verify gone
+    # Trial hardware history is tombstoned instead of deleted, preventing reuse.
     trials_res_after = client.get("/api/v1/admin/device-trials", headers=admin_headers)
-    assert not any(t["id"] == target_trial["id"] for t in trials_res_after.json())
-
+    archived_trial = next(t for t in trials_res_after.json() if t["id"] == target_trial["id"])
+    assert archived_trial["status"] == "BLOCKED"
