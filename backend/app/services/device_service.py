@@ -74,6 +74,7 @@ async def activate_device(
 
             return {
                 "success": True,
+                "allowed": True,
                 "isTrial": False,
                 "deviceId": str(existing_device.id),
                 "licenseId": str(active_license.id),
@@ -91,10 +92,12 @@ async def activate_device(
         active_count = count_res.scalar_one()
 
         if active_count >= active_license.max_devices:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="device_limit",
-            )
+            return {
+                "success": False,
+                "allowed": False,
+                "error": "device_limit",
+                "message": f"Số lượng thiết bị kích hoạt đã đạt giới hạn tối đa ({active_license.max_devices} máy) của gói bản quyền.",
+            }
 
         # Create new device
         new_device = Device(
@@ -129,6 +132,7 @@ async def activate_device(
 
         return {
             "success": True,
+            "allowed": True,
             "isTrial": False,
             "deviceId": str(new_device.id),
             "licenseId": str(active_license.id),
@@ -172,6 +176,7 @@ async def activate_device(
 
     return {
         "success": True,
+        "allowed": True,
         "isTrial": True,
         "deviceId": str(trial.id),
         "licenseId": None,

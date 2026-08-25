@@ -219,6 +219,7 @@ async def get_entitlement_for_user_and_device(
     if user_trial_exp and user_trial_exp.tzinfo is None:
         user_trial_exp = user_trial_exp.replace(tzinfo=timezone.utc)
 
+    # 2. Reject Ineligible Requests Before Claiming Active Device Slot
     if not active_license and request_is_vm:
         return {
             "allowed": False,
@@ -235,7 +236,36 @@ async def get_entitlement_for_user_and_device(
             "serverTime": now.isoformat(),
         }
 
-    # 3. Enforce Single Active Device Concurrency
+    # 3. Check Paid License Device Limit (Pre-Takeover Protection)
+    matched_device = None
+    if active_license:
+        if device_id:
+            for dev in active_license.devices:
+                if dev.id == device_id and dev.revoked_at is None:
+                    matched_device = dev
+                    break
+        if not matched_device and installation_id:
+            for dev in active_license.devices:
+                if dev.installation_id == installation_id and dev.revoked_at is None:
+                    matched_device = dev
+                    break
+        if not matched_device and effective_fp:
+            for dev in active_license.devices:
+                if (dev.fingerprint_hash or "").strip().lower() == effective_fp and dev.revoked_at is None:
+                    matched_device = dev
+                    break
+
+        if not matched_device:
+            active_count = sum(1 for dev in active_license.devices if dev.revoked_at is None)
+            if active_count >= active_license.max_devices:
+                return {
+                    "allowed": False,
+                    "error": "device_limit",
+                    "message": f"Số lượng thiết bị kích hoạt đã đạt giới hạn tối đa ({active_license.max_devices} máy) của gói bản quyền.",
+                    "serverTime": now.isoformat(),
+                }
+
+    # 4. Enforce Single Active Device Concurrency
     if effective_fp:
         if user.active_device_fingerprint is None:
             # Atomically claim the first active-device slot. This prevents two
@@ -294,21 +324,8 @@ async def get_entitlement_for_user_and_device(
                     "serverTime": now.isoformat(),
                 }
 
-    # 4. Check Paid License
+    # 5. Check Paid License Features and Token Generation
     if active_license:
-        # Check device if provided
-        matched_device = None
-        if device_id:
-            for dev in active_license.devices:
-                if dev.id == device_id and dev.revoked_at is None:
-                    matched_device = dev
-                    break
-        elif installation_id:
-            for dev in active_license.devices:
-                if dev.installation_id == installation_id and dev.revoked_at is None:
-                    matched_device = dev
-                    break
-
         custom_features = [f.feature_code for f in active_license.features]
         features = resolve_features(active_license.plan_name, custom_features)
 
