@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Award, CheckCircle2, Download, Headphones, LogOut, Mail, Menu, PhoneCall, ShieldCheck, User, X } from 'lucide-react';
+import { Award, CheckCircle2, Download, Headphones, LogOut, Mail, Menu, MessageCircle, PhoneCall, ShieldCheck, User, X } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
 import ThemeToggle from '../components/ThemeToggle';
 import ConsultationModal from '../components/ConsultationModal';
@@ -104,6 +104,9 @@ export default function PublicLayout() {
           </nav>
 
           <div className="site-header-actions hidden xl:flex">
+            <div className="site-header-theme">
+              <ThemeToggle size="sm" />
+            </div>
             {isAuthenticated ? (
               <div className="flex items-center gap-2">
                 <Link to="/account" className="primary-button !min-h-10 !py-1.5 !px-4 text-xs font-semibold">
@@ -223,11 +226,15 @@ export default function PublicLayout() {
               <div className="pt-2 space-y-2 text-xs text-[var(--text-secondary)]">
                 <p className="flex items-center gap-2">
                   <PhoneCall size={15} className="text-emerald-500 shrink-0" />
-                  <span>Hotline: <strong>0904 885 833</strong> (8:00 - 18:00)</span>
+                  <span>Hotline: <a href="tel:0799660737" className="hover:text-[var(--brand)] transition-colors font-bold">0799 660 737</a> (8:00 - 18:00)</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <img src="/assets/brand/zalo-icon.png" alt="Zalo" width={15} height={15} className="rounded-[3px] shrink-0" />
+                  <span>Cộng đồng: <a href="https://zalo.me/g/euhwzpu6ouswooub16tl" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--brand)] transition-colors font-bold">Nhóm Zalo Kỹ thuật</a></span>
                 </p>
                 <p className="flex items-center gap-2">
                   <Mail size={15} className="text-[var(--brand)] shrink-0" />
-                  <span>Hỗ trợ: <a href="mailto:linhld.cs@gmail.com" className="hover:text-[var(--brand)] transition-colors font-bold">linhld.cs@gmail.com</a></span>
+                  <span>Hỗ trợ: <a href="mailto:support@bimautomation.solutions" className="hover:text-[var(--brand)] transition-colors font-bold">support@bimautomation.solutions</a></span>
                 </p>
               </div>
 
@@ -300,7 +307,7 @@ export default function PublicLayout() {
       )}
 
       {/* Floating Support Action Widget */}
-      {location.pathname !== '/' && (
+      {location.pathname !== '/' && location.pathname !== '/login' && (
         <FloatingSupportWidget onOpenConsultation={() => setConsultationOpen(true)} />
       )}
 

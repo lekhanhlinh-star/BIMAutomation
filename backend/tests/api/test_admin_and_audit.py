@@ -92,3 +92,83 @@ async def test_admin_rbac_and_audit_logging(client: TestClient) -> None:
         meta = str(l.get("metadata_json") or "")
         assert "secret" not in meta.lower() or "[REDACTED]" in meta
         assert "password" not in meta.lower() or "[REDACTED]" in meta
+
+
+@pytest.mark.asyncio
+async def test_admin_can_grant_admin_role_to_another_account(client: TestClient) -> None:
+    async with TestSessionLocal() as session:
+        admin = User(
+            email="role_manager@example.com",
+            hashed_password="hash",
+            role=UserRole.ADMIN,
+            is_active=True,
+        )
+        target = User(
+            email="future_admin@example.com",
+            hashed_password="hash",
+            role=UserRole.USER,
+            is_active=True,
+        )
+        regular_user = User(
+            email="not_allowed@example.com",
+            hashed_password="hash",
+            role=UserRole.USER,
+            is_active=True,
+        )
+        session.add_all([admin, target, regular_user])
+        await session.commit()
+        await session.refresh(admin)
+        await session.refresh(target)
+        await session.refresh(regular_user)
+        admin_id = admin.id
+        target_id = target.id
+        regular_user_id = regular_user.id
+
+    admin_token = create_access_token(
+        user_id=admin_id,
+        email="role_manager@example.com",
+        role="ADMIN",
+    )
+    regular_token = create_access_token(
+        user_id=regular_user_id,
+        email="not_allowed@example.com",
+        role="USER",
+    )
+
+    forbidden = client.post(
+        f"/api/v1/admin/customers/{target_id}/grant-admin",
+        headers={"Authorization": f"Bearer {regular_token}"},
+    )
+    assert forbidden.status_code == 403
+
+    response = client.post(
+        f"/api/v1/admin/customers/{target_id}/grant-admin",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == 200
+    assert response.json()["role"] == "ADMIN"
+
+    customers = client.get(
+        "/api/v1/admin/customers",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    target_customer = next(
+        customer for customer in customers.json() if customer["id"] == str(target_id)
+    )
+    assert target_customer["role"] == "ADMIN"
+
+    async with TestSessionLocal() as session:
+        promoted_user = await session.get(User, target_id)
+        assert promoted_user is not None
+        assert promoted_user.role == UserRole.ADMIN
+
+        result = await session.execute(
+            select(AuditLog).where(
+                AuditLog.action == "admin_role_granted",
+                AuditLog.target_id == str(target_id),
+            )
+        )
+        audit_log = result.scalar_one()
+        assert audit_log.actor_user_id == admin_id
+        assert '"previous_role": "USER"' in (audit_log.metadata_json or "")
+        assert '"new_role": "ADMIN"' in (audit_log.metadata_json or "")

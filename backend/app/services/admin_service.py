@@ -16,7 +16,7 @@ from app.models.order import Order, OrderStatus
 from app.models.payment import Payment
 from app.models.product import Product
 from app.models.release import Release
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.admin import (
     AdminCustomerRead,
     AdminDashboardStats,
@@ -32,6 +32,14 @@ from app.schemas.admin import (
 from app.services.audit_service import log_audit_event
 from app.services.checkout_service import expire_stale_orders
 from app.services.license_service import ensure_utc
+
+ONLINE_PRESENCE_WINDOW = timedelta(minutes=7)
+
+
+def is_recently_online(last_seen_at: datetime | None) -> bool:
+    if last_seen_at is None:
+        return False
+    return ensure_utc(last_seen_at) >= datetime.now(timezone.utc) - ONLINE_PRESENCE_WINDOW
 
 
 async def get_dashboard_stats(session: AsyncSession) -> AdminDashboardStats:
@@ -417,10 +425,19 @@ async def get_all_device_trials(
     trials = result.scalars().all()
     output = []
     for t in trials:
+        active_last_seen = (
+            t.last_user.active_device_last_seen
+            if t.last_user
+            and t.last_user.active_device_fingerprint == t.fingerprint_hash
+            else None
+        )
         is_active_device = bool(
             t.last_user
             and t.last_user.active_device_fingerprint == t.fingerprint_hash
             and t.status == DeviceTrialStatus.ACTIVE
+        )
+        is_currently_online = bool(
+            is_active_device and is_recently_online(active_last_seen)
         )
         output.append(
             AdminDeviceTrialRead(
@@ -437,6 +454,8 @@ async def get_all_device_trials(
                 initial_user_email=t.initial_user.email if t.initial_user else None,
                 last_user_email=t.last_user.email if t.last_user else None,
                 is_currently_active=is_active_device,
+                is_currently_online=is_currently_online,
+                last_seen_at=active_last_seen or t.updated_at,
                 created_at=t.created_at,
             )
         )
@@ -466,6 +485,11 @@ async def reset_license_device(session: AsyncSession, license_id: uuid.UUID) -> 
     license_obj.device_id = None
     for d in license_obj.devices:
         d.revoked_at = datetime.now(timezone.utc)
+
+    if license_obj.user:
+        license_obj.user.active_device_fingerprint = None
+        license_obj.user.active_device_name = None
+        license_obj.user.active_device_last_seen = None
 
     if license_obj.status == LicenseStatus.ACTIVE:
         license_obj.status = LicenseStatus.PENDING
@@ -533,7 +557,10 @@ async def create_release(session: AsyncSession, payload: ReleaseCreate) -> Relea
         release_notes=payload.release_notes,
         minimum_revit_version=payload.minimum_revit_version,
         maximum_revit_version=payload.maximum_revit_version,
+        file_size_label=payload.file_size_label,
+        sha256_hash=payload.sha256_hash,
         is_active=payload.is_active,
+        packages=[p.model_dump(exclude_none=True) for p in payload.packages] if payload.packages else [],
     )
     session.add(release)
     await session.commit()
@@ -565,8 +592,26 @@ async def get_all_customers(session: AsyncSession) -> list[AdminCustomerRead]:
         )
     )
 
+    # Fetch all user licenses map
+    lic_res = await session.execute(
+        select(License).options(selectinload(License.plan)).order_by(License.created_at.desc())
+    )
+    user_licenses: dict[uuid.UUID, License] = {}
+    for lic in lic_res.scalars().all():
+        if lic.user_id not in user_licenses:
+            user_licenses[lic.user_id] = lic
+        elif lic.status == LicenseStatus.ACTIVE and user_licenses[lic.user_id].status != LicenseStatus.ACTIVE:
+            user_licenses[lic.user_id] = lic
+
     customers = []
     for user, total_spent, joined_at in result.unique().all():
+        user_lic = user_licenses.get(user.id)
+        active_plan = None
+        license_status = None
+        if user_lic:
+            active_plan = user_lic.plan.name if user_lic.plan else (user_lic.plan_name or "Trả phí")
+            license_status = user_lic.status.value if hasattr(user_lic.status, 'value') else str(user_lic.status)
+
         customers.append(
             AdminCustomerRead(
                 id=user.id,
@@ -577,12 +622,51 @@ async def get_all_customers(session: AsyncSession) -> list[AdminCustomerRead]:
                 revit_version=user.revit_version,
                 use_case=user.use_case,
                 is_trial_registered=user.is_trial_registered,
+                role=user.role.value if hasattr(user.role, "value") else str(user.role),
                 is_active=user.is_active,
                 total_spent=int(total_spent or 0),
                 joined_at=joined_at or user.created_at,
+                active_plan=active_plan,
+                license_status=license_status,
             )
         )
     return customers
+
+
+async def grant_admin_role(
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    actor_user_id: uuid.UUID,
+) -> User:
+    result = await session.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy tài khoản.",
+        )
+
+    if user.role == UserRole.ADMIN:
+        return user
+
+    previous_role = user.role.value
+    user.role = UserRole.ADMIN
+    await session.commit()
+    await session.refresh(user)
+
+    await log_audit_event(
+        session=session,
+        action="admin_role_granted",
+        target_type="user",
+        target_id=str(user.id),
+        actor_user_id=actor_user_id,
+        metadata={
+            "email": user.email,
+            "previous_role": previous_role,
+            "new_role": UserRole.ADMIN.value,
+        },
+    )
+    return user
 
 
 async def get_all_payments(session: AsyncSession) -> list[AdminPaymentRead]:

@@ -169,7 +169,14 @@ def test_smtp_password_reset_message(monkeypatch) -> None:
         def send_message(self, message):
             events.append(("send", message["To"], message["Subject"]))
 
+    class FakeSMTPSSL(FakeSMTP):
+        def __init__(self, host, port, timeout):
+            events.append(("connect_ssl", host, port, timeout))
+
     monkeypatch.setattr(email_service.smtplib, "SMTP", FakeSMTP)
+    monkeypatch.setattr(email_service.smtplib, "SMTP_SSL", FakeSMTPSSL)
+
+    # 1. Test Port 587 STARTTLS
     smtp_settings = Settings(
         smtp_host="smtp.example.com", smtp_port=587,
         smtp_username="mailer", smtp_password="secret",
@@ -182,3 +189,16 @@ def test_smtp_password_reset_message(monkeypatch) -> None:
     assert sent is True
     assert ("tls",) in events
     assert ("send", "member@example.com", "Đặt lại mật khẩu BIMAutomation") in events
+
+    # 2. Test Port 465 SSL (Hostinger)
+    hostinger_settings = Settings(
+        smtp_host="smtp.hostinger.com", smtp_port=465,
+        smtp_username="support@bimautomation.solutions", smtp_password="secretpassword",
+        smtp_from_name="BIM Automation", smtp_use_ssl=True, smtp_use_tls=False
+    )
+    sent_order = asyncio.run(email_service.send_order_success_email(
+        "customer@example.com", "BA260823-1234", "Gói Cá Nhân Năm", 2500000, "BA-PRO-9999-ABCD", hostinger_settings
+    ))
+    assert sent_order is True
+    assert ("connect_ssl", "smtp.hostinger.com", 465, 15) in events
+    assert ("send", "customer@example.com", "Xác nhận thanh toán thành công đơn hàng BA260823-1234 - BIMAutomation") in events

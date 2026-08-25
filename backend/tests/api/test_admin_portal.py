@@ -153,3 +153,33 @@ async def test_admin_portal_full_flow(client: TestClient) -> None:
     )
     assert release_res.status_code == 201
     assert release_res.json()["version"] == "1.1.0"
+
+    # 12. Activate Trial on a machine and then DELETE via admin
+    inst_res = client.post(
+        "/api/v1/devices/activate",
+        headers=admin_headers,
+        json={
+            "productCode": "revitapp",
+            "installationId": "test-inst-uuid-1",
+            "machineFingerprint": "mock_fp_hash_admin_delete_test",
+            "displayName": "JUNK-TEST-MACHINE",
+            "platform": "windows",
+        },
+    )
+    assert inst_res.status_code == 200
+
+    trials_res = client.get("/api/v1/admin/device-trials", headers=admin_headers)
+    assert trials_res.status_code == 200
+    target_trial = [t for t in trials_res.json() if t["fingerprint_hash"] == "mock_fp_hash_admin_delete_test"][0]
+
+    del_trial_res = client.delete(
+        f"/api/v1/admin/device-trials/{target_trial['id']}",
+        headers=admin_headers,
+    )
+    assert del_trial_res.status_code == 200
+    assert del_trial_res.json()["status"] == "ok"
+
+    # Verify gone
+    trials_res_after = client.get("/api/v1/admin/device-trials", headers=admin_headers)
+    assert not any(t["id"] == target_trial["id"] for t in trials_res_after.json())
+

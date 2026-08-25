@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check, Minus, Sparkles, Star } from 'lucide-react';
+import AiToolIcon from './icons/AiToolIcon';
 
 const featureCategories = [
   {
@@ -99,6 +100,7 @@ const featureCategories = [
         code: 'mcp-read',
         name: 'Quyền đọc mô hình qua MCP Server (mcp-read)',
         desc: 'Cho phép AI Client (Claude/Cursor) đọc cấu trúc, truy vấn cấu kiện và tham số qua cổng 8765.',
+        tools: ['claude', 'cursor'],
         trial: true,
         rebar: false,
         rebarAi: true,
@@ -203,8 +205,8 @@ function RenderCell({ value }) {
   if (value === true) {
     return (
       <div className="flex justify-center text-emerald-500">
-        <div className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-          <Check size={13} strokeWidth={3} />
+        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+          <Check size={14} strokeWidth={2} />
         </div>
       </div>
     );
@@ -212,7 +214,7 @@ function RenderCell({ value }) {
   if (value === false) {
     return (
       <div className="flex justify-center text-[var(--text-muted)] opacity-40">
-        <Minus size={15} />
+        <Minus size={16} strokeWidth={1.8} />
       </div>
     );
   }
@@ -224,13 +226,13 @@ function RenderCell({ value }) {
 }
 export default function FeatureComparisonTable() {
   return (
-    <div className="mt-16 border border-[var(--line)] rounded-[var(--radius-panel)] bg-[var(--surface-raised)] shadow-sm overflow-hidden">
-      <div className="p-6 sm:p-8 bg-[var(--surface-subtle)] border-b border-[var(--line)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="mt-16 overflow-hidden rounded-[var(--radius-panel)] border border-[var(--line)] bg-[var(--surface-raised)] shadow-sm">
+      <div className="flex flex-col justify-between gap-4 border-b border-[var(--line)] bg-[var(--surface-subtle)] p-6 sm:p-8 md:flex-row md:items-center">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-soft)] text-xs font-bold text-[var(--brand)] mb-2">
-            <Sparkles size={13} /> Ma trận 13 Feature Codes & 5 Gói Bản Quyền
+          <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface-raised)] px-3 py-1.5 text-xs font-bold text-[var(--brand)]">
+            <Sparkles size={16} strokeWidth={1.8} /> Ma trận 13 Feature Codes & 5 Gói Bản Quyền
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)]">
+          <h2 className="text-xl font-extrabold leading-tight tracking-[-0.03em] text-[var(--text-primary)] sm:text-2xl">
             Bảng so sánh chi tiết tính năng BIMAutomation
           </h2>
           <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
@@ -256,7 +258,7 @@ export default function FeatureComparisonTable() {
               </th>
               <th className="p-4 text-center text-xs font-bold text-[var(--brand)] w-[16%] border-l border-[var(--line)] bg-[var(--brand-soft)]/20">
                 <span className="inline-flex items-center gap-1 text-[var(--brand)]">
-                  <Star size={11} fill="currentColor" /> Cốt thép + AI
+                  <Star size={14} strokeWidth={1.8} fill="currentColor" /> Cốt thép + AI
                 </span>
                 <span className="block text-[11px] font-bold text-amber-500">Khuyên dùng ★</span>
               </th>
@@ -291,7 +293,14 @@ export default function FeatureComparisonTable() {
                         </code>
                       </div>
                       {item.desc && (
-                        <p className="text-xs text-[var(--text-secondary)] mt-0.5">{item.desc}</p>
+                        <p className="mt-1 flex items-start gap-2 text-xs leading-5 text-[var(--text-secondary)]">
+                          {item.tools && (
+                            <span className="mt-0.5 flex shrink-0 items-center gap-1.5 text-[var(--text-primary)]" aria-hidden="true">
+                              {item.tools.map((tool) => <AiToolIcon key={tool} tool={tool} size={16} />)}
+                            </span>
+                          )}
+                          <span>{item.desc}</span>
+                        </p>
                       )}
                     </td>
                     <td className="py-3.5 px-2.5 border-l border-[var(--line)]">

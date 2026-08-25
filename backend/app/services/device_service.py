@@ -33,6 +33,13 @@ async def activate_device(
     - If no Paid License: Enforces 14-day hardware-bound trial policy (blocks expired machines across accounts).
     """
     now = datetime.now(timezone.utc)
+    clean_fp = fingerprint_hash.strip().lower()
+    active_fp = (user.active_device_fingerprint or "").strip().lower()
+    if active_fp and active_fp != clean_fp:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="concurrent_session_conflict",
+        )
 
     # 1. Check Paid License
     active_license = await get_user_active_license(session, user.id, product_code)
@@ -56,6 +63,9 @@ async def activate_device(
             existing_device.app_version = app_version or existing_device.app_version
             existing_device.last_seen_at = now
             existing_device.revoked_at = None
+            user.active_device_fingerprint = clean_fp
+            user.active_device_name = display_name or existing_device.display_name
+            user.active_device_last_seen = now
             await session.commit()
             await session.refresh(existing_device)
 
@@ -189,28 +199,37 @@ async def heartbeat_device(
     now = datetime.now(timezone.utc)
 
     # Validate active device concurrency
-    if fingerprint_hash:
-        if user.active_device_fingerprint and user.active_device_fingerprint != fingerprint_hash:
-            other_name = user.active_device_name or "thiết bị khác"
-            return {
-                "status": "conflict",
-                "allowed": False,
-                "error": "concurrent_session_conflict",
-                "message": f"Tài khoản của bạn đã chuyển sang hoạt động trên thiết bị '{other_name}'. Phiên làm việc trên máy này đã tạm ngắt.",
-                "lastSeenAt": now.isoformat(),
-            }
+    clean_hb_fp = (fingerprint_hash or "").strip().lower() or None
+    if not clean_hb_fp:
+        return {
+            "status": "invalid_request",
+            "allowed": False,
+            "error": "fingerprint_required",
+            "message": "Heartbeat phải kèm mã nhận dạng thiết bị.",
+            "lastSeenAt": now.isoformat(),
+        }
 
-        user.active_device_fingerprint = fingerprint_hash
-        user.active_device_last_seen = now
+    if user.active_device_fingerprint and user.active_device_fingerprint.lower() != clean_hb_fp:
+        other_name = user.active_device_name or "thiết bị khác"
+        return {
+            "status": "conflict",
+            "allowed": False,
+            "error": "concurrent_session_conflict",
+            "message": f"Tài khoản của bạn đã chuyển sang hoạt động trên thiết bị '{other_name}'. Phiên làm việc trên máy này đã tạm ngắt.",
+            "lastSeenAt": now.isoformat(),
+        }
 
-        trial_res = await session.execute(
-            select(DeviceTrial).where(DeviceTrial.fingerprint_hash == fingerprint_hash)
-        )
-        trial = trial_res.scalar_one_or_none()
-        if trial:
-            trial.updated_at = now
-            await session.commit()
-            return {"status": "ok", "allowed": True, "lastSeenAt": now.isoformat()}
+    user.active_device_fingerprint = clean_hb_fp
+    user.active_device_last_seen = now
+
+    trial_res = await session.execute(
+        select(DeviceTrial).where(DeviceTrial.fingerprint_hash == clean_hb_fp)
+    )
+    trial = trial_res.scalar_one_or_none()
+    if trial:
+        trial.updated_at = now
+        await session.commit()
+        return {"status": "ok", "allowed": True, "lastSeenAt": now.isoformat()}
 
     if device_id:
         dev_res = await session.execute(select(Device).where(Device.id == device_id))

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 import uuid
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.device_trial import DeviceTrialStatus
 from app.models.license import LicenseStatus
@@ -71,7 +71,7 @@ class AdminLicenseRead(BaseModel):
     plan: PlanRead | None = None
     plan_name: str = "standard"
     status: str
-    max_devices: int = 2
+    max_devices: int = 1
     starts_at: datetime | None = None
     expires_at: datetime | None = None
     activated_at: datetime | None = None
@@ -80,6 +80,8 @@ class AdminLicenseRead(BaseModel):
     user: AdminUserSummary | None = None
     features: list[str] = []
     devices: list[AdminDeviceRead] = []
+    is_currently_online: bool = False
+    last_seen_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -87,7 +89,7 @@ class AdminLicenseRead(BaseModel):
 class AdminLicenseCreate(BaseModel):
     user_id: uuid.UUID
     plan: str = "standard"
-    max_devices: int = 2
+    max_devices: int = 1
     days_valid: int = 365
     features: list[str] = []
 
@@ -117,6 +119,8 @@ class AdminDeviceTrialRead(BaseModel):
     initial_user_email: str | None = None
     last_user_email: str | None = None
     is_currently_active: bool = False
+    is_currently_online: bool = False
+    last_seen_at: datetime | None = None
     created_at: datetime
 
 
@@ -155,9 +159,12 @@ class AdminCustomerRead(BaseModel):
     revit_version: str | None = None
     use_case: str | None = None
     is_trial_registered: bool = False
+    role: str
     is_active: bool
     total_spent: int
     joined_at: datetime | None
+    active_plan: str | None = None
+    license_status: str | None = None
 
 
 class AdminPaymentRead(BaseModel):
@@ -181,6 +188,9 @@ class LicenseStatusUpdate(BaseModel):
     status: LicenseStatus
 
 
+from app.schemas.account import ReleasePackageItem
+
+
 class LicenseExtendRequest(BaseModel):
     days: int = Field(..., gt=0)
 
@@ -189,19 +199,38 @@ class ReleaseCreate(BaseModel):
     version: str
     download_url: str
     release_notes: str | None = None
-    minimum_revit_version: int | None = 2021
-    maximum_revit_version: int | None = 2026
+    minimum_revit_version: int | None = 2022
+    maximum_revit_version: int | None = 2027
+    file_size_label: str | None = "71.4 MB"
+    sha256_hash: str | None = None
     is_active: bool = True
+    packages: list[ReleasePackageItem] = []
 
 
 class ReleaseRead(BaseModel):
     id: uuid.UUID
     version: str
     download_url: str
-    release_notes: str | None
-    minimum_revit_version: int | None
-    maximum_revit_version: int | None
-    is_active: bool
+    release_notes: str | None = None
+    minimum_revit_version: int | None = 2022
+    maximum_revit_version: int | None = 2027
+    file_size_label: str | None = "71.4 MB"
+    sha256_hash: str | None = None
+    is_active: bool = True
     released_at: datetime
+    packages: list[ReleasePackageItem] = Field(default_factory=list)
+
+    @field_validator("packages", mode="before")
+    @classmethod
+    def validate_packages(cls, v):
+        if v is None:
+            return []
+        if isinstance(v, str):
+            try:
+                import json
+                return json.loads(v)
+            except Exception:
+                return []
+        return v
 
     model_config = ConfigDict(from_attributes=True)

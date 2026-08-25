@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>RevitAPP BIM Automation &amp; AI Rebar Engine</Name>
+    <Assembly>%LOCALAPPDATA%\RevitAPP\Revit[YEAR]\RevitAPP.dll</Assembly>
+    <FullClassName>RevitAPP.AppMain</FullClassName>
+    <ClientId>8e4f1642-4f77-4c76-96b0-7ef654219801</ClientId>
+    <VendorId>BIMAUTOMATION</VendorId>
+    <VendorDescription>BIMAutomation - https://bimautomation.solutions</VendorDescription>
+  </AddIn>
+</RevitAddIns>

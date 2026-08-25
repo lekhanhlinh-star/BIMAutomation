@@ -11,6 +11,9 @@ from app.models.plan import Plan
 from app.models.release import Release
 
 
+from app.schemas.account import LatestReleaseRead
+
+
 class PublicSystemInfo(BaseModel):
     app_name: str
     supported_revit_versions: list[int] = [2021, 2022, 2023, 2024, 2025, 2026]
@@ -44,3 +47,19 @@ async def get_public_info(
         latest_release_version=latest_rel.version if latest_rel else None,
         active_plans_count=int(active_plans_count),
     )
+
+
+@router.get("/release/latest", response_model=LatestReleaseRead | None)
+async def get_public_latest_release(
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+) -> LatestReleaseRead | None:
+    rel_res = await db.execute(
+        select(Release)
+        .where(Release.is_active == True)
+        .order_by(Release.released_at.desc())
+        .limit(1)
+    )
+    latest_rel = rel_res.scalar_one_or_none()
+    if not latest_rel:
+        return None
+    return LatestReleaseRead.model_validate(latest_rel)

@@ -49,7 +49,7 @@ class License(Base):
         ForeignKey("plans.id", ondelete="SET NULL"), nullable=True
     )
     plan_name: Mapped[str] = mapped_column(
-        String(100), default="standard", nullable=False
+        String(100), default="Gói Cá nhân Tháng (Monthly)", nullable=False
     )
     status: Mapped[LicenseStatus] = mapped_column(
         SQLEnum(LicenseStatus, native_enum=False),
@@ -57,7 +57,7 @@ class License(Base):
         nullable=False,
     )
     max_devices: Mapped[int] = mapped_column(
-        Integer, default=2, nullable=False
+        Integer, default=1, nullable=False
     )
     starts_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

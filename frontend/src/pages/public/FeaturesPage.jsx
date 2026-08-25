@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { savePendingIntent } from '../../utils/pendingIntent';
+import AiToolIcon from '../../components/icons/AiToolIcon';
 
 const workflows = [
   {
@@ -85,25 +86,25 @@ export default function FeaturesPage() {
     <div className="features-page pb-24 sm:pb-32">
       <section className="features-hero relative overflow-hidden border-b border-[var(--line)]">
         <div className="home-grid-pattern absolute inset-0 pointer-events-none" aria-hidden="true" />
-        <div className="page-shell relative grid items-center gap-14 py-16 sm:py-24 xl:min-h-[680px] xl:grid-cols-[0.9fr_1.1fr] xl:gap-20">
+        <div className="page-shell relative grid items-center gap-12 py-16 sm:py-24 xl:min-h-[680px] xl:grid-cols-[0.9fr_1.1fr] xl:gap-20">
           <div>
-            <div className="mb-7 inline-flex items-center gap-3 text-xs font-semibold text-[var(--text-secondary)]">
+            <div className="mb-6 inline-flex items-center gap-3 text-xs font-semibold text-[var(--text-secondary)]">
               <span className="h-px w-8 bg-[var(--brand)]" />
               <span>Một hệ plugin cho công việc Revit hằng ngày</span>
             </div>
-            <h1 className="max-w-3xl text-[clamp(2.8rem,6vw,5.6rem)] font-extrabold leading-[0.98] tracking-[-0.065em] text-balance">
+            <h1 className="max-w-3xl text-[clamp(2.75rem,6vw,5.25rem)] font-extrabold leading-[1.02] tracking-[-0.055em] text-balance">
               Nhiều giờ thao tác.
               <span className="mt-2 block text-[var(--brand)]">Được trả lại cho kỹ sư.</span>
             </h1>
-            <p className="mt-7 max-w-xl text-base leading-8 text-[var(--text-secondary)] sm:text-lg">
+            <p className="mt-6 max-w-xl text-base leading-7 text-[var(--text-secondary)] sm:text-lg sm:leading-8">
               BIMAutomation gom các công việc lặp lại—vẽ cốt thép, triển khai bản vẽ, chuyển dữ liệu CAD và điều khiển bằng AI—thành những workflow dễ dùng và dễ kiểm soát.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <button onClick={startTrial} className="primary-button !min-h-12 !px-6 whitespace-nowrap">
-                Dùng thử miễn phí <ArrowRight size={17} aria-hidden="true" />
+                Dùng thử miễn phí <ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" />
               </button>
               <button onClick={onOpenConsultation} className="home-text-link min-h-12 px-4 text-sm font-semibold whitespace-nowrap">
-                <Play size={16} className="text-[var(--brand)]" aria-hidden="true" /> Xem demo theo workflow
+                <Play size={18} strokeWidth={1.8} className="text-[var(--brand)]" aria-hidden="true" /> Xem demo theo workflow
               </button>
             </div>
           </div>
@@ -161,16 +162,25 @@ export default function FeaturesPage() {
         </div>
 
         <div className="features-workflow-stage mt-8 grid overflow-hidden xl:grid-cols-[0.92fr_1.08fr]">
-          <div className="p-7 sm:p-10 xl:p-14">
-            <span className="font-mono text-[10px] font-bold tracking-[0.16em] text-[var(--brand)]">{selectedWorkflow.eyebrow}</span>
-            <h3 className="mt-4 max-w-xl text-2xl font-extrabold leading-tight tracking-[-0.04em] sm:text-4xl text-balance">{selectedWorkflow.title}</h3>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">{selectedWorkflow.description}</p>
+          <div className="p-6 sm:p-10 xl:p-14">
+            <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] font-bold tracking-[0.14em] text-[var(--brand)]">
+              {selectedWorkflow.id === 'ai' && (
+                <span className="flex items-center gap-1.5" aria-hidden="true">
+                  <AiToolIcon tool="codex" size={16} />
+                  <AiToolIcon tool="claude" size={16} />
+                  <AiToolIcon tool="cursor" size={16} />
+                </span>
+              )}
+              <span>{selectedWorkflow.eyebrow}</span>
+            </div>
+            <h3 className="mt-4 max-w-xl text-2xl font-extrabold leading-tight tracking-[-0.035em] sm:text-4xl text-balance">{selectedWorkflow.title}</h3>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-[var(--text-secondary)] sm:text-base">{selectedWorkflow.description}</p>
             <ul className="mt-7 grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
               {selectedWorkflow.highlights.map((item) => (
                 <li key={item} className="features-spec-item">{item}</li>
               ))}
             </ul>
-            <Link to="/tutorials" className="home-arrow-link mt-8">Xem cách workflow hoạt động <ArrowRight size={16} aria-hidden="true" /></Link>
+            <Link to="/tutorials" className="home-arrow-link mt-8">Xem cách workflow hoạt động <ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></Link>
           </div>
 
           <div className="features-workflow-visual">
@@ -187,11 +197,16 @@ export default function FeaturesPage() {
               Từ một câu lệnh đến một kết quả có thể kiểm tra.
             </h2>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-              Codex, Claude hoặc Cursor có thể là nơi bạn bắt đầu. BIMAutomation kết nối yêu cầu đó với hệ plugin và đưa bước xác nhận cuối cùng trở lại Revit.
+              <span className="inline-flex items-center gap-1.5 font-semibold text-white"><AiToolIcon tool="codex" size={18} />Codex</span>,{' '}
+              <span className="inline-flex items-center gap-1.5 font-semibold text-white"><AiToolIcon tool="claude" size={18} />Claude</span> hoặc{' '}
+              <span className="inline-flex items-center gap-1.5 font-semibold text-white"><AiToolIcon tool="cursor" size={18} />Cursor</span> có thể là nơi bạn bắt đầu. BIMAutomation kết nối yêu cầu đó với hệ plugin và đưa bước xác nhận cuối cùng trở lại Revit.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap gap-2.5">
               {['Codex', 'Claude', 'Cursor'].map((client) => (
-                <span key={client} className="border border-white/15 bg-white/[0.04] px-4 py-2 text-xs font-bold text-slate-200">{client}</span>
+                <span key={client} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/[0.05] px-4 py-2 text-xs font-bold text-slate-100 shadow-sm">
+                  <AiToolIcon tool={client.toLowerCase()} size={18} />
+                  {client}
+                </span>
               ))}
             </div>
           </div>
@@ -219,7 +234,7 @@ export default function FeaturesPage() {
             <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300">Dành cho kỹ sư, phòng BIM và doanh nghiệp muốn đánh giá BIMAutomation trên preset, bảng Excel và quy chuẩn hồ sơ đang sử dụng.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row xl:flex-col">
-            <button onClick={onOpenConsultation} className="primary-button !min-h-12 !bg-cyan-400 !px-6 !text-slate-950 hover:!bg-cyan-300">Đặt lịch demo 1-1 <ArrowRight size={17} /></button>
+            <button onClick={onOpenConsultation} className="primary-button !min-h-12 !bg-cyan-400 !px-6 !text-slate-950 hover:!bg-cyan-300">Đặt lịch demo 1-1 <ArrowRight size={18} strokeWidth={1.8} /></button>
             <button onClick={startTrial} className="inline-flex min-h-12 items-center justify-center border border-white/20 px-6 text-sm font-bold text-white transition hover:border-cyan-300 hover:text-cyan-300">Tải bản dùng thử</button>
           </div>
         </div>

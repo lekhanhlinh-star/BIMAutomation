@@ -1,5 +1,20 @@
 import { axiosClient } from './axiosClient';
 
+export const formatPlanName = (planName) => {
+  if (!planName) return 'Gói cá nhân tháng';
+  const lower = String(planName).toLowerCase().trim();
+  if (lower.includes('năm') || lower.includes('annual') || lower.includes('year') || lower === '12') {
+    return 'Gói cá nhân năm';
+  }
+  if (lower.includes('trial') || lower.includes('thử') || lower.includes('14')) {
+    return 'Dùng thử 14 ngày';
+  }
+  if (lower.includes('tháng') || lower.includes('monthly') || lower.includes('standard') || lower.includes('bimautomation') || lower === '1' || lower === 'pro') {
+    return 'Gói cá nhân tháng';
+  }
+  return planName;
+};
+
 export const getPlanPresentation = (durationMonthsOrPlan) => {
   let duration = typeof durationMonthsOrPlan === 'number' ? durationMonthsOrPlan : durationMonthsOrPlan?.duration_months;
   let name = typeof durationMonthsOrPlan === 'object' ? durationMonthsOrPlan?.name : null;
@@ -19,7 +34,7 @@ export const getPlanPresentation = (durationMonthsOrPlan) => {
     };
   }
 
-  if (name?.toLowerCase().includes('tháng') || name?.toLowerCase().includes('monthly') || duration === 1) {
+  if (name?.toLowerCase().includes('tháng') || name?.toLowerCase().includes('monthly') || duration === 1 || name?.toLowerCase() === 'standard') {
     return {
       name: 'Gói cá nhân tháng',
       period: '/ tháng',
@@ -50,14 +65,14 @@ export const getPlanPresentation = (durationMonthsOrPlan) => {
   }
 
   return {
-    name: 'Gói Doanh nghiệp (Enterprise)',
-    period: '/ giấy phép',
-    description: 'Giải pháp hoàn chỉnh cho phòng BIM & doanh nghiệp: Quản lý thiết bị tập trung, tùy biến Preset & đào tạo 1-1.',
+    name: 'Gói cá nhân tháng',
+    period: '/ tháng',
+    description: 'Toàn bộ BIMAutomation với lựa chọn thanh toán linh hoạt theo tháng.',
     features: [
-      'Toàn bộ 13 Feature Codes & 57 MCP Tools',
-      'Cổng Quản trị License tập trung cho Team',
-      'Tùy biến thư viện Preset & quy chuẩn nét vẽ công ty',
-      'Chuyên viên hỗ trợ kỹ thuật và đào tạo 1-1'
+      'Toàn bộ plugin BIMAutomation',
+      'Kết nối Codex, Claude và Cursor',
+      'Cập nhật tính năng trong thời hạn',
+      'Đổi máy làm việc linh hoạt'
     ],
     isPopular: false,
   };
@@ -150,20 +165,26 @@ export const publicApi = {
 
   getReleases: async () => {
     try {
-      const res = await axiosClient.get('/download/latest');
+      const res = await axiosClient.get('/public/release/latest');
       if (res.data) {
+        const d = res.data;
+        const changelogLines = d.release_notes
+          ? d.release_notes.split('\n').filter(Boolean)
+          : [
+              'Tích hợp 57 MCP Tools và hệ thống AI Rebar Engine thế hệ mới',
+              'Hỗ trợ chính thức Autodesk Revit 2022, 2023, 2024, 2025, 2026, 2027',
+              'Cơ chế kích hoạt 1-click qua Google OAuth PKCE Server-Authoritative',
+              'Bổ sung bộ 18 lệnh Ribbon trên tab BIMAutomation'
+            ];
+
         return {
-          latestVersion: res.data.version || 'v2.5.0',
-          releaseDate: '2026-08-20',
-          fileSize: '48.2 MB',
-          revitVersions: `Revit ${res.data.minimum_revit_version || 2022} - ${res.data.maximum_revit_version || 2027}`,
-          downloadUrl: res.data.download_url || '#download-link',
-          changelog: [
-            res.data.release_notes || 'Tích hợp 57 MCP Tools và hệ thống AI Rebar Engine thế hệ mới',
-            'Hỗ trợ chính thức Autodesk Revit 2022, 2023, 2024, 2025, 2026, 2027',
-            'Cơ chế kích hoạt 1-click qua Google OAuth PKCE Server-Authoritative',
-            'Bổ sung bộ 18 lệnh Ribbon trên tab LDL-STRUCTURAL'
-          ]
+          latestVersion: d.version || 'v2.5.0',
+          releaseDate: d.released_at ? new Date(d.released_at).toLocaleDateString('vi-VN') : 'Mới nhất',
+          fileSize: d.file_size_label || '48.5 MB',
+          sha256Hash: d.sha256_hash || null,
+          revitVersions: `Revit ${d.minimum_revit_version || 2022} - ${d.maximum_revit_version || 2027}`,
+          downloadUrl: d.download_url || '#download-link',
+          changelog: changelogLines
         };
       }
       throw new Error("No release");
@@ -171,12 +192,13 @@ export const publicApi = {
       return {
         latestVersion: 'v2.5.0',
         releaseDate: '2026-08-20',
-        fileSize: '48.2 MB',
+        fileSize: '48.5 MB',
+        sha256Hash: null,
         revitVersions: 'Revit 2022, 2023, 2024, 2025, 2026, 2027',
         downloadUrl: '#download-link',
         changelog: [
           'Tích hợp 57 MCP Tools và hệ sinh thái AI Rebar Engine',
-          'Bổ sung 18 lệnh Ribbon chuyên dụng trên tab LDL-STRUCTURAL',
+          'Bổ sung 18 lệnh Ribbon chuyên dụng trên tab BIMAutomation',
           'Hỗ trợ chính thức Autodesk Revit 2022–2027 (64-bit)',
           'Tự động triển khai bản vẽ dầm và đài móng liên tục lên Sheet'
         ]
@@ -210,10 +232,14 @@ export const customerApi = {
         return res.data.map(lic => ({
           id: lic.id,
           key: lic.license_key,
-          planName: lic.plan?.name || 'Gói BIMAutomation',
+          planName: formatPlanName(lic.plan?.name || lic.plan_name),
           status: lic.status || 'ACTIVE',
-          activatedAt: lic.activated_at ? new Date(lic.activated_at).toLocaleDateString('vi-VN') : 'Chưa kích hoạt',
-          expiresAt: lic.expires_at ? new Date(lic.expires_at).toLocaleDateString('vi-VN') : 'Vĩnh viễn',
+          activatedAt: lic.activated_at
+            ? new Date(lic.activated_at).toLocaleDateString('vi-VN')
+            : (lic.starts_at ? new Date(lic.starts_at).toLocaleDateString('vi-VN') : (lic.created_at ? new Date(lic.created_at).toLocaleDateString('vi-VN') : 'Hôm nay')),
+          expiresAt: lic.expires_at
+            ? new Date(lic.expires_at).toLocaleDateString('vi-VN')
+            : '30 ngày',
           hardwareId: lic.device_id || 'Chưa liên kết máy',
           activeDevices: lic.device_id ? 1 : 0,
           maxDevices: 1
@@ -233,7 +259,7 @@ export const customerApi = {
         return res.data.map(ord => ({
           id: ord.order_code || (typeof ord.id === 'string' ? ord.id.substring(0, 8).toUpperCase() : ord.id),
           date: ord.created_at ? new Date(ord.created_at).toLocaleDateString('vi-VN') : 'Mới đây',
-          planName: ord.plan?.name || 'Gói bản quyền',
+          planName: formatPlanName(ord.plan?.name || ord.plan_name),
           amount: typeof ord.amount === 'number' ? `${ord.amount.toLocaleString('vi-VN')}đ` : (ord.amount || '0đ'),
           paymentMethod: ord.status === 'PAID' ? 'Chuyển khoản QR (VietQR)' : 'Chờ thanh toán',
           status: ord.status || 'PENDING',
@@ -285,25 +311,42 @@ export const adminApi = {
       revitVersion: c.revit_version || '—',
       useCase: c.use_case || '—',
       isTrialRegistered: !!c.is_trial_registered,
+      role: c.role || 'USER',
+      activePlan: c.active_plan ? formatPlanName(c.active_plan) : null,
+      licenseStatus: c.license_status || null,
       totalSpent: typeof c.total_spent === 'number' ? `${c.total_spent.toLocaleString('vi-VN')}đ` : '0đ',
       status: c.is_active ? 'Active' : 'Inactive',
       joinedAt: c.joined_at ? new Date(c.joined_at).toLocaleDateString('vi-VN') : '—'
     }));
   },
 
+  grantAdminRole: async (userId) =>
+    (await axiosClient.post(`/admin/customers/${userId}/grant-admin`)).data,
+
   getLicenses: async () => {
     const res = await axiosClient.get('/admin/licenses');
     if (!Array.isArray(res.data)) return [];
-    return res.data.map(lic => ({
-      id: lic.id,
-      key: lic.license_key,
-      customer: lic.user?.name || 'Chưa cập nhật',
-      email: lic.user?.email || '—',
-      plan: lic.plan_name || lic.plan?.name || 'Gói BIMAutomation',
-      expiresAt: lic.expires_at ? new Date(lic.expires_at).toLocaleDateString('vi-VN') : 'Vĩnh viễn',
-      status: lic.status,
-      device: lic.device_id || 'Chưa liên kết máy'
-    }));
+    return res.data.map(lic => {
+      const expires = lic.expires_at ? new Date(lic.expires_at) : null;
+      const now = new Date();
+      const remainingDays = expires ? Math.max(0, Math.ceil((expires - now) / (1000 * 60 * 60 * 24))) : 30;
+      return {
+        id: lic.id,
+        key: lic.license_key,
+        customer: lic.user?.name || 'Chưa cập nhật',
+        email: lic.user?.email || '—',
+        plan: formatPlanName(lic.plan_name || lic.plan?.name),
+        startsAt: lic.starts_at ? new Date(lic.starts_at).toLocaleDateString('vi-VN') : (lic.created_at ? new Date(lic.created_at).toLocaleDateString('vi-VN') : 'Hôm nay'),
+        expiresAt: expires ? expires.toLocaleDateString('vi-VN') : '30 ngày',
+        remainingDays,
+        status: lic.status,
+        isOnline: !!lic.is_currently_online,
+        lastSeenAt: lic.last_seen_at ? new Date(lic.last_seen_at).toLocaleString('vi-VN') : 'Chưa có tín hiệu',
+        device: lic.device_id || (lic.user?.active_device_name || 'Chưa liên kết máy'),
+        revitVersion: lic.user?.revit_version || '2025',
+        platform: 'Windows',
+      };
+    });
   },
 
   getDeviceTrials: async () => {
@@ -327,6 +370,8 @@ export const adminApi = {
         resetCount: t.reset_count || 0,
         userEmail: t.last_user_email || t.initial_user_email || '—',
         isCurrentlyActive: t.is_currently_active || false,
+        isOnline: !!t.is_currently_online,
+        lastSeenAt: t.last_seen_at ? new Date(t.last_seen_at).toLocaleString('vi-VN') : 'Chưa có tín hiệu',
       };
     });
   },
@@ -334,8 +379,21 @@ export const adminApi = {
   resetDeviceTrial: async (trialId, days = 14) =>
     (await axiosClient.post(`/admin/device-trials/${trialId}/reset?days=${days}`)).data,
 
+  grantDeviceTrial: async (trialId, days = 14) =>
+    (await axiosClient.post(`/admin/device-trials/${trialId}/grant?days=${days}`)).data,
+
+  revokeDeviceTrial: async (trialId) =>
+    (await axiosClient.post(`/admin/device-trials/${trialId}/revoke`)).data,
+
   blockDeviceTrial: async (trialId) =>
     (await axiosClient.post(`/admin/device-trials/${trialId}/block`)).data,
+
+  setActiveDeviceTrial: async (trialId) =>
+    (await axiosClient.post(`/admin/device-trials/${trialId}/set-active`)).data,
+
+  deleteDeviceTrial: async (trialId) =>
+    (await axiosClient.delete(`/admin/device-trials/${trialId}`)).data,
+
 
   resetLicenseDevice: async (licenseId) =>
     (await axiosClient.post(`/admin/licenses/${licenseId}/reset-device`)).data,
@@ -404,6 +462,11 @@ export const adminApi = {
       version: r.version,
       downloadUrl: r.download_url,
       releaseNotes: r.release_notes,
+      fileSizeLabel: r.file_size_label,
+      sha256Hash: r.sha256_hash,
+      minimumRevitVersion: r.minimum_revit_version,
+      maximumRevitVersion: r.maximum_revit_version,
+      packages: r.packages || [],
       isActive: r.is_active,
       releasedAt: r.released_at ? new Date(r.released_at).toLocaleDateString('vi-VN') : '—'
     }));

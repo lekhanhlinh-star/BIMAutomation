@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, CheckCircle2, ShieldCheck, X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import BrandLogo from './BrandLogo';
 
@@ -57,6 +57,7 @@ export default function TrialRegistrationModal({ isOpen, onClose, onSuccess }) {
         {onClose && (
           <button
             onClick={onClose}
+            aria-label="Đóng biểu mẫu đăng ký dùng thử"
             className="absolute top-4 right-4 p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-control)] hover:bg-[var(--surface-subtle)] transition-colors"
           >
             <X size={20} />
@@ -78,10 +79,8 @@ export default function TrialRegistrationModal({ isOpen, onClose, onSuccess }) {
 
         {isSuccess ? (
           <div className="py-12 text-center space-y-4">
-            <div className="inline-flex p-3 rounded-full bg-emerald-500/20 text-emerald-500">
-              <CheckCircle2 size={48} className="animate-bounce" />
-            </div>
-            <h3 className="text-xl font-bold text-[var(--text-primary)]">Đăng ký dùng thử thành công!</h3>
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400">Trial active</p>
+            <h3 className="text-xl font-bold text-[var(--text-primary)]">Đăng ký dùng thử thành công</h3>
             <p className="text-sm text-[var(--text-secondary)]">
               Tài khoản của bạn đã được kích hoạt phiên dùng thử. Đang chuyển hướng...
             </p>
@@ -228,10 +227,7 @@ export default function TrialRegistrationModal({ isOpen, onClose, onSuccess }) {
                     <span>Đang kích hoạt bản quyền thử nghiệm...</span>
                   </>
                 ) : (
-                  <>
-                    <ShieldCheck size={18} />
-                    <span>Bắt đầu dùng thử ngay</span>
-                  </>
+                  <span>Bắt đầu dùng thử ngay</span>
                 )}
               </button>
             </div>

@@ -20,7 +20,7 @@
 3. **Hub 57 MCP Tools Chuẩn Hóa (Spec `2025-11-25`):**
    - Phủ rộng 8 nhóm chức năng: Vẽ thép (12), Đọc mô hình (5), Xử lý Excel (4), Dịch thuật Việt/Trung (2), Thao tác cấu kiện (11), Tag & Khối lượng (5), Điều khiển Ribbon (15), Thực thi C# động an toàn & Tiện ích (3).
    - Tích hợp 1-click với **Claude Desktop** (`claude_desktop_config.json`) và **Cursor IDE** (`.cursor/mcp.json`).
-4. **Hệ Thống 18 Lệnh Ribbon Trực Quan Trên Tab `LDL-STRUCTURAL`:**
+4. **Hệ Thống 18 Lệnh Ribbon Trực Quan Trên Tab `BIMAutomation`:**
    - Phân bổ khoa học thành 4 Panels: `Rebar` (5 lệnh), `Drawing Rebar` (5 lệnh), `CAD Tools` (4 lệnh), `Commands` (4 lệnh).
 5. **Kiến Trúc An Toàn Tuyệt Đối (Why AI Can Draw Rebar):**
    - Gọi trực tiếp vào Native Engine C# .NET qua hàng đợi `IExternalEventHandler` / `ExternalEvent` luồng đơn (STA).
@@ -42,9 +42,10 @@ BIMAutomation / RevitAPP
 ├── backend/          # FastAPI (Python 3.11+) — Server-Authoritative Licensing, Google OAuth PKCE, Webhook SePay/VietQR
 ├── frontend/         # React 18 + Vite 6 + Tailwind CSS v4 — Web platform, Interactive Hero Prompt, 57 MCP Tools Hub
 ├── docs/             # Tài liệu kỹ thuật chi tiết
+│   ├── ADDIN_INTEGRATION_AND_RELEASE_GUIDE.md # Cẩm nang Tích hợp & Phát hành Addin (C# / .NET)
 │   ├── revit_mcp.md  # Đặc tả giao thức MCP Server & Danh bạ 57 Tools
-│   └── revit_addin_integration.md # Hướng dẫn tích hợp C# Add-in với OAuth & License
-└── installer/        # RevitAPP.Installer.exe — Bộ cài đặt tự động cho Revit 2022-2027
+│   └── revit_addin_integration.md # Hướng dẫn kỹ thuật C# Add-in với OAuth & License
+└── installer/        # BIMAutomation.Installer.exe — Bộ cài đặt tự động cho Revit 2022-2027
 ```
 
 ### Tech Stack Chi Tiết
@@ -60,7 +61,7 @@ BIMAutomation / RevitAPP
 
 ---
 
-## 3. Hệ Thống 18 Lệnh Ribbon Trên Tab `LDL-STRUCTURAL`
+## 3. Hệ Thống 18 Lệnh Ribbon Trên Tab `BIMAutomation`
 
 | Panel | Lệnh Ribbon | Mã Feature Code | Phím Tắt | Mô Tả |
 |---|---|---|:---:|---|

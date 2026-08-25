@@ -61,8 +61,11 @@ export const useAuthStore = create((set, get) => ({
   loginWithGoogle: async () => {
     set({ isLoading: true, error: null });
     try {
+      const redirectUri = `${window.location.origin}/auth/google/callback`;
       // Backend returns Google authorization_url
-      const response = await axiosClient.get('/auth/google/authorize');
+      const response = await axiosClient.get('/auth/google/authorize', {
+        params: { redirect_url: redirectUri },
+      });
       if (response.data?.authorization_url) {
         window.location.href = response.data.authorization_url;
       } else {
@@ -92,8 +95,9 @@ export const useAuthStore = create((set, get) => ({
   handleGoogleCallback: async (code, state) => {
     set({ isLoading: true, error: null });
     try {
+      const redirectUri = `${window.location.origin}/auth/google/callback`;
       const response = await axiosClient.get('/auth/google/callback', {
-        params: { code, state },
+        params: { code, state, redirect_url: redirectUri },
       });
       const token = response.data.access_token;
       get().setToken(token);

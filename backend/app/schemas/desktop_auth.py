@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 import uuid
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class DesktopTokenRequest(BaseModel):
@@ -44,8 +44,191 @@ class LicenseCheckRequest(BaseModel):
     revit_version: str | None = Field(None, description="Revit version e.g. 2025")
     installation_id: str | None = Field(None, description="Client installation UUID")
     device_id: str | None = Field(None, description="Existing device activation UUID if any")
-    takeover: bool = Field(True, description="Take over active session for this account if switching devices")
+    takeover: bool = Field(False, description="Take over active session only after an explicit user action")
     is_periodic: bool = Field(False, description="Whether this is a background heartbeat check")
+
+    # Enhanced hardware signals for anti-abuse
+    bios_uuid: str | None = Field(None, description="SMBIOS System Product UUID")
+    cpu_id: str | None = Field(None, description="Processor ID / CPU serial")
+    motherboard_serial: str | None = Field(None, description="BaseBoard serial number")
+    disk_serial: str | None = Field(None, description="Primary physical disk drive serial")
+    mac_address: str | None = Field(None, description="Primary network adapter MAC address")
+    machine_guid: str | None = Field(None, description="Windows MachineGuid")
+    is_virtual_machine: bool | None = Field(None, description="Whether client detected a Virtual Machine/Sandbox")
+    virtual_machine_hint: str | None = Field(None, description="Client-side VM detection evidence")
+    request_timestamp: int | None = Field(None, description="Epoch seconds when request was generated")
+    request_signature: str | None = Field(None, description="HMAC-SHA256 signature of request payload")
+    app_version: str | None = Field(None, description="Add-in app version")
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_aliases(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        def get_val(*keys: str) -> Any:
+            for k in keys:
+                if k in data and data[k] is not None:
+                    return data[k]
+            return None
+
+        # Resolve fingerprint aliases
+        if "hardware_fingerprint" not in data or not data["hardware_fingerprint"]:
+            fp = get_val(
+                "hardware_fingerprint",
+                "hardwareFingerprint",
+                "machineFingerprint",
+                "fingerprintHash",
+                "machine_fingerprint",
+                "MachineFingerprint",
+                "HardwareFingerprint",
+                "FingerprintHash",
+            )
+            if fp is not None:
+                data["hardware_fingerprint"] = fp
+
+        # Resolve cpu_id / processor_id aliases
+        if "cpu_id" not in data or data["cpu_id"] is None:
+            val = get_val(
+                "cpu_id",
+                "processor_id",
+                "cpuId",
+                "processorId",
+                "ProcessorId",
+                "CpuId",
+                "CPU_ID",
+                "PROCESSOR_ID",
+            )
+            if val is not None:
+                data["cpu_id"] = str(val).strip()
+
+        # Resolve motherboard_serial / baseboard_serial aliases
+        if "motherboard_serial" not in data or data["motherboard_serial"] is None:
+            val = get_val(
+                "motherboard_serial",
+                "baseboard_serial",
+                "motherboardSerial",
+                "baseboardSerial",
+                "MotherboardSerial",
+                "BaseboardSerial",
+                "BaseBoardSerial",
+                "MOTHERBOARD_SERIAL",
+                "BASEBOARD_SERIAL",
+            )
+            if val is not None:
+                data["motherboard_serial"] = str(val).strip()
+
+        # Resolve bios_uuid aliases
+        if "bios_uuid" not in data or data["bios_uuid"] is None:
+            val = get_val("bios_uuid", "biosUuid", "BiosUuid", "biosUUID", "BIOS_UUID")
+            if val is not None:
+                data["bios_uuid"] = str(val).strip()
+
+        # Resolve disk_serial aliases
+        if "disk_serial" not in data or data["disk_serial"] is None:
+            val = get_val("disk_serial", "diskSerial", "DiskSerial", "DISK_SERIAL")
+            if val is not None:
+                data["disk_serial"] = str(val).strip()
+
+        # Resolve mac_address aliases
+        if "mac_address" not in data or data["mac_address"] is None:
+            val = get_val("mac_address", "macAddress", "MacAddress", "MAC_ADDRESS")
+            if val is not None:
+                data["mac_address"] = str(val).strip()
+
+        # Resolve machine_guid aliases
+        if "machine_guid" not in data or data["machine_guid"] is None:
+            val = get_val("machine_guid", "machineGuid", "MachineGuid", "MACHINE_GUID")
+            if val is not None:
+                data["machine_guid"] = str(val).strip()
+
+        # Resolve request_timestamp aliases
+        if "request_timestamp" not in data or data["request_timestamp"] is None:
+            val = get_val(
+                "request_timestamp",
+                "requestTimestamp",
+                "RequestTimestamp",
+                "timestamp",
+                "Timestamp",
+                "REQUEST_TIMESTAMP",
+            )
+            if val is not None:
+                try:
+                    data["request_timestamp"] = int(val)
+                except (ValueError, TypeError):
+                    data["request_timestamp"] = val
+
+        # Resolve request_signature aliases
+        if "request_signature" not in data or data["request_signature"] is None:
+            val = get_val(
+                "request_signature",
+                "requestSignature",
+                "RequestSignature",
+                "signature",
+                "Signature",
+                "REQUEST_SIGNATURE",
+            )
+            if val is not None:
+                data["request_signature"] = str(val).strip()
+
+        # Resolve product_code aliases
+        if "product_code" not in data or data["product_code"] is None:
+            val = get_val("product_code", "productCode", "ProductCode", "PRODUCT_CODE")
+            if val is not None:
+                data["product_code"] = val
+
+        # Resolve device_name aliases
+        if "device_name" not in data or data["device_name"] is None:
+            val = get_val("device_name", "deviceName", "displayName", "DisplayName", "DeviceName")
+            if val is not None:
+                data["device_name"] = val
+
+        # Resolve revit_version aliases
+        if "revit_version" not in data or data["revit_version"] is None:
+            val = get_val("revit_version", "revitVersion", "RevitVersion")
+            if val is not None:
+                data["revit_version"] = val
+
+        # Resolve installation_id aliases
+        if "installation_id" not in data or data["installation_id"] is None:
+            val = get_val("installation_id", "installationId", "InstallationId")
+            if val is not None:
+                data["installation_id"] = val
+
+        # Resolve device_id aliases
+        if "device_id" not in data or data["device_id"] is None:
+            val = get_val("device_id", "deviceId", "DeviceId")
+            if val is not None:
+                data["device_id"] = val
+
+        # Resolve concurrency-control aliases used by desktop JSON serializers.
+        if "takeover" not in data or data["takeover"] is None:
+            val = get_val("takeover", "Takeover")
+            if val is not None:
+                data["takeover"] = val
+
+        if "is_periodic" not in data or data["is_periodic"] is None:
+            val = get_val("is_periodic", "isPeriodic", "IsPeriodic")
+            if val is not None:
+                data["is_periodic"] = val
+
+        # Resolve is_virtual_machine aliases
+        if "is_virtual_machine" not in data or data["is_virtual_machine"] is None:
+            val = get_val("is_virtual_machine", "isVirtualMachine", "IsVirtualMachine")
+            if val is not None:
+                data["is_virtual_machine"] = val
+
+        if "virtual_machine_hint" not in data or data["virtual_machine_hint"] is None:
+            val = get_val("virtual_machine_hint", "virtualMachineHint", "VirtualMachineHint")
+            if val is not None:
+                data["virtual_machine_hint"] = str(val).strip()
+
+        if "app_version" not in data or data["app_version"] is None:
+            val = get_val("app_version", "appVersion", "AppVersion")
+            if val is not None:
+                data["app_version"] = str(val).strip()
+
+        return data
 
 
 class EntitlementResponse(BaseModel):
@@ -59,5 +242,9 @@ class EntitlementResponse(BaseModel):
     features: list[str] = []
     serverTime: str
     refreshAfterSeconds: int = 300
+    signedLicenseToken: str | None = None
+    gracePeriodHours: int = 72
+    grace_period_hours: int = 72
+    trialQuota: dict[str, Any] | None = None
     error: str | None = None
     message: str | None = None

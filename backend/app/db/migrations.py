@@ -40,6 +40,8 @@ async def apply_sqlite_migrations(conn: AsyncConnection) -> None:
                                 default_clause = f" DEFAULT '{val}'"
                         elif "BOOLEAN" in col_type_str.upper() or "INT" in col_type_str.upper():
                             default_clause = " DEFAULT 0"
+                        elif "JSON" in col_type_str.upper():
+                            default_clause = " DEFAULT '[]'"
                         elif "VARCHAR" in col_type_str.upper() or "TEXT" in col_type_str.upper():
                             default_clause = " DEFAULT ''"
 

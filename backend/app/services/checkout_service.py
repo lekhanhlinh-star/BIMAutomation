@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
 import random
 import re
@@ -152,7 +153,7 @@ async def process_payment_webhook(
 
     result = await session.execute(
         select(Order)
-        .options(selectinload(Order.plan))
+        .options(selectinload(Order.plan), selectinload(Order.user))
         .where(Order.order_code == order_code)
     )
     order = result.scalar_one_or_none()
@@ -190,16 +191,43 @@ async def process_payment_webhook(
     )
     session.add(payment)
 
-    # Auto Create License
+    # Auto Create License - Activated immediately upon payment
+    duration_months = order.plan.duration_months if order.plan else 1
+    duration_days = 365 if duration_months >= 12 else (duration_months * 30 if duration_months else 30)
+    expires_at = now + timedelta(days=duration_days)
+
     license_key = generate_license_key()
     license_obj = License(
         license_key=license_key,
         user_id=order.user_id,
         order_id=order.id,
         plan_id=order.plan_id,
-        status=LicenseStatus.PENDING,
+        plan_name=order.plan.name if order.plan else "standard",
+        status=LicenseStatus.ACTIVE,
+        starts_at=now,
+        activated_at=now,
+        expires_at=expires_at,
     )
     session.add(license_obj)
 
     await session.commit()
+
+    # Send confirmation email asynchronously
+    if order.user and order.user.email:
+        try:
+            from app.services import email_service
+            plan_title = order.plan.name if order.plan else "Gói Bản Quyền BIMAutomation"
+            asyncio.create_task(
+                email_service.send_order_success_email(
+                    email=order.user.email,
+                    order_code=order.order_code,
+                    plan_name=plan_title,
+                    amount=order.amount,
+                    license_key=license_key,
+                )
+            )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Could not trigger order email: {e}")
+
     return order

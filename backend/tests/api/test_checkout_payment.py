@@ -134,4 +134,6 @@ async def test_plans_orders_qr_and_webhook_flow(client: TestClient) -> None:
         )
         db_license = res_license.scalar_one()
         assert db_license.license_key.startswith("BP7X-")
-        assert db_license.status == LicenseStatus.PENDING
+        assert db_license.status == LicenseStatus.ACTIVE
+        assert db_license.starts_at is not None
+        assert db_license.expires_at is not None

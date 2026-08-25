@@ -33,9 +33,13 @@ ENV/
 env.bak/
 venv.bak/
 
-# Environment variables
+# Environment variables & Keys
 .env
 !.env.example
+*.pem
+*.key
+*.pfx
+data/
 
 # Pytest / Coverage
 .pytest_cache/

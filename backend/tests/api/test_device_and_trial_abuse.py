@@ -373,3 +373,323 @@ async def test_single_active_device_concurrency_and_takeover(client: TestClient)
     assert data_hb_b2["error"] == "concurrent_session_conflict"
     assert "OFFICE-PC-A" in data_hb_b2["message"]
 
+
+@pytest.mark.asyncio
+async def test_second_machine_is_rejected_when_addin_omits_concurrency_flags(
+    client: TestClient,
+) -> None:
+    """The current add-in payload omits takeover/is_periodic, so it must fail closed."""
+    async with TestSessionLocal() as session:
+        user = User(
+            email="strict_single_device@example.com",
+            hashed_password="hash",
+            role=UserRole.USER,
+            is_active=True,
+            is_trial_registered=True,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        user_id = user.id
+
+    token = create_access_token(
+        user_id=user_id,
+        email="strict_single_device@example.com",
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+
+    machine_a = client.post(
+        "/api/v1/entitlements/check",
+        headers=headers,
+        json={
+            "product_code": "revitapp",
+            "hardware_fingerprint": "strict_fp_machine_a",
+            "device_name": "STRICT-PC-A",
+        },
+    )
+    assert machine_a.status_code == 200
+    assert machine_a.json()["allowed"] is True
+
+    machine_b = client.post(
+        "/api/v1/entitlements/check",
+        headers=headers,
+        json={
+            "product_code": "revitapp",
+            "hardware_fingerprint": "strict_fp_machine_b",
+            "device_name": "STRICT-PC-B",
+        },
+    )
+    assert machine_b.status_code == 200
+    assert machine_b.json()["allowed"] is False
+    assert machine_b.json()["error"] == "concurrent_session_conflict"
+    assert "STRICT-PC-A" in machine_b.json()["message"]
+
+    activation_b = client.post(
+        "/api/v1/devices/activate",
+        headers=headers,
+        json={
+            "productCode": "revitapp",
+            "installationId": str(uuid.uuid4()),
+            "machineFingerprint": "strict_fp_machine_b",
+            "displayName": "STRICT-PC-B",
+            "platform": "windows",
+            "revitVersion": "2025",
+            "appVersion": "1.0.0",
+        },
+    )
+    assert activation_b.status_code == 409
+    assert activation_b.json()["detail"] == "concurrent_session_conflict"
+
+    heartbeat_without_fingerprint = client.post(
+        "/api/v1/devices/heartbeat",
+        headers=headers,
+        json={},
+    )
+    assert heartbeat_without_fingerprint.status_code == 200
+    assert heartbeat_without_fingerprint.json()["allowed"] is False
+    assert heartbeat_without_fingerprint.json()["error"] == "fingerprint_required"
+
+
+@pytest.mark.asyncio
+async def test_camel_case_periodic_flag_cannot_take_over_active_machine(
+    client: TestClient,
+) -> None:
+    async with TestSessionLocal() as session:
+        user = User(
+            email="camel_periodic@example.com",
+            hashed_password="hash",
+            role=UserRole.USER,
+            is_active=True,
+            is_trial_registered=True,
+            active_device_fingerprint="camel_fp_machine_a",
+            active_device_name="CAMEL-PC-A",
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        user_id = user.id
+
+    token = create_access_token(user_id=user_id, email="camel_periodic@example.com")
+    response = client.post(
+        "/api/v1/entitlements/check",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "productCode": "revitapp",
+            "hardwareFingerprint": "camel_fp_machine_b",
+            "deviceName": "CAMEL-PC-B",
+            "takeover": True,
+            "isPeriodic": True,
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["allowed"] is False
+    assert response.json()["error"] == "concurrent_session_conflict"
+
+
+@pytest.mark.asyncio
+async def test_admin_online_status_uses_recent_server_activity(
+    client: TestClient,
+) -> None:
+    now = datetime.now(timezone.utc)
+    async with TestSessionLocal() as session:
+        admin = User(
+            email="presence_admin@example.com",
+            hashed_password="hash",
+            role=UserRole.ADMIN,
+            is_active=True,
+        )
+        fresh_user = User(
+            email="fresh_presence@example.com",
+            hashed_password="hash",
+            role=UserRole.USER,
+            is_active=True,
+            active_device_fingerprint="presence_fresh_fp",
+            active_device_name="FRESH-PC",
+            active_device_last_seen=now - timedelta(minutes=2),
+        )
+        stale_user = User(
+            email="stale_presence@example.com",
+            hashed_password="hash",
+            role=UserRole.USER,
+            is_active=True,
+            active_device_fingerprint="presence_stale_fp",
+            active_device_name="STALE-PC",
+            active_device_last_seen=now - timedelta(minutes=10),
+        )
+        session.add_all([admin, fresh_user, stale_user])
+        await session.flush()
+        session.add_all(
+            [
+                DeviceTrial(
+                    fingerprint_hash="presence_fresh_fp",
+                    display_name="FRESH-PC",
+                    platform="windows",
+                    revit_version="2025",
+                    app_version="1.0.0",
+                    first_trial_at=now,
+                    trial_expires_at=now + timedelta(days=14),
+                    initial_user_id=fresh_user.id,
+                    last_user_id=fresh_user.id,
+                    status=DeviceTrialStatus.ACTIVE,
+                ),
+                DeviceTrial(
+                    fingerprint_hash="presence_stale_fp",
+                    display_name="STALE-PC",
+                    platform="windows",
+                    revit_version="2025",
+                    app_version="1.0.0",
+                    first_trial_at=now,
+                    trial_expires_at=now + timedelta(days=14),
+                    initial_user_id=stale_user.id,
+                    last_user_id=stale_user.id,
+                    status=DeviceTrialStatus.ACTIVE,
+                ),
+                License(
+                    license_key="PRESENCE-PAID-LICENSE",
+                    user_id=fresh_user.id,
+                    plan_name="monthly",
+                    status=LicenseStatus.ACTIVE,
+                    starts_at=now,
+                    expires_at=now + timedelta(days=30),
+                ),
+            ]
+        )
+        await session.commit()
+        admin_id = admin.id
+
+    admin_token = create_access_token(
+        user_id=admin_id,
+        email="presence_admin@example.com",
+        role="ADMIN",
+    )
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    trials_response = client.get("/api/v1/admin/device-trials", headers=headers)
+    assert trials_response.status_code == 200
+    trials_by_fp = {item["fingerprint_hash"]: item for item in trials_response.json()}
+    assert trials_by_fp["presence_fresh_fp"]["is_currently_online"] is True
+    assert trials_by_fp["presence_stale_fp"]["is_currently_online"] is False
+    assert trials_by_fp["presence_fresh_fp"]["last_seen_at"] is not None
+
+    licenses_response = client.get("/api/v1/admin/licenses", headers=headers)
+    assert licenses_response.status_code == 200
+    paid_license = next(
+        item for item in licenses_response.json() if item["license_key"] == "PRESENCE-PAID-LICENSE"
+    )
+    assert paid_license["is_currently_online"] is True
+    assert paid_license["last_seen_at"] is not None
+
+
+@pytest.mark.asyncio
+async def test_bi_directional_trial_abuse_prevent_forged_hwid_on_same_user(client: TestClient) -> None:
+    """
+    Validates that a single user account CANNOT bypass 14-day trial limits
+    by sending continuously forged/random hardware fingerprints.
+    """
+    fp_1 = "fp_first_machine_11111111111111111111111"
+    fp_forged = "fp_forged_machine_22222222222222222222222"
+
+    async with TestSessionLocal() as session:
+        user = User(
+            email="forger@example.com",
+            hashed_password="hash",
+            role=UserRole.USER,
+            is_active=True,
+            is_trial_registered=True,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        user_id = user.id
+
+    token = create_access_token(user_id=user_id, email="forger@example.com")
+
+    # 1. User starts 14-day trial on Machine 1
+    res1 = client.post(
+        "/api/v1/entitlements/check",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "product_code": "revitapp",
+            "hardware_fingerprint": fp_1,
+            "device_name": "MACHINE-1",
+        },
+    )
+    assert res1.status_code == 200
+    assert res1.json()["allowed"] is True
+    assert res1.json()["isTrial"] is True
+
+    # 2. Simulate User's personal 14-day trial expiring
+    async with TestSessionLocal() as session:
+        u = (await session.execute(select(User).where(User.id == user_id))).scalar_one()
+        u.trial_expires_at = datetime.now(timezone.utc) - timedelta(days=1)
+        await session.commit()
+
+    # 3. User attempts to generate a new trial on a "brand new" forged HWID -> REJECTED!
+    res_forged = client.post(
+        "/api/v1/entitlements/check",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "product_code": "revitapp",
+            "hardware_fingerprint": fp_forged,
+            "device_name": "FORGED-MACHINE",
+        },
+    )
+    assert res_forged.status_code == 200
+    data_forged = res_forged.json()
+    assert data_forged["allowed"] is False
+    assert data_forged["error"] == "trial_expired_for_user"
+
+
+@pytest.mark.asyncio
+async def test_entitlement_signed_token_and_public_key(client: TestClient) -> None:
+    """
+    Validates RS256 Signed License Token generation, 72h Grace Period, and Public Key export.
+    """
+    from app.core.license_crypto import verify_license_token
+
+    # 1. Test Public Key endpoint
+    pk_resp = client.get("/api/v1/entitlements/public-key")
+    assert pk_resp.status_code == 200
+    pk_data = pk_resp.json()
+    assert pk_data["algorithm"] == "RS256"
+    assert "BEGIN PUBLIC KEY" in pk_data["pem"]
+    assert "<RSAKeyValue>" in pk_data["xml"]
+
+    # 2. Test Entitlement Check returns RS256 signed token
+    async with TestSessionLocal() as session:
+        user = User(
+            email="crypto_user@example.com",
+            hashed_password="hash",
+            role=UserRole.USER,
+            is_active=True,
+            is_trial_registered=True,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        user_id = user.id
+
+    token = create_access_token(user_id=user_id, email="crypto_user@example.com")
+    fp = "fp_crypto_test_1234567890abcdef"
+
+    res = client.post(
+        "/api/v1/entitlements/check",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "product_code": "revitapp",
+            "hardware_fingerprint": fp,
+            "device_name": "CRYPTO-WORKSTATION",
+        },
+    )
+    assert res.status_code == 200
+    ent_data = res.json()
+    assert ent_data["allowed"] is True
+    assert ent_data["gracePeriodHours"] == 12
+    assert ent_data["signedLicenseToken"] is not None
+
+    # 3. Verify cryptographic token signature and payload
+    decoded = verify_license_token(ent_data["signedLicenseToken"])
+    assert decoded["email"] == "crypto_user@example.com"
+    assert decoded["hwid"] == fp
+    assert decoded["grace_period_hours"] == 12
+    assert len(decoded["features"]) == 13

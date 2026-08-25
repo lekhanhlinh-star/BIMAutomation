@@ -113,6 +113,13 @@ async def get_admin_licenses(
                 revoked_at=lic.revoked_at,
                 created_at=lic.created_at,
                 user=lic.user,
+                is_currently_online=bool(
+                    lic.status == LicenseStatus.ACTIVE
+                    and lic.user
+                    and lic.user.active_device_fingerprint
+                    and admin_service.is_recently_online(lic.user.active_device_last_seen)
+                ),
+                last_seen_at=lic.user.active_device_last_seen if lic.user else None,
                 features=[f.feature_code for f in getattr(lic, "features", [])],
                 devices=[
                     {
@@ -314,6 +321,38 @@ async def reset_device_trial_endpoint(
     }
 
 
+@router.post("/device-trials/{trial_id}/grant")
+async def grant_device_trial_endpoint(
+    trial_id: uuid.UUID,
+    admin: CurrentAdminUserDep,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    days: int = Query(14, gt=0),
+) -> dict[str, Any]:
+    trial = await trial_service.grant_device_trial(db, trial_id, days=days)
+    return {
+        "status": "ok",
+        "trialId": str(trial.id),
+        "newExpiresAt": trial.trial_expires_at.isoformat(),
+        "resetCount": trial.reset_count,
+        "message": f"Đã cấp quyền dùng thử lại cho thiết bị ({days} ngày)",
+    }
+
+
+@router.post("/device-trials/{trial_id}/revoke")
+async def revoke_device_trial_endpoint(
+    trial_id: uuid.UUID,
+    admin: CurrentAdminUserDep,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+) -> dict[str, Any]:
+    trial = await trial_service.revoke_device_trial(db, trial_id)
+    return {
+        "status": "ok",
+        "trialId": str(trial.id),
+        "status": trial.status.value,
+        "message": "Đã thu hồi quyền dùng thử đối với thiết bị này",
+    }
+
+
 @router.post("/device-trials/{trial_id}/block")
 async def block_device_trial_endpoint(
     trial_id: uuid.UUID,
@@ -327,6 +366,35 @@ async def block_device_trial_endpoint(
         "status": trial.status.value,
         "message": "Đã khóa dùng thử đối với thiết bị này",
     }
+
+
+@router.post("/device-trials/{trial_id}/set-active")
+async def set_active_device_trial_endpoint(
+    trial_id: uuid.UUID,
+    admin: CurrentAdminUserDep,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+) -> dict[str, Any]:
+    trial = await trial_service.set_active_device_trial(db, trial_id)
+    return {
+        "status": "ok",
+        "trialId": str(trial.id),
+        "message": "Đã đặt thiết bị làm máy hoạt động (Active) cho tài khoản",
+    }
+
+
+@router.delete("/device-trials/{trial_id}")
+async def delete_device_trial_endpoint(
+    trial_id: uuid.UUID,
+    admin: CurrentAdminUserDep,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+) -> dict[str, Any]:
+    await trial_service.delete_device_trial(db, trial_id)
+    return {
+        "status": "ok",
+        "trialId": str(trial_id),
+        "message": "Đã xóa bản ghi thiết bị dùng thử thành công",
+    }
+
 
 
 @router.get("/audit-logs", response_model=list[AdminAuditLogRead])
@@ -380,6 +448,30 @@ async def get_admin_customers(
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> list[AdminCustomerRead]:
     return await admin_service.get_all_customers(db)
+
+
+@router.post("/customers/{user_id}/grant-admin", response_model=AdminUserRead)
+async def grant_customer_admin_role(
+    user_id: uuid.UUID,
+    admin: CurrentAdminUserDep,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+) -> AdminUserRead:
+    user = await admin_service.grant_admin_role(
+        db,
+        user_id=user_id,
+        actor_user_id=admin.id,
+    )
+    return AdminUserRead(
+        id=user.id,
+        email=user.email,
+        name=user.name,
+        display_name=user.display_name,
+        phone=user.phone,
+        role=user.role.value if hasattr(user.role, "value") else str(user.role),
+        status=user.status.value if hasattr(user.status, "value") else str(user.status),
+        is_active=user.is_active,
+        created_at=user.created_at,
+    )
 
 
 @router.get("/payments", response_model=list[AdminPaymentRead])
@@ -477,4 +569,3 @@ async def migrate_sheet_endpoint(
     res["importedCount"] = res["imported"]
     res["errorCount"] = len(res["errors"])
     return res
-

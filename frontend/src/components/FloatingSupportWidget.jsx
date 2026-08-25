@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ArrowUp, Headphones, PhoneCall } from 'lucide-react';
 
 export default function FloatingSupportWidget({ onOpenConsultation }) {
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -26,28 +27,38 @@ export default function FloatingSupportWidget({ onOpenConsultation }) {
         title="Đăng ký nhận tư vấn và dùng thử"
         aria-label="Nhận tư vấn và demo BIMAutomation"
       >
-        Tư vấn
+        <Headphones size={15} className="shrink-0" />
+        <span>Tư vấn</span>
       </button>
 
       <div className="support-dock__links">
         <a
-          href="https://zalo.me"
+          href="https://zalo.me/g/euhwzpu6ouswooub16tl"
           target="_blank"
           rel="noopener noreferrer"
           className="support-dock__link"
-          title="Chat Zalo Kỹ thuật (24/7)"
-          aria-label="Chat Zalo hỗ trợ kỹ thuật"
+          title="Nhóm Zalo hỗ trợ kỹ thuật (24/7)"
+          aria-label="Tham gia nhóm Zalo hỗ trợ kỹ thuật"
         >
-          Zalo
+          <img
+            src="/assets/brand/zalo-icon.png"
+            alt="Zalo"
+            width={18}
+            height={18}
+            className="shrink-0 rounded-[4px] object-contain shadow-xs"
+            aria-hidden="true"
+          />
+          <span>Zalo</span>
         </a>
 
         <a
-          href="tel:0904885833"
+          href="tel:0799660737"
           className="support-dock__link"
-          title="Hotline tư vấn: 0904 885 833"
+          title="Hotline tư vấn: 0799 660 737"
           aria-label="Gọi hotline tư vấn"
         >
-          Hotline
+          <PhoneCall size={14} className="shrink-0 text-emerald-500" />
+          <span>Hotline</span>
         </a>
 
         {showBackToTop && (
@@ -57,7 +68,8 @@ export default function FloatingSupportWidget({ onOpenConsultation }) {
             title="Cuộn lên đầu trang"
             aria-label="Cuộn lên đầu trang"
           >
-            Lên đầu
+            <ArrowUp size={14} className="shrink-0" />
+            <span>Lên đầu</span>
           </button>
         )}
       </div>

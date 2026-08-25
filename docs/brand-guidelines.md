@@ -2,7 +2,7 @@
 
 > **Thương hiệu chủ quản:** BIMAutomation  
 > **Sản phẩm cốt lõi:** BIMAutomation (Bộ Add-in Tự động hóa Kết cấu cho Autodesk Revit 2022–2027)  
-> **Ribbon Tab độc quyền:** `LDL-STRUCTURAL`  
+> **Ribbon Tab độc quyền:** `BIMAutomation`  
 > **Phiên bản tài liệu:** 1.0.0  
 > **Cập nhật:** 2026-08-22  
 
@@ -127,7 +127,7 @@ Bộ màu của BIMAutomation lấy cảm hứng từ màu xanh bản vẽ kỹ 
 1. ❌ **Không** kéo méo, thay đổi tỷ lệ dài/rộng của logo.
 2. ❌ **Không** thay đổi màu sắc logo ngoài bảng màu quy chuẩn.
 3. ❌ **Không** đặt logo trên nền hình ảnh quá nhiều chi tiết làm giảm độ tương phản.
-4. ❌ **Không** viết sai chính tả tên thương hiệu (Viết đúng: `BIMAutomation`; tên Ribbon giữ nguyên: `LDL-STRUCTURAL`).
+4. ❌ **Không** viết sai chính tả tên thương hiệu (Viết đúng: `BIMAutomation`; tên Ribbon: `BIMAutomation`).
 
 ---
 
@@ -144,6 +144,6 @@ Bộ màu của BIMAutomation lấy cảm hứng từ màu xanh bản vẽ kỹ 
 ## 6. Danh Mục Ứng Dụng Nhận Diện (Brand Application Inventory)
 
 1. **Giao diện Website & Web Platform:** Đã triển khai tại `frontend/` với Dark/Light Mode chuẩn.
-2. **Revit Add-in Ribbon:** Tab `LDL-STRUCTURAL` với 4 panel trực quan (`Rebar`, `Drawing Rebar`, `CAD Tools`, `Commands`).
+2. **Revit Add-in Ribbon:** Tab `BIMAutomation` với 4 panel trực quan (`Rebar`, `Drawing Rebar`, `CAD Tools`, `Commands`).
 3. **MCP Protocol Hub:** Bảng điều khiển công cụ MCP với token 256-bit và giao diện Streamable HTTP.
 4. **Bộ tài liệu kỹ thuật & Ấn phẩm doanh nghiệp:** Danh thiếp số, Letterhead thuyết minh tính toán, Chữ ký Email, Slide thuyết trình.

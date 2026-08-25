@@ -14,4 +14,4 @@ Bộ biểu tượng vector SVG chuẩn nhận diện thương hiệu cho các c
 | `icon-wall-rebar.svg` | **Thép Vách** | Vách bê tông cốt thép 2 lớp, thanh dọc, thanh ngang và móc giữ C. |
 | `icon-slab-rebar.svg` | **Thép Sàn** | Lớp thép trên mũ, thép dưới đáy và con kê chịu lực. |
 | `icon-mcp-engine.svg` | **MCP AI Protocol** | Khối tổ ong trung tâm xử lý dữ liệu AI kết nối luồng Revit. |
-| `icon-ribbon-tab.svg` | **Tab LDL-STRUCTURAL** | Thanh ribbon Revit với 4 panel tính năng chuyên biệt. |
+| `icon-ribbon-tab.svg` | **Tab BIMAutomation** | Thanh ribbon Revit với 4 panel tính năng chuyên biệt. |

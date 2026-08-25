@@ -56,6 +56,25 @@ class DeviceTrial(Base):
     last_user_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("user.id", ondelete="SET NULL"), nullable=True
     )
+    # Individual hardware components for unbreakable anti-abuse identification
+    bios_uuid: Mapped[str | None] = mapped_column(
+        String(100), index=True, nullable=True
+    )
+    cpu_id: Mapped[str | None] = mapped_column(
+        String(100), index=True, nullable=True
+    )
+    motherboard_serial: Mapped[str | None] = mapped_column(
+        String(100), index=True, nullable=True
+    )
+    disk_serial: Mapped[str | None] = mapped_column(
+        String(100), index=True, nullable=True
+    )
+    mac_address: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )
+    tamper_flags: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
     status: Mapped[DeviceTrialStatus] = mapped_column(
         SQLEnum(DeviceTrialStatus, native_enum=False),
         default=DeviceTrialStatus.ACTIVE,

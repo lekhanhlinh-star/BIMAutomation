@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Info
 } from 'lucide-react';
+import AiToolIcon from './icons/AiToolIcon';
 
 const CATEGORIES = [
   { id: 'all', label: 'Tất cả công cụ', count: 57, icon: Layers },
@@ -817,7 +818,7 @@ const MCP_TOOLS = [
     categoryName: 'Lệnh điều khiển Ribbon',
     permission: 'mcp-write',
     licenseCode: 'column-rebar',
-    description: 'Kích hoạt lệnh vẽ cốt thép cột (CR) từ Ribbon add-in trên tab LDL-STRUCTURAL.',
+    description: 'Kích hoạt lệnh vẽ cốt thép cột (CR) từ Ribbon add-in trên tab BIMAutomation.',
     inputs: [{ name: 'selection_mode', type: 'string', required: false, desc: 'Chế độ chọn: "Interactive" hoặc "AllInLevel"' }],
     outputs: { success: true, command_status: 'Executed' },
     errorHandling: 'Báo lỗi nếu chưa mở Document hoặc thiếu bản quyền `column-rebar`.'
@@ -985,10 +986,10 @@ const MCP_TOOLS = [
     categoryName: 'Lệnh điều khiển Ribbon',
     permission: 'mcp-read',
     licenseCode: 'mcp-read',
-    description: 'Kiểm tra trạng thái sẵn sàng của các panel và lệnh trên tab LDL-STRUCTURAL.',
+    description: 'Kiểm tra trạng thái sẵn sàng của các panel và lệnh trên tab BIMAutomation.',
     inputs: [],
     outputs: {
-      active_tab: 'LDL-STRUCTURAL',
+      active_tab: 'BIMAutomation',
       available_commands: ['CR', 'BR', 'FR', 'WR', 'SR', 'BD', 'FD', 'CD', 'WD', 'RS', 'MC', 'DE', 'LM', 'LC', 'AI', 'LA', 'ST', 'MS'],
       license_tier: 'Rebar + AI Suite'
     },
@@ -1117,40 +1118,43 @@ export default function McpToolsHub() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-8" id="mcp-tools-hub">
+    <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16" id="mcp-tools-hub">
       {/* Header Section */}
-      <div className="text-center max-w-3xl mx-auto mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 mb-3">
-          <Command className="w-3.5 h-3.5" />
+      <div className="mb-10 max-w-4xl">
+        <div className="mb-4 inline-flex items-center gap-2 border border-[var(--line)] bg-[var(--surface-subtle)] px-3 py-1.5 font-mono text-[10px] font-bold tracking-wide text-[var(--text-secondary)]">
+          <Command className="h-4 w-4 text-[var(--brand)]" strokeWidth={1.8} />
           <span>MCP SPEC 2025-11-25 • 57 TOOLS DIRECTORY</span>
         </div>
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+        <h2 className="max-w-3xl text-3xl font-extrabold leading-tight tracking-[-0.04em] text-[var(--text-primary)] sm:text-5xl">
           Danh Bạ 57 Công Cụ Chuẩn MCP BIMAutomation
         </h2>
-        <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400">
-          Tra cứu toàn diện các tool kết nối hai chiều giữa AI Client (Claude Desktop, Cursor, Chat Assistant) và Autodesk Revit. Tự động kiểm tra bản quyền, luồng STA và transaction an toàn.
+        <p className="mt-5 max-w-3xl text-sm leading-7 text-[var(--text-secondary)] sm:text-base">
+          Tra cứu toàn diện các tool kết nối hai chiều giữa AI Client (
+          <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--text-primary)]"><AiToolIcon tool="claude" size={18} />Claude Desktop</span>,{' '}
+          <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--text-primary)]"><AiToolIcon tool="cursor" size={18} />Cursor</span>,{' '}
+          <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--text-primary)]"><AiToolIcon tool="chatgpt" size={18} />Chat Assistant</span>) và Autodesk Revit. Tự động kiểm tra bản quyền, luồng STA và transaction an toàn.
         </p>
       </div>
 
       {/* Search Bar & Filter Controls */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-[#0b1320] border border-slate-200 dark:border-slate-800 shadow-lg mb-6 space-y-4">
+      <div className="mb-7 space-y-5 rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-4 shadow-sm sm:p-5">
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
           {/* Search Input */}
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[var(--text-muted)]" strokeWidth={1.8} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm tool theo tên, mô tả, tham số (ví dụ: column_rebar, excel, axis, schedule)..."
-              className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent font-mono placeholder:font-sans"
+              className="min-h-11 w-full rounded-lg border border-[var(--line)] bg-[var(--surface-subtle)] py-2.5 pl-11 pr-10 font-mono text-sm text-[var(--text-primary)] outline-none transition placeholder:font-sans focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)]"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
-                <X className="w-4 h-4" />
+                <X className="h-[18px] w-[18px]" strokeWidth={1.8} />
               </button>
             )}
           </div>
@@ -1159,10 +1163,10 @@ export default function McpToolsHub() {
           <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
             <button
               onClick={() => setPermissionFilter('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+              className={`min-h-9 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
                 permissionFilter === 'all'
-                  ? 'bg-slate-900 dark:bg-sky-500 text-white dark:text-slate-950 font-bold'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  ? 'bg-[var(--text-primary)] font-bold text-[var(--surface-raised)]'
+                  : 'bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               Tất cả quyền ({MCP_TOOLS.length})
@@ -1172,7 +1176,7 @@ export default function McpToolsHub() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                 permissionFilter === 'mcp-write'
                   ? 'bg-amber-600 text-white font-bold'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  : 'bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-amber-500" />
@@ -1183,7 +1187,7 @@ export default function McpToolsHub() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                 permissionFilter === 'mcp-read'
                   ? 'bg-sky-600 text-white font-bold'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  : 'bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-sky-500" />
@@ -1201,16 +1205,16 @@ export default function McpToolsHub() {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                className={`inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
                   isSelected
-                    ? 'bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/20'
-                    : 'bg-slate-100 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+                    ? 'bg-[var(--brand)] font-bold text-[var(--brand-text)]'
+                    : 'border border-[var(--line)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:border-[var(--brand)] hover:text-[var(--text-primary)]'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-slate-950' : 'text-sky-500'}`} />
+                <Icon className={`h-4 w-4 ${isSelected ? '' : 'text-[var(--brand)]'}`} strokeWidth={1.8} />
                 <span>{cat.label}</span>
                 <span
-                  className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                  className={`ml-0.5 px-1.5 py-0.5 text-[10px] font-mono ${
                     isSelected
                       ? 'bg-slate-950/20 text-slate-950 font-extrabold'
                       : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
@@ -1238,19 +1242,19 @@ export default function McpToolsHub() {
 
       {/* Tools Cards Grid */}
       {filteredTools.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {filteredTools.map((tool) => {
             const isWrite = tool.permission === 'mcp-write';
             return (
               <div
                 key={tool.id}
                 onClick={() => setSelectedTool(tool)}
-                className="group relative p-4 rounded-xl bg-white dark:bg-[#0a1220] border border-slate-200 dark:border-slate-800/90 hover:border-sky-500/80 dark:hover:border-sky-500/60 shadow-sm hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer"
+                className="group relative flex cursor-pointer flex-col justify-between rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-5 shadow-sm transition hover:border-[var(--brand)] hover:shadow-md"
               >
                 <div>
                   {/* Card Header */}
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="font-mono text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors break-all">
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="break-all font-mono text-sm font-bold leading-5 text-[var(--text-primary)] transition-colors group-hover:text-[var(--brand)]">
                       {tool.name}
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
@@ -1278,13 +1282,13 @@ export default function McpToolsHub() {
                   </div>
 
                   {/* Description */}
-                  <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed mb-3">
+                  <p className="mb-4 line-clamp-3 text-xs leading-6 text-[var(--text-secondary)]">
                     {tool.description}
                   </p>
 
                   {/* Parameters Preview */}
                   {tool.inputs.length > 0 && (
-                    <div className="mb-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/60">
+                    <div className="mb-4 rounded-lg border border-[var(--line)] bg-[var(--surface-subtle)] p-3">
                       <div className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
                         Tham Số ({tool.inputs.length}):
                       </div>
@@ -1333,7 +1337,7 @@ export default function McpToolsHub() {
           })}
         </div>
       ) : (
-        <div className="text-center py-16 p-6 rounded-2xl bg-slate-50 dark:bg-[#0a1220] border border-slate-200 dark:border-slate-800">
+        <div className="rounded-xl border border-[var(--line)] bg-[var(--surface-subtle)] p-6 py-16 text-center">
           <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
             Không tìm thấy công cụ MCP nào khớp với từ khóa
@@ -1358,7 +1362,7 @@ export default function McpToolsHub() {
       {selectedTool && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div 
-            className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#0c1424] border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-slate-900 dark:text-slate-100"
+            className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-5 text-[var(--text-primary)] shadow-xl sm:p-7"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}

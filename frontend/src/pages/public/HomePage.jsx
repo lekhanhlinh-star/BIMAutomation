@@ -6,6 +6,7 @@ import {
 import { useAuthStore } from '../../store/useAuthStore';
 import { savePendingIntent } from '../../utils/pendingIntent';
 import { publicApi } from '../../api/services';
+import AiToolIcon from '../../components/icons/AiToolIcon';
 
 const outcomes = [
   {
@@ -109,7 +110,7 @@ export default function HomePage() {
             <div className="editorial-actions">
               <button onClick={startTrial} className="editorial-primary">Dùng thử 14 ngày</button>
               <button onClick={onOpenConsultation} className="editorial-secondary">
-                Xem workflow thực tế <ArrowRight size={16} aria-hidden="true" />
+                Xem workflow thực tế <ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -160,7 +161,7 @@ export default function HomePage() {
             <span className="home-kicker">Một cách làm việc mới</span>
             <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-[-0.045em] sm:text-5xl text-balance">Bạn nói điều cần làm. BIMAutomation lo phần lặp lại.</h2>
             <p className="mt-5 max-w-md text-sm leading-7 text-[var(--text-secondary)] sm:text-base">AI không thay quyết định của kỹ sư. Nó giúp biến quyết định đó thành thao tác Revit nhanh, nhất quán và dễ kiểm tra hơn.</p>
-            <Link to="/features" className="home-arrow-link mt-7">Khám phá toàn bộ tính năng <ArrowRight size={16} aria-hidden="true" /></Link>
+            <Link to="/features" className="home-arrow-link mt-7">Khám phá toàn bộ tính năng <ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></Link>
           </div>
           <div className="border-t border-[var(--line)]">
             {outcomes.map(({ number, title, description }) => (
@@ -179,7 +180,7 @@ export default function HomePage() {
             <div><span className="home-kicker">Hệ plugin BIMAutomation</span><h2 className="mt-5 max-w-3xl text-3xl font-extrabold leading-tight tracking-[-0.045em] sm:text-5xl text-balance">Từ cốt thép đến hồ sơ, trong một hệ công cụ.</h2></div>
             <p className="max-w-md text-sm leading-7 text-[var(--text-secondary)]">Dùng từng plugin độc lập trên Ribbon hoặc để AI phối hợp nhiều bước cho một mục tiêu hoàn chỉnh.</p>
           </div>
-          <div className="mt-14 grid gap-5 lg:grid-cols-12">
+          <div className="mt-12 grid gap-5 sm:mt-14 lg:grid-cols-12">
             {pluginGroups.map((group) => (
               <article key={group.title} className={`home-plugin-card group ${group.className}`}>
                 <div className="relative overflow-hidden border-b border-white/10">
@@ -187,9 +188,16 @@ export default function HomePage() {
                 </div>
                 <div className="p-6 sm:p-8">
                   <span className="font-mono text-[10px] font-bold tracking-[0.12em] text-[var(--brand)]">{group.label}</span>
-                  <h3 className="mt-2 text-2xl font-bold tracking-[-0.035em]">{group.title}</h3>
+                  <h3 className="mt-3 text-2xl font-extrabold leading-tight tracking-[-0.035em]">{group.title}</h3>
                   <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">{group.description}</p>
-                  <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2">{group.items.map((item) => <span key={item} className="home-spec-item">{item}</span>)}</div>
+                  <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3">
+                    {group.items.map((item) => (
+                      <span key={item} className="home-spec-item inline-flex items-center gap-2">
+                        {item === 'Claude Desktop' && <AiToolIcon tool="claude" size={18} />}
+                        {item}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </article>
             ))}
@@ -202,15 +210,40 @@ export default function HomePage() {
           <div>
             <span className="home-kicker">Câu hỏi thường gặp</span><h2 className="mt-5 text-3xl font-extrabold tracking-[-0.045em] sm:text-4xl">Trước khi bạn bắt đầu.</h2>
             <p className="mt-4 max-w-sm text-sm leading-7 text-[var(--text-secondary)]">Cần xem trực tiếp trên một file dự án thực tế? Đội ngũ kỹ thuật có thể demo 1-1 cùng bạn.</p>
-            <button onClick={onOpenConsultation} className="home-arrow-link mt-6">Đặt lịch demo <ArrowRight size={16} aria-hidden="true" /></button>
+            <button onClick={onOpenConsultation} className="home-arrow-link mt-6">Đặt lịch demo <ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></button>
           </div>
           <div className="border-t border-[var(--line)]">
             {faqs.map((faq, index) => {
               const isOpen = openFaq === index;
               return (
                 <article key={faq.q} className="border-b border-[var(--line)]">
-                  <h3><button type="button" onClick={() => setOpenFaq(isOpen ? null : index)} aria-expanded={isOpen} aria-controls={`home-faq-${index}`} className="flex min-h-[72px] w-full items-center justify-between gap-6 py-5 text-left text-sm font-bold text-[var(--text-primary)] transition-colors hover:text-[var(--brand)] sm:text-base">{faq.q}<ChevronDown size={18} className={`shrink-0 transition-transform ${isOpen ? 'rotate-180 text-[var(--brand)]' : 'text-[var(--text-muted)]'}`} aria-hidden="true" /></button></h3>
-                  {isOpen && <p id={`home-faq-${index}`} className="max-w-2xl pb-6 text-sm leading-7 text-[var(--text-secondary)]">{faq.a}</p>}
+                  <h3>
+                    <button type="button" onClick={() => setOpenFaq(isOpen ? null : index)} aria-expanded={isOpen} aria-controls={`home-faq-${index}`} className="flex min-h-[72px] w-full items-center justify-between gap-6 py-5 text-left text-sm font-bold text-[var(--text-primary)] transition-colors hover:text-[var(--brand)] sm:text-base">
+                      <span className="flex items-center gap-3">
+                        {faq.q.includes('Codex') && (
+                          <span className="hidden shrink-0 items-center gap-1.5 sm:flex" aria-hidden="true">
+                            <AiToolIcon tool="codex" size={18} />
+                            <AiToolIcon tool="claude" size={18} />
+                            <AiToolIcon tool="cursor" size={18} />
+                          </span>
+                        )}
+                        <span>{faq.q}</span>
+                      </span>
+                      <ChevronDown size={18} strokeWidth={1.8} className={`shrink-0 transition-transform ${isOpen ? 'rotate-180 text-[var(--brand)]' : 'text-[var(--text-muted)]'}`} aria-hidden="true" />
+                    </button>
+                  </h3>
+                  {isOpen && (
+                    <p id={`home-faq-${index}`} className="flex max-w-2xl items-start gap-3 pb-6 text-sm leading-7 text-[var(--text-secondary)]">
+                      {faq.q.includes('Codex') && (
+                        <span className="mt-1 flex shrink-0 items-center gap-1.5 sm:hidden" aria-hidden="true">
+                          <AiToolIcon tool="codex" size={16} />
+                          <AiToolIcon tool="claude" size={16} />
+                          <AiToolIcon tool="cursor" size={16} />
+                        </span>
+                      )}
+                      <span>{faq.a}</span>
+                    </p>
+                  )}
                 </article>
               );
             })}
@@ -227,8 +260,8 @@ export default function HomePage() {
               <h2 className="mt-5 max-w-2xl text-3xl font-extrabold leading-tight tracking-[-0.05em] text-white sm:text-5xl text-balance">Biến những giờ thao tác lặp thành một workflow có thể tái sử dụng.</h2>
               <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300">Dùng thử đầy đủ tính năng trong 14 ngày hoặc đặt lịch để đội ngũ BIMAutomation demo trực tiếp trên quy trình của doanh nghiệp bạn.</p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <button onClick={startTrial} className="primary-button !min-h-12 !bg-cyan-400 !px-6 !text-slate-950 hover:!bg-cyan-300"><Download size={17} aria-hidden="true" /> Tải BIMAutomation</button>
-                <Link to="/pricing" className="inline-flex min-h-12 items-center gap-2 border border-white/20 px-6 text-sm font-bold text-white transition hover:border-cyan-300 hover:text-cyan-300">Xem bảng giá <ArrowRight size={16} aria-hidden="true" /></Link>
+                <button onClick={startTrial} className="primary-button !min-h-12 !bg-cyan-400 !px-6 !text-slate-950 hover:!bg-cyan-300"><Download size={18} strokeWidth={1.8} aria-hidden="true" /> Tải BIMAutomation</button>
+                <Link to="/pricing" className="inline-flex min-h-12 items-center gap-2 border border-white/20 px-6 text-sm font-bold text-white transition hover:border-cyan-300 hover:text-cyan-300">Xem bảng giá <ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></Link>
               </div>
             </div>
             <div className="border border-white/10 bg-white/[0.04] p-5 sm:p-6">

@@ -33,6 +33,32 @@ async def test_get_public_info(client: TestClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_get_public_latest_release(client: TestClient) -> None:
+    from app.models.release import Release
+    async with TestSessionLocal() as session:
+        release = Release(
+            version="2.5.0",
+            download_url="https://cdn.bimautomation.vn/releases/v2.5.0/BIMAutomation.Installer.exe",
+            release_notes="Tích hợp 57 MCP Tools",
+            minimum_revit_version=2022,
+            maximum_revit_version=2027,
+            file_size_label="48.5 MB",
+            sha256_hash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            is_active=True,
+        )
+        session.add(release)
+        await session.commit()
+
+    res = client.get("/api/v1/public/release/latest")
+    assert res.status_code == 200
+    data = res.json()
+    assert data is not None
+    assert data["version"] == "2.5.0"
+    assert data["file_size_label"] == "48.5 MB"
+    assert data["sha256_hash"] == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+
+@pytest.mark.asyncio
 async def test_admin_get_feedbacks(client: TestClient) -> None:
     # 1. Submit Feedback
     client.post(

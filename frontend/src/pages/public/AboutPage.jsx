@@ -64,7 +64,7 @@ export default function AboutPage() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <span className="px-3 py-1.5 rounded-lg bg-[var(--surface-raised)] border border-[var(--line)] text-xs font-mono font-semibold text-[var(--text-secondary)]">
-              Tab: LDL-STRUCTURAL
+              Tab: BIMAutomation
             </span>
             <span className="px-3 py-1.5 rounded-lg bg-[var(--surface-raised)] border border-[var(--line)] text-xs font-mono font-semibold text-[var(--text-secondary)]">
               Tiêu chuẩn: TCVN 5574:2018

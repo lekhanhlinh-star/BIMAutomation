@@ -121,7 +121,7 @@ async def test_full_e2e_bimpilot_customer_and_admin_journey(client: TestClient) 
     license_key = licenses_list[0]["license_key"]
     license_id = licenses_list[0]["id"]
     assert license_key.startswith("BP7X-")
-    assert licenses_list[0]["status"] == "PENDING"
+    assert licenses_list[0]["status"] == "ACTIVE"
 
     orders_res = client.get("/api/v1/account/orders", headers=user_headers)
     assert orders_res.status_code == 200

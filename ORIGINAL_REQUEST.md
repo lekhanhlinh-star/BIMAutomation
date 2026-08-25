@@ -20,7 +20,7 @@ Integrity mode: development
 - Loại bỏ hoàn toàn các thông tin sai lệch theo audit: Gỡ bỏ Auto Dimension độc lập, MEP routing, Batch Rename Sheets, 2-way sync 10k param, fake testimonials.
 
 ### R2. Trang Tính năng (FeaturesPage) & Hub Tra cứu 57 Tools MCP Interactive
-- Cập nhật hệ thống 18 lệnh Ribbon trên tab `LDL-STRUCTURAL` (Rebar, Drawing Rebar, CAD Tools, Commands).
+- Cập nhật hệ thống 18 lệnh Ribbon trên tab `BIMAutomation` (Rebar, Drawing Rebar, CAD Tools, Commands).
 - Xây dựng Hub/Tab tra cứu tương tác 57 công cụ AI & MCP chia theo 8 nhóm rõ ràng:
   1. Vẽ thép & Bản vẽ kết cấu (12 tools)
   2. Đọc mô hình & Chọn đối tượng (5 tools)
@@ -51,7 +51,7 @@ Integrity mode: development
 
 ### R5. FAQ & Chuẩn hóa Thương hiệu
 - Tích hợp bộ 9 câu hỏi thường gặp (FAQ) chi tiết về độ chính xác AI, an toàn mô hình, bảo mật MCP, tương thích Revit.
-- Chuẩn hóa tên thương hiệu toàn bộ website: Tên add-in **RevitAPP**, Tab Ribbon **LDL-STRUCTURAL**.
+- Chuẩn hóa tên thương hiệu toàn bộ website: Tên add-in **BIMAutomation**, Tab Ribbon **BIMAutomation**.
 
 ## Acceptance Criteria
 

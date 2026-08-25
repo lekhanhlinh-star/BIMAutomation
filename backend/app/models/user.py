@@ -35,6 +35,12 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     trial_registered_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    trial_started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    trial_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Single Active Device / Concurrency Enforcement
     active_device_fingerprint: Mapped[str | None] = mapped_column(

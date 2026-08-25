@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useOutletContext } from 'react-router-dom';
 import {
+  AlertCircle,
+  Check,
   CheckCircle2,
   ChevronDown,
   Clock,
+  Copy,
   Cpu,
   Download,
   FileCheck,
@@ -45,7 +48,7 @@ const steps = [
   {
     step: '03',
     title: 'Mở Revit & Đăng nhập Google',
-    desc: 'Khởi động Revit, mở Tab LDL-STRUCTURAL trên thanh Ribbon và bấm Đăng nhập Google để tự động kích hoạt bản quyền Server-Authoritative.'
+    desc: 'Khởi động Revit, mở Tab BIMAutomation trên thanh Ribbon và bấm Đăng nhập Google để tự động kích hoạt bản quyền Server-Authoritative.'
   }
 ];
 
@@ -61,6 +64,7 @@ const supportedVersions = [
 export default function DownloadPage() {
   const { user, isAuthenticated } = useAuthStore();
   const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
+  const [copiedHash, setCopiedHash] = useState(false);
   const outletContext = useOutletContext();
   const onOpenConsultation = outletContext?.onOpenConsultation || (() => {});
 
@@ -71,6 +75,14 @@ export default function DownloadPage() {
   });
 
   const ready = validDownloadUrl(release?.downloadUrl);
+
+  const handleCopyHash = () => {
+    if (release?.sha256Hash) {
+      navigator.clipboard.writeText(release.sha256Hash);
+      setCopiedHash(true);
+      setTimeout(() => setCopiedHash(false), 2000);
+    }
+  };
 
   return (
     <div className="page-shell py-12 lg:py-16 pb-24 max-w-4xl">
@@ -83,7 +95,7 @@ export default function DownloadPage() {
           Tải phần mềm BIMAutomation (Revit 2022–2027)
         </h1>
         <p className="mt-4 text-base text-[var(--text-secondary)] leading-relaxed">
-          Tự động tích hợp thanh công cụ Ribbon <strong>LDL-STRUCTURAL</strong> và 57 công cụ chuẩn MCP vào Autodesk Revit. Dùng thử miễn phí 14 ngày trọn bộ tính năng.
+          Tự động tích hợp thanh công cụ Ribbon <strong>BIMAutomation</strong> và 57 công cụ chuẩn MCP vào Autodesk Revit. Dùng thử miễn phí 14 ngày trọn bộ tính năng.
         </p>
       </header>
 
@@ -128,6 +140,21 @@ export default function DownloadPage() {
                 <p className="mt-2 text-xs sm:text-sm text-[var(--text-secondary)]">
                   Tương thích {release?.revitVersions} · Dung lượng: <strong>{release?.fileSize}</strong> · Ngày phát hành: <strong>{release?.releaseDate}</strong>
                 </p>
+
+                {release?.sha256Hash && (
+                  <div className="mt-3 flex items-center gap-2 text-xs font-mono text-[var(--text-muted)] bg-[var(--surface-subtle)] px-2.5 py-1.5 rounded-[var(--radius-control)] border border-[var(--line)] w-fit max-w-full overflow-hidden">
+                    <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
+                    <span className="truncate">SHA-256: {release.sha256Hash}</span>
+                    <button
+                      onClick={handleCopyHash}
+                      className="ml-1 text-[var(--brand)] hover:underline shrink-0 flex items-center gap-1 font-sans font-bold cursor-pointer"
+                      title="Copy SHA-256 Checksum"
+                    >
+                      {copiedHash ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                      {copiedHash ? 'Đã chép' : 'Chép mã'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {ready ? (
@@ -139,6 +166,17 @@ export default function DownloadPage() {
                   <Download size={19} /> Bản cài đang được đồng bộ
                 </button>
               )}
+            </div>
+
+            {/* Windows SmartScreen Guidance Box */}
+            <div className="p-4 rounded-[var(--radius-control)] bg-amber-500/10 border border-amber-500/20 text-xs text-[var(--text-secondary)] flex items-start gap-3">
+              <AlertCircle size={17} className="text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <strong className="text-[var(--text-primary)]">Lưu ý khi mở file trên Windows 10/11:</strong>
+                <p className="mt-0.5">
+                  Nếu xuất hiện thông báo <em>"Windows protected your PC" (SmartScreen)</em>, bạn chỉ cần nhấn <strong>"More info" (Thông tin khác)</strong> và chọn <strong>"Run anyway" (Vẫn chạy)</strong> để tiến hành cài đặt an toàn.
+                </p>
+              </div>
             </div>
 
             {/* Supported Revit Versions Grid */}
@@ -235,10 +273,10 @@ export default function DownloadPage() {
           </div>
         </div>
         <a
-          href="tel:0904885833"
+          href="tel:0799660737"
           className="secondary-button shrink-0 text-xs font-bold"
         >
-          <PhoneCall size={14} className="text-emerald-500" /> Gọi: 0904 885 833
+          <PhoneCall size={14} className="text-emerald-500" /> Gọi: 0799 660 737
         </a>
       </div>
 

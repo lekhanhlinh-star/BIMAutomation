@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { User, Save, Check } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user } = useAuthStore();
@@ -16,7 +15,8 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Hồ sơ cá nhân</h2>
+        <p className="account-kicker">Thông tin tài khoản</p>
+        <h2 className="mt-2 text-xl font-extrabold text-[var(--text-primary)]">Hồ sơ cá nhân</h2>
         <p className="text-xs text-[var(--text-secondary)] mt-1">Cập nhật thông tin tài khoản người dùng BIMAutomation.</p>
       </div>
 
@@ -49,13 +49,9 @@ export default function ProfilePage() {
               className="primary-button !min-h-10 !py-2 text-xs font-bold"
             >
               {saved ? (
-                <>
-                  <Check className="w-4 h-4" /> Đã lưu thông tin
-                </>
+                <>Đã lưu thông tin</>
               ) : (
-                <>
-                  <Save className="w-4 h-4" /> Lưu thay đổi
-                </>
+                <>Lưu thay đổi</>
               )}
             </button>
           </div>

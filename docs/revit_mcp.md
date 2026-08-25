@@ -154,13 +154,13 @@ curl -X POST http://127.0.0.1:8765/mcp \
 
 ---
 
-## 3. Hệ Thống 18 Lệnh Ribbon Trên Tab `LDL-STRUCTURAL`
+## 3. Hệ Thống 18 Lệnh Ribbon Trên Tab `BIMAutomation`
 
-Trong giao diện Autodesk Revit, toàn bộ tính năng của Add-in được bố trí chuyên nghiệp trên Ribbon Tab mang tên **`LDL-STRUCTURAL`**, phân bổ thành 4 nhóm bảng điều khiển (Panels):
+Trong giao diện Autodesk Revit, toàn bộ tính năng của Add-in được bố trí chuyên nghiệp trên Ribbon Tab mang tên **`BIMAutomation`**, phân bổ thành 4 nhóm bảng điều khiển (Panels):
 
 ```
 +-------------------------------------------------------------------------------------------------------+
-|                                         TAB: LDL-STRUCTURAL                                           |
+|                                         TAB: BIMAutomation                                            |
 +-------------------+-----------------------+-----------------------+-----------------------------------+
 |   PANEL: REBAR    | PANEL: DRAWING REBAR  |   PANEL: CAD TOOLS    |         PANEL: COMMANDS           |
 +-------------------+-----------------------+-----------------------+-----------------------------------+
@@ -826,10 +826,10 @@ Danh bạ 57 công cụ MCP được phân loại chính xác thành 8 nhóm ch�
 - **Đầu ra:** `{ "success": true, "port": 8765, "status": "Restarted" }`
 
 #### 54. `get_ribbon_status`
-- **Mô tả:** Kiểm tra trạng thái sẵn sàng của các panel và lệnh trên tab `LDL-STRUCTURAL`.
+- **Mô tả:** Kiểm tra trạng thái sẵn sàng của các panel và lệnh trên tab `BIMAutomation`.
 - **Quyền yêu cầu:** `mcp-read`
 - **Tham số:** *Không có.*
-- **Đầu ra:** `{ "active_tab": "LDL-STRUCTURAL", "available_commands": ["CR", "BR", "FR", "WR", "SR", "BD", "FD", "CD", "WD", "RS", "MC", "DE", "LM", "LC", "AI", "LA", "ST", "MS"], "license_tier": "Rebar + AI Suite" }`
+- **Đầu ra:** `{ "active_tab": "BIMAutomation", "available_commands": ["CR", "BR", "FR", "WR", "SR", "BD", "FD", "CD", "WD", "RS", "MC", "DE", "LM", "LC", "AI", "LA", "ST", "MS"], "license_tier": "Rebar + AI Suite" }`
 
 ---
 
@@ -933,7 +933,7 @@ RevitAPP cung cấp năng lực tự động hóa khép kín từ khâu nhận d
 
 | Mã Lỗi (Error Code) | HTTP Status | Nguyên Nhân Gây Ra | Hướng Dẫn Xử Lý & Khắc Phục |
 |---|:---:|---|---|
-| `PORT_IN_USE` | `500` | Cổng Loopback `8765` đang bị ứng dụng khác chiếm dụng. | Vào Ribbon tab `LDL-STRUCTURAL` -> `Settings & Presets`, cấu hình cổng thay thế và khởi động lại dịch vụ. |
+| `PORT_IN_USE` | `500` | Cổng Loopback `8765` đang bị ứng dụng khác chiếm dụng. | Vào Ribbon tab `BIMAutomation` -> `Settings & Presets`, cấu hình cổng thay thế và khởi động lại dịch vụ. |
 | `INVALID_BEARER_TOKEN` | `401` | Token gửi trong header `Authorization` không khớp với file cục bộ. | Mở file `%LocalAppData%\RevitAPP\mcp-access-token.txt`, sao chép lại chuỗi token chính xác vào cấu hình client. |
 | `FEATURE_NOT_LICENSED` | `403` | Tài khoản chưa mua gói chứa tính năng yêu cầu (ví dụ: gọi `create_beam_rebar` khi chỉ có `utility-tools`). | Nâng cấp gói bản quyền tại website hoặc kích hoạt gói Dùng thử 14 ngày Full tính năng. |
 | `UNAUTHORIZED_WRITE` | `403` | Client gọi công cụ sửa đổi mô hình nhưng tài khoản chỉ có quyền `mcp-read`. | Đăng nhập tài khoản có license hỗ trợ quyền `mcp-write`. |
@@ -948,4 +948,4 @@ RevitAPP cung cấp năng lực tự động hóa khép kín từ khâu nhận d
 
 ## 7. Kết Luận
 
-Tài liệu này là đặc tả kỹ thuật chính thức và toàn diện nhất cho toàn bộ hệ thống **RevitAPP MCP Server**, bao gồm 18 lệnh Ribbon trên tab `LDL-STRUCTURAL`, 57 công cụ MCP chuẩn hóa và các chuỗi pipeline tự động hóa triển khai bản vẽ cốt thép. Mọi nhà phát triển và kỹ sư AI cần tuân thủ nghiêm ngặt các định dạng tham số và cơ chế an toàn nêu trên.
+Tài liệu này là đặc tả kỹ thuật chính thức và toàn diện nhất cho toàn bộ hệ thống **RevitAPP MCP Server**, bao gồm 18 lệnh Ribbon trên tab `BIMAutomation`, 57 công cụ MCP chuẩn hóa và các chuỗi pipeline tự động hóa triển khai bản vẽ cốt thép. Mọi nhà phát triển và kỹ sư AI cần tuân thủ nghiêm ngặt các định dạng tham số và cơ chế an toàn nêu trên.

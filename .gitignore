@@ -18,6 +18,12 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
+data/
+
+# Security Keys & Certificates
+*.pem
+*.key
+*.pfx
 
 # Editors / OS
 .vscode/

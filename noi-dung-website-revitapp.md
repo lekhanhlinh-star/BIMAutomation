@@ -4,7 +4,7 @@
 
 *Nội dung viết theo đúng tính năng đang có trong code, lấy AI/MCP vẽ thép tự động làm điểm bán hàng số 1*
 
-*Add-in v1.14.3  ·  Revit 2022–2027  ·  Tab Ribbon: LDL-STRUCTURAL*
+*Add-in v1.14.3  ·  Revit 2022–2027  ·  Tab Ribbon: BIMAutomation*
 
 *✎ Mọi số liệu trong tài liệu lấy trực tiếp từ source code. Đoạn in nghiêng có ký hiệu ✎ là ghi chú cho bạn — xóa trước khi đưa lên web. Chỗ trong dấu \[ \] là phần bạn cần điền.*
 
@@ -13,7 +13,7 @@
 | Hạng mục | Giá trị thật | Nguồn |
 | :---- | :---- | :---- |
 | **Tên sản phẩm** | RevitAPP (ProductCode \= "revitapp") | LicenseConfig.cs |
-| **Tab Ribbon** | LDL-STRUCTURAL | Application.cs |
+| **Tab Ribbon** | BIMAutomation | Application.cs |
 | **Phiên bản** | v1.14.3 | RevitAPP.csproj |
 | **Revit hỗ trợ** | 2022 – 2027 (R22–R27) | RevitAPP.csproj |
 | **Lệnh trên Ribbon** | 18 nút / 4 panel | Application.cs |
@@ -175,7 +175,7 @@ Ngoài cửa sổ Chat AI có sẵn, RevitAPP mở chính 57 tool đó ra chuẩ
 | **Endpoint** | http://127.0.0.1:8765/mcp |
 | **Phạm vi mạng** | Chỉ loopback — không mở ra mạng ngoài |
 | **Xác thực** | Bearer token 256-bit sinh riêng từng máy, lưu tại %LocalAppData%\\RevitAPP\\mcp-access-token.txt |
-| **Bật/tắt** | Ribbon LDL-STRUCTURAL → Commands → MCP Server |
+| **Bật/tắt** | Ribbon BIMAutomation → Commands → MCP Server |
 | **Phụ thuộc ngoài** | Không cần revit\_mcp\_plugin, commandRegistry.json hay MCP server bên thứ ba |
 | **Hàng đợi** | Worker có giới hạn, kết quả liên kết riêng theo từng request |
 | **An toàn** | Mọi tool thay đổi mô hình đều yêu cầu xác nhận trong Revit; license gate và transaction ownership giữ nguyên như lệnh Ribbon |
@@ -196,7 +196,7 @@ Ngoài cửa sổ Chat AI có sẵn, RevitAPP mở chính 57 tool đó ra chuẩ
 
 # **4\. Các tính năng còn lại trên Ribbon**
 
-Ngoài trục AI/MCP, RevitAPP có 18 lệnh bấm trực tiếp trên tab LDL-STRUCTURAL. Trình bày ngắn gọn, không cần chiếm trang chủ.
+Ngoài trục AI/MCP, RevitAPP có 18 lệnh bấm trực tiếp trên tab BIMAutomation. Trình bày ngắn gọn, không cần chiếm trang chủ.
 
 ## **4.1. Panel Rebar — bấm nút vẽ thép thủ công**
 
@@ -283,7 +283,7 @@ License của RevitAPP cấp quyền theo từng mã tính năng, mỗi lệnh k
 | :---- | :---- |
 | **1** | Tải RevitAPP.Installer.exe — một installer duy nhất cho mọi bản Revit, không phải chọn đúng phiên bản. |
 | **2** | Chạy installer. Nó tự dò các bản Revit đang có trên máy và cài gói tương ứng vào %AppData%\\Autodesk\\Revit\\Addins\\\<năm\>. |
-| **3** | Mở Revit → tab LDL-STRUCTURAL → License → Đăng nhập Google. Không cần mã kích hoạt. |
+| **3** | Mở Revit → tab BIMAutomation → License → Đăng nhập Google. Không cần mã kích hoạt. |
 
 *✎ Web hiện viết “Tải bộ cài (.exe) tương thích cho phiên bản Revit bạn đang sử dụng” — sai. Installer tự dò tất cả. Sửa câu này.*
 
@@ -336,7 +336,7 @@ License của RevitAPP cấp quyền theo từng mã tính năng, mỗi lệnh k
 
 **Hỏi: Kích hoạt bản quyền thế nào?**
 
-Đáp: Không cần mã kích hoạt. Mở Revit → tab LDL-STRUCTURAL → License → Đăng nhập Google. Bản quyền gắn trực tiếp với tài khoản của bạn, đổi máy chỉ cần đăng nhập lại.
+Đáp: Không cần mã kích hoạt. Mở Revit → tab BIMAutomation → License → Đăng nhập Google. Bản quyền gắn trực tiếp với tài khoản của bạn, đổi máy chỉ cần đăng nhập lại.
 
 **Hỏi: Dùng RevitAPP có bắt buộc phải có Internet không?**
 
@@ -360,7 +360,7 @@ License của RevitAPP cấp quyền theo từng mã tính năng, mỗi lệnh k
 | **“Bar Schedule chuẩn TCVN, kiểm tra chiều dài neo nối”** | Có 5 lệnh vẽ thép thật, nhưng chưa thấy code sinh Bar Schedule TCVN | Giữ phần vẽ thép, gỡ phần Bar Schedule |
 | **“30+ công cụ” vs “Full 13 tính năng” trong portal** | 18 lệnh Ribbon, 12 mã tính năng, 57 tool AI | Dùng thống nhất “18 lệnh \+ 57 công cụ AI” |
 | **Testimonial đích danh Coteccons, Central Cons, Archetype** | Không có căn cứ | Thay bằng khách hàng thật có xác nhận |
-| **Bốn tên lẫn lộn: BIMAutomation, BIMPilot, RevitAPP, RevitAI** | Code dùng nhất quán RevitAPP; tab Ribbon là LDL-STRUCTURAL | Chốt một tên, nói rõ quan hệ nhà phát hành ↔ tên add-in |
+| **Bốn tên lẫn lộn: BIMAutomation, BIMPilot, RevitAPP, RevitAI** | Code dùng nhất quán RevitAPP; tab Ribbon là BIMAutomation | Chốt một tên, nói rõ quan hệ nhà phát hành ↔ tên add-in |
 
 # **Phụ lục. 18 lệnh Ribbon và mã tính năng**
 

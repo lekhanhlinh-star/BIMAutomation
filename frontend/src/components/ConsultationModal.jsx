@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Building2, CheckCircle2, Loader2, Mail, Phone, Send, Sparkles, User, X } from 'lucide-react';
 import AccessibleDialog from './AccessibleDialog';
 import { publicApi } from '../api/services';
+import AiToolIcon from './icons/AiToolIcon';
 
 export default function ConsultationModal({ isOpen, onClose, defaultTopic = 'Tư vấn giải pháp & Báo giá Doanh nghiệp' }) {
   const [formData, setFormData] = useState({
@@ -66,8 +67,11 @@ export default function ConsultationModal({ isOpen, onClose, defaultTopic = 'Tư
             Cảm ơn bạn <strong className="text-[var(--text-primary)]">{formData.name}</strong>. Chúng tôi đã nhận được thông tin và sẽ liên hệ qua số điện thoại/email để gửi tài liệu giải pháp và kích hoạt bản quyền thử nghiệm cho đội ngũ.
           </p>
           <div className="p-4 bg-[var(--surface-subtle)] rounded-[var(--radius-control)] border border-[var(--line)] text-xs text-[var(--text-secondary)] text-left space-y-1">
-            <p><strong>Hotline hỗ trợ trực tiếp:</strong> 0904 885 833 (8:00 - 18:00)</p>
-            <p><strong>Zalo hỗ trợ kỹ thuật:</strong> https://zalo.me/bimautomation</p>
+            <p><strong>Hotline hỗ trợ trực tiếp:</strong> <a href="tel:0799660737" className="hover:underline text-[var(--brand)] font-semibold">0799 660 737</a> (8:00 - 18:00)</p>
+            <p className="flex items-center gap-1.5">
+              <img src="/assets/brand/zalo-icon.png" alt="Zalo" width={14} height={14} className="rounded-[3px] shrink-0" />
+              <strong>Cộng đồng Zalo:</strong> <a href="https://zalo.me/g/euhwzpu6ouswooub16tl" target="_blank" rel="noopener noreferrer" className="hover:underline text-[var(--brand)] font-semibold">Tham gia nhóm Zalo hỗ trợ</a>
+            </p>
           </div>
           <button
             onClick={handleReset}
@@ -84,15 +88,15 @@ export default function ConsultationModal({ isOpen, onClose, defaultTopic = 'Tư
                 Họ và tên <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
+                <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none z-10" />
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Kỹ sư Nguyễn Văn A"
-                  className="form-control text-sm w-full pl-9"
+                  className="form-control form-control--with-icon text-sm w-full"
                 />
-                <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               </div>
             </div>
 
@@ -101,15 +105,15 @@ export default function ConsultationModal({ isOpen, onClose, defaultTopic = 'Tư
                 Số điện thoại / Zalo <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
+                <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none z-10" />
                 <input
                   type="tel"
                   required
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="0912 345 678"
-                  className="form-control text-sm w-full pl-9"
+                  className="form-control form-control--with-icon text-sm w-full"
                 />
-                <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               </div>
             </div>
           </div>
@@ -120,15 +124,15 @@ export default function ConsultationModal({ isOpen, onClose, defaultTopic = 'Tư
                 Email công việc <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
+                <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none z-10" />
                 <input
                   type="email"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="engineer@company.com"
-                  className="form-control text-sm w-full pl-9"
+                  className="form-control form-control--with-icon text-sm w-full"
                 />
-                <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               </div>
             </div>
 
@@ -137,14 +141,14 @@ export default function ConsultationModal({ isOpen, onClose, defaultTopic = 'Tư
                 Tên công ty / Studio thiết kế
               </label>
               <div className="relative">
+                <Building2 size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none z-10" />
                 <input
                   type="text"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                   placeholder="Công ty CP Kiến trúc & Xây dựng..."
-                  className="form-control text-sm w-full pl-9"
+                  className="form-control form-control--with-icon text-sm w-full"
                 />
-                <Building2 size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               </div>
             </div>
           </div>
@@ -167,8 +171,12 @@ export default function ConsultationModal({ isOpen, onClose, defaultTopic = 'Tư
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[var(--text-primary)] mb-1">
-                Phân hệ quan tâm nhất
+              <label className="mb-1 flex items-center justify-between gap-3 text-xs font-bold text-[var(--text-primary)]">
+                <span>Phân hệ quan tâm nhất</span>
+                <span className="flex items-center gap-1.5 text-[var(--text-secondary)]" aria-hidden="true">
+                  <AiToolIcon tool="claude" size={16} />
+                  <AiToolIcon tool="cursor" size={16} />
+                </span>
               </label>
               <select
                 value={formData.interest}

@@ -6,6 +6,7 @@ import { customerApi, publicApi } from '../../api/services';
 import { useAuthStore } from '../../store/useAuthStore';
 import { savePendingIntent } from '../../utils/pendingIntent';
 import AccessibleDialog from '../../components/AccessibleDialog';
+import AiToolIcon from '../../components/icons/AiToolIcon';
 
 const basePlans = [
   {
@@ -124,10 +125,10 @@ export default function PricingPage() {
         <div className="home-grid-pattern absolute inset-0 pointer-events-none" aria-hidden="true" />
         <div className="page-shell relative py-16 text-center sm:py-24">
           <span className="home-kicker">Giá đơn giản cho kỹ sư Revit</span>
-          <h1 className="mx-auto mt-6 max-w-4xl text-[clamp(2.75rem,6vw,5.5rem)] font-extrabold leading-[0.98] tracking-[-0.065em] text-balance">
+          <h1 className="mx-auto mt-6 max-w-4xl text-[clamp(2.75rem,6vw,5.25rem)] font-extrabold leading-[1.02] tracking-[-0.055em] text-balance">
             Một bộ công cụ. <span className="text-[var(--brand)]">Chọn thời gian phù hợp.</span>
           </h1>
-          <p className="mx-auto mt-7 max-w-2xl text-base leading-8 text-[var(--text-secondary)] sm:text-lg">
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-[var(--text-secondary)] sm:text-lg sm:leading-8">
             Không chia nhỏ tính năng, không bắt bạn chọn module. Mỗi gói cá nhân đều mở toàn bộ plugin BIMAutomation và workflow cùng AI.
           </p>
           <div className="mt-8 inline-flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-[var(--text-secondary)]">
@@ -144,11 +145,11 @@ export default function PricingPage() {
         ) : (
           <section className="pricing-personal-grid" aria-label="Các gói BIMAutomation dành cho cá nhân">
             {plans.map((plan) => (
-              <article key={plan.id} className={`pricing-personal-card ${plan.isPopular ? 'is-popular' : ''}`}>
+              <article key={plan.id} className={`pricing-personal-card rounded-xl border border-[var(--line)] shadow-sm ${plan.isPopular ? 'is-popular' : ''}`}>
                 {plan.isPopular && <div className="pricing-popular-label">Đáng chọn nhất</div>}
                 <div>
                   <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--brand)]">{plan.eyebrow}</span>
-                  <h2 className="mt-3 text-xl font-extrabold tracking-[-0.03em]">{plan.name}</h2>
+                  <h2 className="mt-3 text-xl font-extrabold leading-tight tracking-[-0.03em]">{plan.name}</h2>
                   <p className="mt-3 min-h-14 text-sm leading-6 text-[var(--text-secondary)]">{plan.description}</p>
                 </div>
                 <div className="mt-7 border-y border-[var(--line)] py-6">
@@ -156,10 +157,21 @@ export default function PricingPage() {
                   {plan.equivalent && <p className="mt-2 text-xs font-semibold text-[var(--text-secondary)]">{plan.equivalent}</p>}
                   {plan.saving && <span className="mt-3 inline-flex bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{plan.saving}</span>}
                 </div>
-                <ul className="mt-7 flex-1 space-y-3">
-                  {plan.features.map((feature) => <li key={feature} className="pricing-feature-item">{feature}</li>)}
+                <ul className="mt-7 flex-1 space-y-3.5">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="pricing-feature-item">
+                      {feature.includes('Codex') && (
+                        <span className="mr-2 inline-flex shrink-0 items-center gap-1.5 align-middle text-[var(--text-primary)]" aria-hidden="true">
+                          <AiToolIcon tool="codex" size={18} />
+                          <AiToolIcon tool="claude" size={18} />
+                          <AiToolIcon tool="cursor" size={18} />
+                        </span>
+                      )}
+                      <span>{feature}</span>
+                    </li>
+                  ))}
                 </ul>
-                <button onClick={() => choose(plan)} className={plan.isPopular ? 'primary-button mt-8 w-full justify-center' : 'secondary-button mt-8 w-full justify-center'}>{plan.cta} <ArrowRight size={16} /></button>
+                <button onClick={() => choose(plan)} className={plan.isPopular ? 'primary-button mt-8 w-full justify-center' : 'secondary-button mt-8 w-full justify-center'}>{plan.cta} <ArrowRight size={18} strokeWidth={1.8} /></button>
               </article>
             ))}
           </section>
@@ -182,13 +194,13 @@ export default function PricingPage() {
             <span className="home-kicker">Cần biết trước khi bắt đầu</span>
             <h2 className="mt-5 text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl">Câu hỏi về gói cá nhân</h2>
             <p className="mt-4 max-w-md text-sm leading-7 text-[var(--text-secondary)]">Nếu công việc của bạn có yêu cầu riêng, hãy gửi một file mẫu để đội ngũ BIMAutomation tư vấn đúng workflow.</p>
-            <button onClick={onOpenConsultation} className="home-arrow-link mt-6">Trao đổi với chúng tôi <ArrowRight size={16} /></button>
+            <button onClick={onOpenConsultation} className="home-arrow-link mt-6">Trao đổi với chúng tôi <ArrowRight size={18} strokeWidth={1.8} /></button>
           </div>
           <div className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
             {pricingFaqs.map((faq, index) => {
               const isOpen = openFaq === index;
               return <article key={faq.q}>
-                <button onClick={() => setOpenFaq(isOpen ? -1 : index)} className="flex w-full items-center justify-between gap-5 py-5 text-left text-sm font-bold"><span>{faq.q}</span><ChevronDown size={17} className={`shrink-0 transition-transform ${isOpen ? 'rotate-180 text-[var(--brand)]' : 'text-[var(--text-muted)]'}`} /></button>
+                <button onClick={() => setOpenFaq(isOpen ? -1 : index)} className="flex min-h-[72px] w-full items-center justify-between gap-5 py-5 text-left text-sm font-bold"><span>{faq.q}</span><ChevronDown size={18} strokeWidth={1.8} className={`shrink-0 transition-transform ${isOpen ? 'rotate-180 text-[var(--brand)]' : 'text-[var(--text-muted)]'}`} /></button>
                 {isOpen && <p className="pb-6 pr-8 text-sm leading-7 text-[var(--text-secondary)]">{faq.a}</p>}
               </article>;
             })}
@@ -197,7 +209,7 @@ export default function PricingPage() {
 
         <section className="pricing-team-note">
           <div><strong>Mua cho đội BIM hoặc doanh nghiệp?</strong><span>Chúng tôi vẫn có chính sách nhiều máy, đào tạo và hỗ trợ riêng.</span></div>
-          <button onClick={onOpenConsultation}>Nhận báo giá đội nhóm <ArrowRight size={15} /></button>
+          <button onClick={onOpenConsultation}>Nhận báo giá đội nhóm <ArrowRight size={18} strokeWidth={1.8} /></button>
         </section>
       </div>
 
@@ -207,9 +219,9 @@ export default function PricingPage() {
 
       <AccessibleDialog open={checkout} onClose={close} title={order?.status === 'PAID' ? 'Thanh toán thành công' : 'Thanh toán đơn hàng'} description={!order ? `${selected?.name} · ${selected?.price}` : undefined}>
         {order?.status === 'PAID' ? (
-          <div className="py-4 text-center"><ShieldCheck size={56} className="mx-auto text-emerald-500" /><h3 className="mt-4 text-lg font-bold">Giao dịch thành công!</h3><p className="mt-2 text-sm text-[var(--text-secondary)]">License đã được kích hoạt trong tài khoản của bạn.</p><button onClick={() => navigate('/account/licenses')} className="primary-button mt-6 w-full justify-center">Xem License của tôi</button></div>
+          <div className="py-4 text-center"><ShieldCheck size={48} strokeWidth={1.8} className="mx-auto text-emerald-500" /><h3 className="mt-4 text-lg font-bold">Giao dịch thành công!</h3><p className="mt-2 text-sm text-[var(--text-secondary)]">License đã được kích hoạt trong tài khoản của bạn.</p><button onClick={() => navigate('/account/licenses')} className="primary-button mt-6 w-full justify-center">Xem License của tôi</button></div>
         ) : !order ? (
-          <div className="pt-2"><div className="flex items-center justify-between border border-[var(--line)] bg-[var(--surface-subtle)] p-4 text-sm"><span className="text-[var(--text-secondary)]">Tổng thanh toán</span><strong className="font-mono text-lg text-[var(--brand)]">{selected?.price}</strong></div>{error && <p role="alert" className="mt-3 text-sm font-medium text-rose-500">{error}</p>}<button onClick={create} disabled={busy} className="primary-button mt-5 w-full justify-center">{busy ? <Loader2 className="animate-spin" /> : <CreditCard size={18} />} Tạo mã thanh toán VietQR</button></div>
+          <div className="pt-2"><div className="flex items-center justify-between rounded-lg border border-[var(--line)] bg-[var(--surface-subtle)] p-4 text-sm"><span className="text-[var(--text-secondary)]">Tổng thanh toán</span><strong className="font-mono text-lg text-[var(--brand)]">{selected?.price}</strong></div>{error && <p role="alert" className="mt-3 text-sm font-medium text-rose-500">{error}</p>}<button onClick={create} disabled={busy} className="primary-button mt-5 w-full justify-center">{busy ? <Loader2 className="animate-spin" size={18} strokeWidth={1.8} /> : <CreditCard size={18} strokeWidth={1.8} />} Tạo mã thanh toán VietQR</button></div>
         ) : (
           <div className="pt-2 text-center"><div className="mb-3 inline-flex items-center gap-2 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-600"><Loader2 size={13} className="animate-spin" /> Đang chờ thanh toán VietQR</div>{qr && <><div className="mx-auto mt-2 h-56 w-56 border border-[var(--line)] bg-white p-3"><img className="h-full w-full object-contain" src={qr.qr_code_url} alt={`Mã QR thanh toán đơn ${qr.order_code}`} /></div><div className="mt-4 space-y-2 border border-[var(--line)] bg-[var(--surface-subtle)] p-3.5 text-left text-sm"><div className="flex items-center justify-between"><span className="text-[var(--text-secondary)]">Số tiền:</span><strong className="font-mono text-[var(--brand)]">{Number(qr.amount).toLocaleString('vi-VN')}đ</strong></div><div className="flex items-center justify-between"><span className="text-[var(--text-secondary)]">Nội dung CK:</span><div className="flex items-center gap-1"><strong className="font-mono">{qr.payment_content}</strong><button onClick={() => copyText(qr.payment_content, 'memo')} title="Sao chép nội dung"><Copy size={14} /></button></div></div>{copiedField === 'memo' && <p className="text-right text-[11px] font-semibold text-emerald-500">Đã sao chép!</p>}</div></>}<p className="mt-5 text-xs text-[var(--text-muted)]">License được kích hoạt tự động ngay khi giao dịch hoàn tất.</p></div>
         )}
