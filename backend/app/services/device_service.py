@@ -82,24 +82,7 @@ async def activate_device(
                 "message": "Thiết bị kích hoạt lại thành công",
             }
 
-        # Check active device count
-        count_res = await session.execute(
-            select(func.count(Device.id)).where(
-                Device.license_id == active_license.id,
-                Device.revoked_at.is_(None),
-            )
-        )
-        active_count = count_res.scalar_one()
-
-        if active_count >= active_license.max_devices:
-            return {
-                "success": False,
-                "allowed": False,
-                "error": "device_limit",
-                "message": f"Số lượng thiết bị kích hoạt đã đạt giới hạn tối đa ({active_license.max_devices} máy) của gói bản quyền.",
-            }
-
-        # Create new device
+        # Create and register new device under license (unlimited devices allowed)
         new_device = Device(
             license_id=active_license.id,
             installation_id=installation_id,

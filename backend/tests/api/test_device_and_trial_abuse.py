@@ -788,27 +788,27 @@ async def test_entitlement_signed_token_and_public_key(client: TestClient) -> No
 
 
 @pytest.mark.asyncio
-async def test_device_limit_rejection_format_and_takeover_protection(client: TestClient) -> None:
+async def test_unlimited_devices_and_single_active_session_concurrency(client: TestClient) -> None:
     """
-    Verifies that:
-    1. device_limit returns HTTP 200 with {"allowed": false, "error": "device_limit"} across all endpoints.
-    2. Session takeover is blocked BEFORE active_device_fingerprint is modified if device limit is exceeded.
-       (Legitimate active Machine 1 is not kicked out by unauthorized Machine 3).
-    3. Legitimate existing devices can take over session idempotently without counting as new devices.
+    Verifies the Unlimited Devices + Single Active Session Floating License model:
+    1. Paid license users can install and activate on unlimited devices (PC, Laptop, Workstation, etc.).
+    2. Zero device_limit restrictions block legitimate user devices.
+    3. At any given moment, strictly 1 active machine can operate.
+    4. Switching machines via takeover=True is seamless and immediately transfers active control.
     """
     now = datetime.now(timezone.utc)
     fp_1 = "paid_machine_1_fingerprint"
     fp_2 = "paid_machine_2_fingerprint"
-    fp_3 = "unauthorized_machine_3_fingerprint"
+    fp_3 = "paid_machine_3_fingerprint"
 
     async with TestSessionLocal() as session:
         user = User(
-            email="paid_customer@example.com",
+            email="floating_customer@example.com",
             hashed_password="hash",
             role=UserRole.USER,
             is_active=True,
             active_device_fingerprint=fp_1,
-            active_device_name="WORKSTATION-01",
+            active_device_name="OFFICE-PC",
         )
         session.add(user)
         await session.commit()
@@ -817,109 +817,53 @@ async def test_device_limit_rejection_format_and_takeover_protection(client: Tes
 
         lic = License(
             user_id=user_id,
-            plan_name="pro",
-            license_key="LIC-MAX-DEV-TEST",
-            max_devices=2,
+            plan_name="Gói Cá nhân Năm (Annual)",
+            license_key="LIC-FLOATING-TEST-1234",
             status=LicenseStatus.ACTIVE,
             starts_at=now,
             expires_at=now + timedelta(days=365),
         )
         session.add(lic)
         await session.commit()
-        await session.refresh(lic)
-        lic_id = lic.id
 
-        # Register Device 1 & Device 2
-        dev1 = Device(
-            license_id=lic_id,
-            installation_id=str(uuid.uuid4()),
-            fingerprint_hash=fp_1,
-            display_name="WORKSTATION-01",
-            first_seen_at=now,
-            last_seen_at=now,
-        )
-        dev2 = Device(
-            license_id=lic_id,
-            installation_id=str(uuid.uuid4()),
-            fingerprint_hash=fp_2,
-            display_name="WORKSTATION-02",
-            first_seen_at=now,
-            last_seen_at=now,
-        )
-        session.add_all([dev1, dev2])
-        await session.commit()
-
-    token = create_access_token(user_id=user_id, email="paid_customer@example.com")
+    token = create_access_token(user_id=user_id, email="floating_customer@example.com")
     headers = {"Authorization": f"Bearer {token}"}
 
-    # Step 1: Machine 3 attempts takeover via /api/v1/entitlements/check with takeover=True
-    res_m3_check = client.post(
-        "/api/v1/entitlements/check",
-        headers=headers,
-        json={
-            "product_code": "revitapp",
-            "hardware_fingerprint": fp_3,
-            "device_name": "WORKSTATION-03",
-            "takeover": True,
-        },
-    )
-    assert res_m3_check.status_code == 200
-    data_m3_check = res_m3_check.json()
-    assert data_m3_check["allowed"] is False
-    assert data_m3_check["error"] == "device_limit"
-    assert "2 máy" in data_m3_check["message"]
+    # Step 1: Activate Machine 1, Machine 2, and Machine 3 (all succeed without device_limit)
+    for fp, name in [
+        (fp_1, "OFFICE-PC"),
+        (fp_2, "HOME-LAPTOP"),
+        (fp_3, "SITE-TABLET"),
+    ]:
+        res_act = client.post(
+            "/api/v1/devices/activate",
+            headers=headers,
+            json={
+                "productCode": "revitapp",
+                "installationId": str(uuid.uuid4()),
+                "machineFingerprint": fp,
+                "displayName": name,
+                "platform": "windows",
+                "revitVersion": "2025",
+                "appVersion": "1.0.0",
+            },
+        )
+        assert res_act.status_code == 200
+        data_act = res_act.json()
+        assert data_act["success"] is True
+        assert data_act["allowed"] is True
+        assert data_act["isTrial"] is False
 
-    # Step 2: Verify active_device_fingerprint was NOT altered in database
-    async with TestSessionLocal() as session:
-        refreshed_user = (await session.execute(select(User).where(User.id == user_id))).scalar_one()
-        assert refreshed_user.active_device_fingerprint == fp_1
-        assert refreshed_user.active_device_name == "WORKSTATION-01"
-
-    # Step 3: Machine 1 is still allowed and active
-    res_m1_heartbeat = client.post(
+    # Step 2: Machine 3 (Site Tablet) was activated last, so it is the active device
+    res_m3_hb = client.post(
         "/api/v1/devices/heartbeat",
         headers=headers,
-        json={"machineFingerprint": fp_1},
+        json={"machineFingerprint": fp_3},
     )
-    assert res_m1_heartbeat.status_code == 200
-    assert res_m1_heartbeat.json()["allowed"] is True
+    assert res_m3_hb.status_code == 200
+    assert res_m3_hb.json()["allowed"] is True
 
-    # Step 4: Machine 3 attempts to activate via /api/v1/devices/activate
-    res_m3_activate = client.post(
-        "/api/v1/devices/activate",
-        headers=headers,
-        json={
-            "productCode": "revitapp",
-            "installationId": str(uuid.uuid4()),
-            "machineFingerprint": fp_3,
-            "displayName": "WORKSTATION-03",
-            "platform": "windows",
-            "revitVersion": "2025",
-            "appVersion": "1.0.0",
-        },
-    )
-    assert res_m3_activate.status_code == 200
-    data_m3_activate = res_m3_activate.json()
-    assert data_m3_activate["success"] is False
-    assert data_m3_activate["allowed"] is False
-    assert data_m3_activate["error"] == "device_limit"
-    assert "2 máy" in data_m3_activate["message"]
-
-    # Step 5: Machine 2 (authorized device) takes over session
-    res_m2_check = client.post(
-        "/api/v1/entitlements/check",
-        headers=headers,
-        json={
-            "product_code": "revitapp",
-            "hardware_fingerprint": fp_2,
-            "device_name": "WORKSTATION-02",
-            "takeover": True,
-        },
-    )
-    assert res_m2_check.status_code == 200
-    assert res_m2_check.json()["allowed"] is True
-
-    # Step 6: Machine 1 now receives concurrent_session_conflict
+    # Step 3: Machine 1 (Office PC) pings heartbeat -> Gets concurrent_session_conflict
     res_m1_conflict = client.post(
         "/api/v1/devices/heartbeat",
         headers=headers,
@@ -928,4 +872,43 @@ async def test_device_limit_rejection_format_and_takeover_protection(client: Tes
     assert res_m1_conflict.status_code == 200
     assert res_m1_conflict.json()["allowed"] is False
     assert res_m1_conflict.json()["error"] == "concurrent_session_conflict"
+
+    # Step 4: Machine 1 user clicks "Tiếp tục trên máy này" (takeover=True)
+    res_m1_takeover = client.post(
+        "/api/v1/entitlements/check",
+        headers=headers,
+        json={
+            "product_code": "revitapp",
+            "hardware_fingerprint": fp_1,
+            "device_name": "OFFICE-PC",
+            "takeover": True,
+        },
+    )
+    assert res_m1_takeover.status_code == 200
+    assert res_m1_takeover.json()["allowed"] is True
+
+    # Step 5: Machine 1 is now active, Machine 3 gets conflict on next check
+    res_m3_conflict = client.post(
+        "/api/v1/devices/heartbeat",
+        headers=headers,
+        json={"machineFingerprint": fp_3},
+    )
+    assert res_m3_conflict.status_code == 200
+    assert res_m3_conflict.json()["allowed"] is False
+    assert res_m3_conflict.json()["error"] == "concurrent_session_conflict"
+
+    # Step 6: Machine 2 (Home Laptop) takes over session in evening
+    res_m2_takeover = client.post(
+        "/api/v1/entitlements/check",
+        headers=headers,
+        json={
+            "product_code": "revitapp",
+            "hardware_fingerprint": fp_2,
+            "device_name": "HOME-LAPTOP",
+            "takeover": True,
+        },
+    )
+    assert res_m2_takeover.status_code == 200
+    assert res_m2_takeover.json()["allowed"] is True
+
 
