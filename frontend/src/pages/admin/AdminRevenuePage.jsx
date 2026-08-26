@@ -12,7 +12,7 @@ export default function AdminRevenuePage() {
   const maxRevenue = Math.max(1, ...revenueData.map((d) => d.revenue));
 
   return (
-    <div className="space-y-6">
+    <div className="admin-page space-y-6">
       <div>
         <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Báo cáo doanh thu</h2>
         <p className="text-xs text-[var(--text-secondary)] mt-1">Thống kê doanh thu theo thời gian và tăng trưởng kinh doanh BIMAutomation.</p>

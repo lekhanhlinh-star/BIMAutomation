@@ -155,15 +155,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="page-shell py-24 sm:py-32" id="workflow">
-        <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:gap-20">
-          <div className="lg:sticky lg:top-28 lg:self-start">
+      <section className="home-workflow-section page-shell" id="workflow">
+        <div className="home-workflow-grid">
+          <div className="home-workflow-intro">
             <span className="home-kicker">Một cách làm việc mới</span>
             <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-[-0.045em] sm:text-5xl text-balance">Bạn nói điều cần làm. BIMAutomation lo phần lặp lại.</h2>
             <p className="mt-5 max-w-md text-sm leading-7 text-[var(--text-secondary)] sm:text-base">AI không thay quyết định của kỹ sư. Nó giúp biến quyết định đó thành thao tác Revit nhanh, nhất quán và dễ kiểm tra hơn.</p>
             <Link to="/features" className="home-arrow-link mt-7">Khám phá toàn bộ tính năng <ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></Link>
           </div>
-          <div className="border-t border-[var(--line)]">
+          <div className="home-outcome-list">
             {outcomes.map(({ number, title, description }) => (
               <article key={number} className="grid gap-5 border-b border-[var(--line)] py-8 sm:grid-cols-[72px_1fr] sm:items-start sm:py-10">
                 <span className="font-mono text-xs font-bold text-[var(--text-muted)]">/{number}</span>
@@ -174,15 +174,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="home-dark-section py-24 sm:py-32" id="plugins">
+      <section className="home-dark-section home-plugins-section" id="plugins">
         <div className="page-shell">
-          <div className="flex flex-col gap-7 sm:flex-row sm:items-end sm:justify-between">
+          <div className="home-section-heading">
             <div><span className="home-kicker">Hệ plugin BIMAutomation</span><h2 className="mt-5 max-w-3xl text-3xl font-extrabold leading-tight tracking-[-0.045em] sm:text-5xl text-balance">Từ cốt thép đến hồ sơ, trong một hệ công cụ.</h2></div>
             <p className="max-w-md text-sm leading-7 text-[var(--text-secondary)]">Dùng từng plugin độc lập trên Ribbon hoặc để AI phối hợp nhiều bước cho một mục tiêu hoàn chỉnh.</p>
           </div>
-          <div className="mt-12 grid gap-5 sm:mt-14 lg:grid-cols-12">
-            {pluginGroups.map((group) => (
-              <article key={group.title} className={`home-plugin-card group ${group.className}`}>
+          <div className="home-plugin-index">
+            {pluginGroups.map((group, index) => (
+              <article key={group.title} className={`home-plugin-card home-plugin-card--${index + 1} group ${group.className}`}>
                 <div className="relative overflow-hidden border-b border-white/10">
                   <img src={group.image} alt={group.alt} loading="lazy" className="h-56 w-full object-cover object-top transition duration-500 group-hover:scale-[1.01] sm:h-72" />
                 </div>
@@ -205,8 +205,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-[var(--line)] bg-[var(--surface-raised)] py-24 sm:py-28">
-        <div className="page-shell grid gap-14 lg:grid-cols-[0.72fr_1.28fr] lg:gap-24">
+      <section className="home-faq-section">
+        <div className="page-shell home-faq-layout">
           <div>
             <span className="home-kicker">Câu hỏi thường gặp</span><h2 className="mt-5 text-3xl font-extrabold tracking-[-0.045em] sm:text-4xl">Trước khi bạn bắt đầu.</h2>
             <p className="mt-4 max-w-sm text-sm leading-7 text-[var(--text-secondary)]">Cần xem trực tiếp trên một file dự án thực tế? Đội ngũ kỹ thuật có thể demo 1-1 cùng bạn.</p>
@@ -251,32 +251,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="page-shell pt-24 sm:pt-32">
+      <section className="page-shell home-cta-section">
         <div className="home-final-cta relative overflow-hidden">
           <div className="home-grid-pattern absolute inset-0 opacity-40" aria-hidden="true" />
           <div className="relative grid gap-12 p-7 sm:p-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:p-16">
             <div>
-              <span className="font-mono text-[10px] font-bold tracking-[0.18em] text-cyan-300">BẮT ĐẦU VỚI FILE REVIT CỦA BẠN</span>
-              <h2 className="mt-5 max-w-2xl text-3xl font-extrabold leading-tight tracking-[-0.05em] text-white sm:text-5xl text-balance">Biến những giờ thao tác lặp thành một workflow có thể tái sử dụng.</h2>
-              <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300">Dùng thử đầy đủ tính năng trong 14 ngày hoặc đặt lịch để đội ngũ BIMAutomation demo trực tiếp trên quy trình của doanh nghiệp bạn.</p>
+              <span className="home-cta-label font-mono text-[10px] font-bold tracking-[0.18em]">BẮT ĐẦU VỚI FILE REVIT CỦA BẠN</span>
+              <h2 className="home-cta-title mt-5 max-w-2xl text-3xl font-extrabold leading-tight tracking-[-0.05em] sm:text-5xl text-balance">Biến những giờ thao tác lặp thành một workflow có thể tái sử dụng.</h2>
+              <p className="home-cta-copy mt-5 max-w-xl text-sm leading-7">Dùng thử đầy đủ tính năng trong 14 ngày hoặc đặt lịch để đội ngũ BIMAutomation demo trực tiếp trên quy trình của doanh nghiệp bạn.</p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <button onClick={startTrial} className="primary-button !min-h-12 !bg-cyan-400 !px-6 !text-slate-950 hover:!bg-cyan-300"><Download size={18} strokeWidth={1.8} aria-hidden="true" /> Tải BIMAutomation</button>
-                <Link to="/pricing" className="inline-flex min-h-12 items-center gap-2 border border-white/20 px-6 text-sm font-bold text-white transition hover:border-cyan-300 hover:text-cyan-300">Xem bảng giá <ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></Link>
+                <button onClick={startTrial} className="home-cta-primary primary-button !min-h-12 !px-6"><Download size={18} strokeWidth={1.8} aria-hidden="true" /> Tải BIMAutomation</button>
+                <Link to="/pricing" className="home-cta-secondary inline-flex min-h-12 items-center gap-2 px-6 text-sm font-bold transition">Xem bảng giá <ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></Link>
               </div>
             </div>
-            <div className="border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+            <div className="home-lead-panel p-5 sm:p-6">
               {formSent ? (
-                <div className="py-10 text-center"><CheckCircle2 size={36} className="mx-auto text-emerald-400" aria-hidden="true" /><h3 className="mt-4 text-lg font-bold text-white">Đã nhận yêu cầu của bạn</h3><p className="mt-2 text-sm text-slate-300">Đội ngũ BIMAutomation sẽ sớm liên hệ để trao đổi workflow phù hợp.</p></div>
+                <div className="py-10 text-center"><CheckCircle2 size={36} className="mx-auto text-emerald-500" aria-hidden="true" /><h3 className="mt-4 text-lg font-bold">Đã nhận yêu cầu của bạn</h3><p className="mt-2 text-sm text-[var(--text-secondary)]">Đội ngũ BIMAutomation sẽ sớm liên hệ để trao đổi workflow phù hợp.</p></div>
               ) : (
                 <form onSubmit={handleQuickSubmit}>
-                  <h3 className="text-lg font-bold text-white">Đăng ký demo 1-1</h3><p className="mt-1 text-xs leading-5 text-slate-400">Dành cho kỹ sư, phòng BIM và doanh nghiệp muốn tối ưu quy trình riêng.</p>
+                  <h3 className="text-lg font-bold">Đăng ký demo 1-1</h3><p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">Dành cho kỹ sư, phòng BIM và doanh nghiệp muốn tối ưu quy trình riêng.</p>
                   <div className="mt-5 grid gap-3">
                     <label className="sr-only" htmlFor="home-lead-name">Họ và tên</label><input id="home-lead-name" required value={quickForm.name} onChange={(event) => setQuickForm({ ...quickForm, name: event.target.value })} className="home-dark-input" placeholder="Họ và tên" />
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div><label className="sr-only" htmlFor="home-lead-phone">Số điện thoại</label><input id="home-lead-phone" type="tel" required value={quickForm.phone} onChange={(event) => setQuickForm({ ...quickForm, phone: event.target.value })} className="home-dark-input" placeholder="Số điện thoại" /></div>
                       <div><label className="sr-only" htmlFor="home-lead-email">Email công việc</label><input id="home-lead-email" type="email" required value={quickForm.email} onChange={(event) => setQuickForm({ ...quickForm, email: event.target.value })} className="home-dark-input" placeholder="Email công việc" /></div>
                     </div>
-                    <button type="submit" disabled={formLoading} className="mt-1 min-h-12 bg-white px-5 text-sm font-bold text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60">{formLoading ? 'Đang gửi yêu cầu…' : 'Nhận tư vấn workflow'}</button>
+                    <button type="submit" disabled={formLoading} className="home-lead-submit mt-1 min-h-12 px-5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60">{formLoading ? 'Đang gửi yêu cầu…' : 'Nhận tư vấn workflow'}</button>
                   </div>
                 </form>
               )}

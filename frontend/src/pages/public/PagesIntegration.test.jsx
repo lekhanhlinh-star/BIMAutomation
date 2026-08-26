@@ -75,6 +75,9 @@ describe('Public Pages Integration', () => {
       expect(screen.getByText(/Tải phần mềm BIMAutomation/i)).toBeInTheDocument();
       expect(screen.getAllByText(/BIMAutomation\.Installer\.exe/i).length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText(/Mở Revit & Đăng nhập Google/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Yêu cầu hệ thống/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Điểm mới trong bản cập nhật/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Bản cài đang được đồng bộ/i })).toBeDisabled();
     });
   });
 });

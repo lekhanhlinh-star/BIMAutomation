@@ -10,7 +10,7 @@ export default function AdminPaymentsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="admin-page space-y-6">
       <div>
         <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Quản lý giao dịch thanh toán</h2>
         <p className="text-xs text-[var(--text-secondary)] mt-1">Lịch sử biến động số dư và sao kê ngân hàng chuyển khoản tự động.</p>

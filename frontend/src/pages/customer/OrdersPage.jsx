@@ -10,7 +10,7 @@ export default function OrdersPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="portal-page space-y-6">
       <div>
         <p className="account-kicker">Giao dịch</p>
         <h2 className="mt-2 text-xl font-extrabold text-[var(--text-primary)]">Lịch sử đơn hàng</h2>

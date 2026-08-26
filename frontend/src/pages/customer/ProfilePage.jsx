@@ -13,7 +13,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="portal-page portal-profile max-w-2xl space-y-6">
       <div>
         <p className="account-kicker">Thông tin tài khoản</p>
         <h2 className="mt-2 text-xl font-extrabold text-[var(--text-primary)]">Hồ sơ cá nhân</h2>

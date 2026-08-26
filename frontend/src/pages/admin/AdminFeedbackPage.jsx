@@ -10,7 +10,7 @@ export default function AdminFeedbackPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="admin-page space-y-6">
       <div>
         <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Quản lý phản hồi góp ý</h2>
         <p className="text-xs text-[var(--text-secondary)] mt-1">Ý kiến đóng góp và báo lỗi từ người dùng Add-in BIMAutomation.</p>

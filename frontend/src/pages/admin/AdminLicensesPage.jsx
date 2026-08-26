@@ -139,7 +139,7 @@ export default function AdminLicensesPage() {
   }, [licenses, searchQuery, statusFilter]);
 
   return (
-    <div className="space-y-6">
+    <div className="admin-page space-y-6">
       {/* Top Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>

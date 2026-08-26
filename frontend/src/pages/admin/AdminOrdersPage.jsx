@@ -10,7 +10,7 @@ export default function AdminOrdersPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="admin-page space-y-6">
       <div>
         <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Quản lý đơn hàng</h2>
         <p className="text-xs text-[var(--text-secondary)] mt-1">Theo dõi giao dịch mua bản quyền Add-in và trạng thái thanh toán tự động qua webhook.</p>

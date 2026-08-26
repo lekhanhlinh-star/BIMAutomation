@@ -154,7 +154,7 @@ export default function PublicLayout() {
             ref={menuRef}
             id="mobile-navigation"
             aria-label="Điều hướng di động"
-            className="absolute inset-x-0 top-[68px] border-b border-[var(--line)] bg-[var(--surface-raised)] p-4 shadow-xl animate-fade-in xl:hidden"
+            className="absolute inset-x-0 top-[72px] border-b border-[var(--line)] bg-[var(--surface-raised)] p-4 shadow-xl animate-fade-in xl:hidden"
           >
             <div className="grid gap-1">
               {links.map(([p, l]) => (

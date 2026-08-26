@@ -37,7 +37,7 @@ export default function AdminCustomersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="admin-page space-y-6">
       <div>
         <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Quản lý khách hàng</h2>
         <p className="text-xs text-[var(--text-secondary)] mt-1">Danh sách tài khoản kỹ sư & công ty đã đăng ký trên hệ thống.</p>

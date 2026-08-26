@@ -1,20 +1,15 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useOutletContext } from 'react-router-dom';
 import {
   AlertCircle,
   Check,
   CheckCircle2,
-  ChevronDown,
   Clock,
   Copy,
   Cpu,
   Download,
-  FileCheck,
   FileText,
   Headphones,
-  HelpCircle,
-  Laptop,
   Loader2,
   PhoneCall,
   ShieldCheck,
@@ -65,10 +60,8 @@ export default function DownloadPage() {
   const { user, isAuthenticated } = useAuthStore();
   const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
   const [copiedHash, setCopiedHash] = useState(false);
-  const outletContext = useOutletContext();
-  const onOpenConsultation = outletContext?.onOpenConsultation || (() => {});
 
-  const { data: release, isLoading, isError } = useQuery({
+  const { data: release, isLoading } = useQuery({
     queryKey: ['release'],
     queryFn: publicApi.getReleases,
     retry: false,
@@ -85,152 +78,145 @@ export default function DownloadPage() {
   };
 
   return (
-    <div className="page-shell py-12 lg:py-16 pb-24 max-w-4xl">
-      {/* Header */}
-      <header className="text-center max-w-2xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--brand-soft)] border border-[var(--line)] text-xs font-bold text-[var(--brand)] mb-3">
-          <Zap size={14} /> Bộ cài đặt Autodesk Revit Add-in
+    <div className="download-page page-shell">
+      <header className="download-hero">
+        <div className="download-hero__copy">
+          <p className="download-kicker"><Zap size={15} aria-hidden="true" /> Bộ cài đặt Autodesk Revit Add-in</p>
+          <h1>
+            Tải phần mềm BIMAutomation (Revit 2022–2027)
+          </h1>
+          <p>
+            Tự động tích hợp thanh công cụ Ribbon <strong>BIMAutomation</strong> và 57 công cụ chuẩn MCP vào Autodesk Revit. Dùng thử miễn phí 14 ngày trọn bộ tính năng.
+          </p>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight">
-          Tải phần mềm BIMAutomation (Revit 2022–2027)
-        </h1>
-        <p className="mt-4 text-base text-[var(--text-secondary)] leading-relaxed">
-          Tự động tích hợp thanh công cụ Ribbon <strong>BIMAutomation</strong> và 57 công cụ chuẩn MCP vào Autodesk Revit. Dùng thử miễn phí 14 ngày trọn bộ tính năng.
-        </p>
+        <div className="download-hero__spec" aria-label="Thông tin tương thích">
+          <span>Hệ điều hành</span><strong>Windows 10 / 11</strong>
+          <span>Kiến trúc</span><strong>64-bit</strong>
+          <span>Autodesk Revit</span><strong>2022—2027</strong>
+        </div>
       </header>
 
-      {/* Trial Onboarding Banner */}
       {isAuthenticated && !user?.is_trial_registered && (
-        <div className="mt-8 p-6 bg-gradient-to-r from-[var(--brand-soft)]/50 to-[var(--surface-raised)] border border-[var(--brand)]/30 rounded-[var(--radius-panel)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+        <aside className="download-trial-banner">
+          <Clock aria-hidden="true" />
           <div>
-            <h3 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2">
-              <Clock className="text-amber-500 w-4 h-4" /> Kích hoạt dùng thử 14 ngày cho đội ngũ
-            </h3>
-            <p className="text-xs text-[var(--text-secondary)] mt-1">
+            <h2>Kích hoạt dùng thử 14 ngày cho đội ngũ</h2>
+            <p>
               Đăng ký thông tin kỹ sư để mở khóa toàn bộ 13 tính năng và nhận hỗ trợ kỹ thuật trực tiếp.
             </p>
           </div>
           <button
+            type="button"
             onClick={() => setIsTrialModalOpen(true)}
-            className="primary-button !min-h-9 !py-1.5 !px-4 text-xs font-bold shrink-0 cursor-pointer"
+            className="primary-button"
           >
             Đăng ký ngay
           </button>
-        </div>
+        </aside>
       )}
 
-      {/* Main Download Card */}
-      <div className="mt-10 p-8 rounded-[var(--radius-panel)] border border-[var(--line)] bg-[var(--surface-raised)] shadow-md">
+      <section className="download-release" aria-label="Bản phát hành BIMAutomation">
         {isLoading ? (
-          <div className="py-12 flex justify-center items-center gap-2.5 text-[var(--text-secondary)]">
-            <Loader2 className="animate-spin" size={22} /> Đang kiểm tra bản phát hành mới nhất…
+          <div className="download-release__loading" aria-live="polite">
+            <Loader2 className="animate-spin" size={22} aria-hidden="true" /> Đang kiểm tra bản phát hành mới nhất…
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row gap-6 justify-between md:items-center pb-6 border-b border-[var(--line)]">
-              <div>
-                <div className="flex items-center gap-2.5">
-                  <h2 className="text-2xl font-extrabold text-[var(--text-primary)]">
-                    BIMAutomation.Installer.exe
-                  </h2>
-                  <span className="font-mono text-xs font-extrabold text-[var(--brand)] bg-[var(--brand-soft)] px-2.5 py-1 rounded">
-                    {release?.latestVersion}
-                  </span>
+          <>
+            <div className="download-release__header">
+              <div className="download-release__identity">
+                <span className="download-release__icon"><Download aria-hidden="true" /></span>
+                <div>
+                  <p>Bản phát hành mới nhất</p>
+                  <h2 id="download-release-title">BIMAutomation.Installer.exe</h2>
                 </div>
-                <p className="mt-2 text-xs sm:text-sm text-[var(--text-secondary)]">
-                  Tương thích {release?.revitVersions} · Dung lượng: <strong>{release?.fileSize}</strong> · Ngày phát hành: <strong>{release?.releaseDate}</strong>
-                </p>
+              </div>
+              <span className="download-release__version">{release?.latestVersion}</span>
+            </div>
 
-                {release?.sha256Hash && (
-                  <div className="mt-3 flex items-center gap-2 text-xs font-mono text-[var(--text-muted)] bg-[var(--surface-subtle)] px-2.5 py-1.5 rounded-[var(--radius-control)] border border-[var(--line)] w-fit max-w-full overflow-hidden">
-                    <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
-                    <span className="truncate">SHA-256: {release.sha256Hash}</span>
-                    <button
-                      onClick={handleCopyHash}
-                      className="ml-1 text-[var(--brand)] hover:underline shrink-0 flex items-center gap-1 font-sans font-bold cursor-pointer"
-                      title="Copy SHA-256 Checksum"
-                    >
-                      {copiedHash ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+            <div className="download-release__body">
+              <div className="download-release__primary">
+                <dl className="download-release__metadata">
+                  <div><dt>Tương thích</dt><dd>{release?.revitVersions}</dd></div>
+                  <div><dt>Dung lượng</dt><dd>{release?.fileSize}</dd></div>
+                  <div><dt>Ngày phát hành</dt><dd>{release?.releaseDate}</dd></div>
+                </dl>
+
+                {release?.sha256Hash ? (
+                  <div className="download-checksum">
+                    <ShieldCheck size={16} aria-hidden="true" />
+                    <div><span>SHA-256</span><code>{release.sha256Hash}</code></div>
+                    <button type="button" onClick={handleCopyHash} title="Copy SHA-256 Checksum" aria-live="polite">
+                      {copiedHash ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
                       {copiedHash ? 'Đã chép' : 'Chép mã'}
                     </button>
                   </div>
+                ) : null}
+
+                {ready ? (
+                  <a href={release.downloadUrl} className="primary-button download-release__cta" download="BIMAutomation.Installer.exe">
+                    <Download size={20} aria-hidden="true" /> Tải BIMAutomation.Installer.exe
+                  </a>
+                ) : (
+                  <button disabled className="secondary-button download-release__cta">
+                    <Download size={19} aria-hidden="true" /> Bản cài đang được đồng bộ
+                  </button>
                 )}
               </div>
 
-              {ready ? (
-                <a href={release.downloadUrl} className="primary-button shrink-0 font-bold !py-3.5 !px-6 text-sm sm:text-base shadow-md" download="BIMAutomation.Installer.exe">
-                  <Download size={20} /> Tải BIMAutomation.Installer.exe
-                </a>
-              ) : (
-                <button disabled className="secondary-button opacity-50 cursor-not-allowed shrink-0 font-bold">
-                  <Download size={19} /> Bản cài đang được đồng bộ
-                </button>
-              )}
+              <aside className="download-smartscreen">
+                <AlertCircle size={18} aria-hidden="true" />
+                <div>
+                  <strong>Lưu ý khi mở file trên Windows 10/11:</strong>
+                  <p>
+                    Nếu xuất hiện thông báo <em>"Windows protected your PC" (SmartScreen)</em>, bạn chỉ cần nhấn <strong>"More info" (Thông tin khác)</strong> và chọn <strong>"Run anyway" (Vẫn chạy)</strong> để tiến hành cài đặt an toàn.
+                  </p>
+                </div>
+              </aside>
             </div>
 
-            {/* Windows SmartScreen Guidance Box */}
-            <div className="p-4 rounded-[var(--radius-control)] bg-amber-500/10 border border-amber-500/20 text-xs text-[var(--text-secondary)] flex items-start gap-3">
-              <AlertCircle size={17} className="text-amber-500 shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-[var(--text-primary)]">Lưu ý khi mở file trên Windows 10/11:</strong>
-                <p className="mt-0.5">
-                  Nếu xuất hiện thông báo <em>"Windows protected your PC" (SmartScreen)</em>, bạn chỉ cần nhấn <strong>"More info" (Thông tin khác)</strong> và chọn <strong>"Run anyway" (Vẫn chạy)</strong> để tiến hành cài đặt an toàn.
-                </p>
+            <div className="download-versions">
+              <div className="download-section-label">
+                <span>Phiên bản Autodesk Revit hỗ trợ</span>
+                <small>Tự động nhận diện</small>
               </div>
-            </div>
-
-            {/* Supported Revit Versions Grid */}
-            <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3">
-                Phiên bản Autodesk Revit hỗ trợ (Tự động nhận diện)
-              </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-                {supportedVersions.map((v) => (
-                  <div
-                    key={v.version}
-                    className="p-3 rounded-[var(--radius-control)] border border-[var(--line)] bg-[var(--surface-subtle)] text-center space-y-0.5"
-                  >
-                    <p className="font-mono text-xs font-extrabold text-[var(--text-primary)]">{v.version}</p>
-                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center gap-1">
-                      <CheckCircle2 size={11} /> 64-bit
-                    </p>
+              <div className="download-versions__grid">
+                {supportedVersions.map((version) => (
+                  <div key={version.version}>
+                    <strong>{version.version}</strong>
+                    <span><CheckCircle2 size={12} aria-hidden="true" />64-bit</span>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+          </>
         )}
-      </div>
-
-      {/* 3-Step Installation Guide */}
-      <section className="mt-12">
-        <h3 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] text-center">
-          Hướng dẫn cài đặt & Kích hoạt trong 3 bước
-        </h3>
-        <div className="mt-8 grid md:grid-cols-3 gap-6">
-          {steps.map((s) => (
-            <div
-              key={s.step}
-              className="p-6 rounded-[var(--radius-panel)] border border-[var(--line)] bg-[var(--surface-raised)] shadow-xs"
-            >
-              <span className="font-mono text-2xl font-extrabold text-[var(--brand)] block mb-3">
-                {s.step}
-              </span>
-              <h4 className="font-bold text-base text-[var(--text-primary)]">{s.title}</h4>
-              <p className="mt-2 text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">{s.desc}</p>
-            </div>
-          ))}
-        </div>
       </section>
 
-      {/* System Requirements & Changelog */}
-      <div className="grid md:grid-cols-2 gap-6 mt-12">
-        {/* Requirements */}
-        <div className="p-6 sm:p-7 rounded-[var(--radius-panel)] border border-[var(--line)] bg-[var(--surface-raised)] shadow-xs">
-          <h3 className="font-bold text-base text-[var(--text-primary)] flex items-center gap-2 mb-4">
-            <Cpu className="text-[var(--brand)]" size={18} /> Yêu cầu hệ thống & Phần mềm
-          </h3>
-          <ul className="space-y-3 text-xs sm:text-sm text-[var(--text-secondary)] font-medium">
+      <section className="download-install" aria-labelledby="download-install-title">
+        <div className="download-install__intro">
+          <p className="download-kicker">Quy trình cài đặt</p>
+          <h2 id="download-install-title">Hướng dẫn cài đặt & Kích hoạt trong 3 bước</h2>
+        </div>
+        <ol className="download-install__steps">
+          {steps.map((step) => (
+            <li key={step.step}>
+              <span>{step.step}</span>
+              <div>
+                <h3>{step.title}</h3>
+                <p>{step.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <div className="download-details">
+        <section aria-labelledby="download-requirements-title">
+          <header>
+            <Cpu size={19} aria-hidden="true" />
+            <h2 id="download-requirements-title">Yêu cầu hệ thống & Phần mềm</h2>
+          </header>
+          <ul>
             {[
               'Autodesk Revit 2022, 2023, 2024, 2025, 2026, 2027 (64-bit)',
               'Hệ điều hành Windows 10 hoặc Windows 11 (64-bit)',
@@ -238,49 +224,40 @@ export default function DownloadPage() {
               'AutoCAD Full 2016+ (Bắt buộc cho tính năng Model from CAD & DWG Export; AutoCAD LT không hỗ trợ)',
               'Đăng nhập Google OAuth 2.0 PKCE để xác thực bản quyền Server-Authoritative'
             ].map((req) => (
-              <li key={req} className="flex items-start gap-2.5">
-                <CheckCircle2 size={15} className="text-emerald-500 shrink-0 mt-0.5" />
+              <li key={req}>
+                <CheckCircle2 size={15} aria-hidden="true" />
                 <span>{req}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
 
-        {/* Changelog */}
-        <div className="p-6 sm:p-7 rounded-[var(--radius-panel)] border border-[var(--line)] bg-[var(--surface-raised)] shadow-xs">
-          <h3 className="font-bold text-base text-[var(--text-primary)] flex items-center gap-2 mb-4">
-            <FileText className="text-[var(--brand)]" size={18} /> Điểm mới trong bản cập nhật
-          </h3>
-          <ul className="space-y-2.5 text-xs sm:text-sm text-[var(--text-secondary)] list-disc pl-5 leading-relaxed">
+        <section aria-labelledby="download-changelog-title">
+          <header>
+            <FileText size={19} aria-hidden="true" />
+            <h2 id="download-changelog-title">Điểm mới trong bản cập nhật</h2>
+          </header>
+          <ul>
             {release?.changelog?.map((change, idx) => (
-              <li key={idx}>{change}</li>
+              <li key={idx}><span>{String(idx + 1).padStart(2, '0')}</span>{change}</li>
             ))}
           </ul>
-        </div>
+        </section>
       </div>
 
-      {/* Support Box */}
-      <div className="mt-12 p-6 rounded-[var(--radius-panel)] border border-[var(--line)] bg-[var(--surface-subtle)] flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-full bg-[var(--brand-soft)] text-[var(--brand)] flex items-center justify-center shrink-0">
-            <Headphones size={20} />
-          </div>
-          <div>
-            <h4 className="font-bold text-sm text-[var(--text-primary)]">Cần hỗ trợ cài đặt từ xa?</h4>
-            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-              Kỹ sư hỗ trợ sẵn sàng kết nối qua UltraViewer hoặc Google Meet để cài đặt giúp bạn.
-            </p>
-          </div>
+      <aside className="download-support">
+        <Headphones size={22} aria-hidden="true" />
+        <div>
+          <h2>Cần hỗ trợ cài đặt từ xa?</h2>
+          <p>
+            Kỹ sư hỗ trợ sẵn sàng kết nối qua UltraViewer hoặc Google Meet để cài đặt giúp bạn.
+          </p>
         </div>
-        <a
-          href="tel:0799660737"
-          className="secondary-button shrink-0 text-xs font-bold"
-        >
-          <PhoneCall size={14} className="text-emerald-500" /> Gọi: 0799 660 737
+        <a href="tel:0799660737" className="secondary-button">
+          <PhoneCall size={15} aria-hidden="true" /> Gọi: 0799 660 737
         </a>
-      </div>
+      </aside>
 
-      {/* Trial Modal */}
       <TrialRegistrationModal
         isOpen={isTrialModalOpen}
         onClose={() => setIsTrialModalOpen(false)}
