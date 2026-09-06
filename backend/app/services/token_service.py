@@ -82,6 +82,7 @@ async def create_refresh_session(
     device_id: uuid.UUID | None = None,
     family_id: str | None = None,
     rotated_from_id: uuid.UUID | None = None,
+    client_type: str = "desktop",
 ) -> tuple[str, RefreshSession]:
     """
     Creates a new refresh session with cryptographic token and SHA-256 hash.
@@ -96,6 +97,7 @@ async def create_refresh_session(
         user_id=user_id,
         device_id=device_id,
         family_id=fam_id,
+        client_type=client_type,
         token_hash=token_h,
         expires_at=expires_at,
         rotated_from_id=rotated_from_id,
@@ -107,10 +109,11 @@ async def create_refresh_session(
     return raw_token, refresh_session_record
 
 
-async def rotate_refresh_token(
+async def rotate_refresh_session(
     session: AsyncSession,
     raw_refresh_token: str,
-) -> tuple[str, str, RefreshSession]:
+    expected_client_type: str,
+) -> tuple[str, RefreshSession, User]:
     """
     Rotates a refresh token.
     - If valid: old token revoked, new token issued in same family.
@@ -122,7 +125,10 @@ async def rotate_refresh_token(
     )
     current_session = result.scalar_one_or_none()
 
-    if not current_session:
+    if (
+        not current_session
+        or current_session.client_type != expected_client_type
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="invalid_grant",
@@ -176,13 +182,28 @@ async def rotate_refresh_token(
         device_id=current_session.device_id,
         family_id=current_session.family_id,
         rotated_from_id=current_session.id,
+        client_type=current_session.client_type,
+    )
+
+    return new_raw_token, new_session, user
+
+
+async def rotate_refresh_token(
+    session: AsyncSession,
+    raw_refresh_token: str,
+) -> tuple[str, str, RefreshSession]:
+    """Rotates a desktop refresh token and issues a new desktop access token."""
+    new_raw_token, new_session, user = await rotate_refresh_session(
+        session=session,
+        raw_refresh_token=raw_refresh_token,
+        expected_client_type="desktop",
     )
 
     new_access_token = create_access_token(
         user_id=user.id,
         email=user.email,
         role=user.role.value,
-        device_id=current_session.device_id,
+        device_id=new_session.device_id,
     )
 
     return new_access_token, new_raw_token, new_session

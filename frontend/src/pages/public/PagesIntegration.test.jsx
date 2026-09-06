@@ -7,6 +7,7 @@ import HomePage from './HomePage';
 import FeaturesPage from './FeaturesPage';
 import PricingPage from './PricingPage';
 import DownloadPage from './DownloadPage';
+import TutorialsPage from './TutorialsPage';
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -79,5 +80,21 @@ describe('Public Pages Integration', () => {
       expect(screen.getByRole('heading', { name: /Điểm mới trong bản cập nhật/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Bản cài đang được đồng bộ/i })).toBeDisabled();
     });
+  });
+
+  it('renders the current BIMAutomation YouTube tutorials', async () => {
+    const Wrapper = createWrapper();
+    const { container } = render(<TutorialsPage />, { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(screen.getByText('Revit MCP – Hướng dẫn vẽ thép dầm')).toBeInTheDocument();
+      expect(screen.getByText('Revit MCP – Hướng dẫn cài đặt BIMAutomation')).toBeInTheDocument();
+    });
+
+    const videoSources = [...container.querySelectorAll('iframe')].map((iframe) => iframe.src);
+    expect(videoSources).toEqual([
+      'https://www.youtube.com/embed/VmM6KdZ624Q',
+      'https://www.youtube.com/embed/DMfI2InIZAs',
+    ]);
   });
 });

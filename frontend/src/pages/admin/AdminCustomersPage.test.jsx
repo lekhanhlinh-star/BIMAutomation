@@ -72,9 +72,7 @@ describe('AdminCustomersPage', () => {
     await user.click(screen.getByRole('button', { name: 'Xác nhận cấp quyền' }));
 
     await waitFor(() => expect(grantAdminRole).toHaveBeenCalledWith(customer.id));
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      `Đã cấp quyền admin cho ${customer.email}.`
-    );
-    expect(screen.getByText('Admin')).toBeInTheDocument();
+    expect(await screen.findByText(`Đã cấp quyền admin cho ${customer.email}.`)).toBeInTheDocument();
+    expect(screen.getByText('Admin', { selector: 'span' })).toBeInTheDocument();
   });
 });

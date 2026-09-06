@@ -42,5 +42,5 @@ async def init_test_db() -> AsyncGenerator[None, None]:
 
 @pytest.fixture
 def client() -> Generator[TestClient, None, None]:
-    with TestClient(app, base_url="http://testserver") as c:
+    with TestClient(app, base_url="https://testserver") as c:
         yield c

@@ -74,10 +74,15 @@ export default function CustomerLayout() {
         </div>
 
         <div className="account-sidebar__footer">
-          <Link to="/download" className="account-download-link">
-            <Download size={18} aria-hidden="true" />
-            <span><strong>Tải Add-in Revit</strong><small>Phiên bản mới nhất</small></span>
-            <ArrowUpRight size={14} aria-hidden="true" />
+          <Link to="/download" className="account-download-link" aria-label="Tải Add-in Revit - Phiên bản mới nhất">
+            <div className="account-download-icon">
+              <Download size={16} strokeWidth={2.2} aria-hidden="true" />
+            </div>
+            <div className="account-download-content">
+              <span className="account-download-title">Tải Add-in Revit</span>
+              <span className="account-download-sub">Phiên bản mới nhất</span>
+            </div>
+            <ArrowUpRight className="account-download-arrow" size={14} strokeWidth={2} aria-hidden="true" />
           </Link>
           <div className="account-preference">
             <span>Giao diện</span>

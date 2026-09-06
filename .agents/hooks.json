@@ -1,0 +1,42 @@
+{
+  "safety-gate": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/safety_gate.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "python-lint": {
+    "enabled": true,
+    "PostToolUse": [
+      {
+        "matcher": "replace_file_content|write_to_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/python_lint.py",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  },
+  "fastapi-invariants-reminder": {
+    "enabled": true,
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "./scripts/fastapi_reminder.py",
+        "timeout": 10
+      }
+    ]
+  }
+}

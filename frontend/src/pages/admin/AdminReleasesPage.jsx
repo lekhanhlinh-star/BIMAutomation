@@ -17,6 +17,41 @@ import {
   Code2
 } from 'lucide-react';
 import { adminApi } from '../../api/services';
+import { AdminSortableHeader, AdminTablePagination, AdminTableToolbar, useAdminTable } from '../../components/AdminTableTools';
+
+const RELEASE_SEARCH_ACCESSORS = [
+  'version', 'fileSizeLabel', 'sha256Hash', 'releasedAt', 'minimumRevitVersion', 'maximumRevitVersion',
+];
+const RELEASE_FILTER_PREDICATES = {
+  status: (release, value) => value === 'ACTIVE' ? release.isActive : !release.isActive,
+};
+const RELEASE_FILTERS = [{
+  key: 'status',
+  label: 'Lọc trạng thái phiên bản',
+  options: [
+    { value: 'ALL', label: 'Mọi trạng thái' },
+    { value: 'ACTIVE', label: 'Đang phát hành' },
+    { value: 'HIDDEN', label: 'Đã ẩn' },
+  ],
+}];
+const RELEASE_EXPORT_COLUMNS = [
+  { label: 'Phiên bản', value: 'version' },
+  { label: 'URL bộ cài', value: 'downloadUrl' },
+  { label: 'Dung lượng', value: 'fileSizeLabel' },
+  { label: 'SHA-256', value: 'sha256Hash' },
+  { label: 'Revit tối thiểu', value: 'minimumRevitVersion' },
+  { label: 'Revit tối đa', value: 'maximumRevitVersion' },
+  { label: 'Số gói cập nhật', value: (release) => release.packages?.length || 0 },
+  { label: 'Ngày phát hành', value: 'releasedAt' },
+  { label: 'Trạng thái', value: (release) => release.isActive ? 'Đang phát hành' : 'Đã ẩn' },
+];
+const RELEASE_SORT_COLUMNS = [
+  { key: 'version', label: 'Phiên bản', value: 'version' },
+  { key: 'installer', label: 'Bộ cài Full .exe', value: 'fileSizeLabel' },
+  { key: 'packages', label: 'Gói cập nhật', value: (release) => release.packages?.length || 0 },
+  { key: 'releasedAt', label: 'Ngày phát hành', value: 'releasedAt' },
+  { key: 'status', label: 'Trạng thái', value: (release) => release.isActive ? 1 : 0 },
+];
 
 export default function AdminReleasesPage() {
   const queryClient = useQueryClient();
@@ -41,6 +76,13 @@ export default function AdminReleasesPage() {
   const { data: releases = [], isLoading } = useQuery({
     queryKey: ['adminReleases'],
     queryFn: adminApi.getReleases,
+  });
+  const releasesTable = useAdminTable({
+    rows: releases,
+    searchAccessors: RELEASE_SEARCH_ACCESSORS,
+    filterPredicates: RELEASE_FILTER_PREDICATES,
+    initialFilters: { status: 'ALL' },
+    sortColumns: RELEASE_SORT_COLUMNS,
   });
 
   const createRelease = useMutation({
@@ -435,34 +477,57 @@ export default function AdminReleasesPage() {
           <span className="text-xs text-[var(--text-muted)] font-mono">{releases.length} bản ghi</span>
         </div>
 
+        {!isLoading ? (
+          <div className="p-3 border-b border-[var(--line)]">
+            <AdminTableToolbar
+              searchQuery={releasesTable.searchQuery}
+              onSearchChange={releasesTable.setSearchQuery}
+              searchPlaceholder="Tìm phiên bản, SHA-256, ngày phát hành..."
+              filters={RELEASE_FILTERS}
+              filterValues={releasesTable.filterValues}
+              onFilterChange={releasesTable.setFilter}
+              sortOptions={releasesTable.sortColumns}
+              sortKey={releasesTable.sortKey}
+              sortDirection={releasesTable.sortDirection}
+              onSortChange={releasesTable.setSortKey}
+              onSortDirectionToggle={releasesTable.toggleSortDirection}
+              onReset={releasesTable.reset}
+              resultCount={releasesTable.filteredRows.length}
+              exportRows={releasesTable.filteredRows}
+              exportColumns={RELEASE_EXPORT_COLUMNS}
+              exportFilename="lich-su-phien-ban-addin"
+            />
+          </div>
+        ) : null}
+
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="admin-responsive-table w-full text-left text-xs">
             <thead className="text-[11px] text-[var(--text-secondary)] uppercase font-mono bg-[var(--surface-subtle)] border-b border-[var(--line)] font-bold">
               <tr>
-                <th className="px-4 py-3.5">Phiên bản</th>
-                <th className="px-4 py-3.5">Bộ cài Full .exe</th>
-                <th className="px-4 py-3.5">Gói Cập nhật In-Place (ZIP)</th>
-                <th className="px-4 py-3.5">Ngày phát hành</th>
-                <th className="px-4 py-3.5">Trạng thái</th>
+                <AdminSortableHeader label="Phiên bản" columnKey="version" activeSortKey={releasesTable.sortKey} sortDirection={releasesTable.sortDirection} onSort={releasesTable.requestSort} />
+                <AdminSortableHeader label="Bộ cài Full .exe" columnKey="installer" activeSortKey={releasesTable.sortKey} sortDirection={releasesTable.sortDirection} onSort={releasesTable.requestSort} />
+                <AdminSortableHeader label="Gói Cập nhật In-Place (ZIP)" columnKey="packages" activeSortKey={releasesTable.sortKey} sortDirection={releasesTable.sortDirection} onSort={releasesTable.requestSort} />
+                <AdminSortableHeader label="Ngày phát hành" columnKey="releasedAt" activeSortKey={releasesTable.sortKey} sortDirection={releasesTable.sortDirection} onSort={releasesTable.requestSort} />
+                <AdminSortableHeader label="Trạng thái" columnKey="status" activeSortKey={releasesTable.sortKey} sortDirection={releasesTable.sortDirection} onSort={releasesTable.requestSort} />
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--line)]">
               {isLoading ? (
                 <tr>
-                  <td className="px-4 py-8 text-center text-[var(--text-secondary)]" colSpan={5}>
+                  <td data-label="Trạng thái" className="px-4 py-8 text-center text-[var(--text-secondary)]" colSpan={5}>
                     <Loader2 className="animate-spin inline mr-2" size={14} /> Đang tải lịch sử...
                   </td>
                 </tr>
-              ) : releases.length === 0 ? (
+              ) : releasesTable.pageRows.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-8 text-center text-[var(--text-muted)]" colSpan={5}>
-                    Chưa có phiên bản nào được phát hành.
+                  <td data-label="Kết quả" className="px-4 py-8 text-center text-[var(--text-muted)]" colSpan={5}>
+                    {releases.length === 0 ? 'Chưa có phiên bản nào được phát hành.' : 'Không tìm thấy phiên bản phù hợp với bộ lọc.'}
                   </td>
                 </tr>
               ) : (
-                releases.map((r) => (
+                releasesTable.pageRows.map((r) => (
                   <tr key={r.id} className="hover:bg-[var(--surface-subtle)]/60 transition-colors">
-                    <td className="px-4 py-3.5 font-mono">
+                    <td data-label="Phiên bản" className="px-4 py-3.5 font-mono">
                       <span className="font-bold text-[var(--brand)] text-xs block">{r.version}</span>
                       {r.sha256Hash && (
                         <span className="text-[10px] text-[var(--text-muted)] block truncate max-w-[130px]" title={r.sha256Hash}>
@@ -471,7 +536,7 @@ export default function AdminReleasesPage() {
                       )}
                     </td>
 
-                    <td className="px-4 py-3.5">
+                    <td data-label="Bộ cài Full" data-span="full" className="px-4 py-3.5">
                       <div className="space-y-0.5">
                         <a
                           href={r.downloadUrl}
@@ -487,7 +552,7 @@ export default function AdminReleasesPage() {
                       </div>
                     </td>
 
-                    <td className="px-4 py-3.5">
+                    <td data-label="Gói cập nhật" data-span="full" className="px-4 py-3.5">
                       {Array.isArray(r.packages) && r.packages.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {r.packages.map((pkg, pIdx) => (
@@ -505,11 +570,11 @@ export default function AdminReleasesPage() {
                       )}
                     </td>
 
-                    <td className="px-4 py-3.5 text-[var(--text-secondary)] font-mono text-[11px]">
+                    <td data-label="Ngày phát hành" className="px-4 py-3.5 text-[var(--text-secondary)] font-mono text-[11px]">
                       {r.releasedAt}
                     </td>
 
-                    <td className="px-4 py-3.5">
+                    <td data-label="Trạng thái" className="px-4 py-3.5">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                         r.isActive 
                           ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
@@ -525,6 +590,18 @@ export default function AdminReleasesPage() {
             </tbody>
           </table>
         </div>
+        {!isLoading ? (
+          <AdminTablePagination
+            currentPage={releasesTable.currentPage}
+            totalPages={releasesTable.totalPages}
+            pageSize={releasesTable.pageSize}
+            totalRows={releasesTable.filteredRows.length}
+            startIndex={releasesTable.startIndex}
+            endIndex={releasesTable.endIndex}
+            onPageChange={releasesTable.setPage}
+            onPageSizeChange={releasesTable.setPageSize}
+          />
+        ) : null}
       </div>
     </div>
   );

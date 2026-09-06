@@ -1,18 +1,180 @@
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from typing import Annotated
+
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi_users import BaseUserManager
+from fastapi_users.router.common import ErrorCode
 import httpx
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.security import auth_backend, fastapi_users, google_oauth_client
+from app.core.security import (
+    auth_backend,
+    current_active_user,
+    fastapi_users,
+    get_jwt_strategy,
+    google_oauth_client,
+)
+from app.db.session import get_async_session
+from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
+from app.services.token_service import (
+    REFRESH_TOKEN_LIFETIME_DAYS,
+    create_refresh_session,
+    revoke_refresh_token,
+    rotate_refresh_session,
+)
+from app.services.user_manager import get_user_manager
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# /auth/jwt/login & /auth/jwt/logout
-router.include_router(
-    fastapi_users.get_auth_router(auth_backend),
-    prefix="/jwt",
-)
+WEB_REFRESH_COOKIE = "bimautomation_web_refresh"
+WEB_REFRESH_COOKIE_PATH = "/api/v1/auth/jwt"
+
+
+def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
+    response.set_cookie(
+        key=WEB_REFRESH_COOKIE,
+        value=refresh_token,
+        max_age=REFRESH_TOKEN_LIFETIME_DAYS * 24 * 60 * 60,
+        httponly=True,
+        secure=settings.environment.lower() == "production",
+        samesite="lax",
+        path=WEB_REFRESH_COOKIE_PATH,
+    )
+
+
+def _clear_refresh_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key=WEB_REFRESH_COOKIE,
+        httponly=True,
+        secure=settings.environment.lower() == "production",
+        samesite="lax",
+        path=WEB_REFRESH_COOKIE_PATH,
+    )
+
+
+async def _issue_web_session(db: AsyncSession, user: User) -> tuple[str, str]:
+    access_token = await get_jwt_strategy().write_token(user)
+    refresh_token, _ = await create_refresh_session(
+        session=db,
+        user_id=user.id,
+        client_type="web",
+    )
+    return access_token, refresh_token
+
+
+@router.post("/jwt/login", name="auth:jwt.login")
+async def web_login(
+    request: Request,
+    credentials: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    user_manager: Annotated[BaseUserManager, Depends(get_user_manager)],
+    previous_refresh_token: Annotated[
+        str | None, Cookie(alias=WEB_REFRESH_COOKIE)
+    ] = None,
+) -> JSONResponse:
+    user = await user_manager.authenticate(credentials)
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ErrorCode.LOGIN_BAD_CREDENTIALS.value,
+        )
+
+    if previous_refresh_token:
+        await revoke_refresh_token(db, previous_refresh_token)
+
+    access_token, refresh_token = await _issue_web_session(db, user)
+    response = JSONResponse(
+        {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "expires_in": settings.web_jwt_lifetime_seconds,
+        }
+    )
+    _set_refresh_cookie(response, refresh_token)
+    await user_manager.on_after_login(user, request, response)
+    return response
+
+
+@router.post("/jwt/session", name="auth:jwt.session")
+async def establish_web_session(
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    user: Annotated[User, Depends(current_active_user)],
+    previous_refresh_token: Annotated[
+        str | None, Cookie(alias=WEB_REFRESH_COOKIE)
+    ] = None,
+) -> JSONResponse:
+    """Creates a refresh session after a successful social-OAuth login."""
+    if previous_refresh_token:
+        await revoke_refresh_token(db, previous_refresh_token)
+
+    access_token, refresh_token = await _issue_web_session(db, user)
+    response = JSONResponse(
+        {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "expires_in": settings.web_jwt_lifetime_seconds,
+        }
+    )
+    _set_refresh_cookie(response, refresh_token)
+    return response
+
+
+@router.post("/jwt/refresh", name="auth:jwt.refresh")
+async def refresh_web_session(
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    refresh_token: Annotated[
+        str | None, Cookie(alias=WEB_REFRESH_COOKIE)
+    ] = None,
+) -> JSONResponse:
+    if not refresh_token:
+        response = JSONResponse(
+            {"detail": "invalid_refresh_token"},
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+        _clear_refresh_cookie(response)
+        return response
+
+    try:
+        new_refresh_token, _, user = await rotate_refresh_session(
+            session=db,
+            raw_refresh_token=refresh_token,
+            expected_client_type="web",
+        )
+    except HTTPException:
+        response = JSONResponse(
+            {"detail": "invalid_refresh_token"},
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+        _clear_refresh_cookie(response)
+        return response
+
+    access_token = await get_jwt_strategy().write_token(user)
+    response = JSONResponse(
+        {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "expires_in": settings.web_jwt_lifetime_seconds,
+        }
+    )
+    _set_refresh_cookie(response, new_refresh_token)
+    return response
+
+
+@router.post("/jwt/logout", name="auth:jwt.logout", status_code=status.HTTP_204_NO_CONTENT)
+async def web_logout(
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    refresh_token: Annotated[
+        str | None, Cookie(alias=WEB_REFRESH_COOKIE)
+    ] = None,
+) -> Response:
+    if refresh_token:
+        await revoke_refresh_token(db, refresh_token)
+    response = Response(status_code=status.HTTP_204_NO_CONTENT)
+    _clear_refresh_cookie(response)
+    return response
 
 # /auth/register
 router.include_router(

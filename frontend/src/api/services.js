@@ -1,5 +1,23 @@
 import { axiosClient } from './axiosClient';
 
+export const formatAdminDateTime = (value) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+
+  const parts = new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    hourCycle: 'h23',
+  }).formatToParts(date);
+  const getPart = (type) => parts.find((part) => part.type === type)?.value || '';
+
+  return `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}`;
+};
+
 export const formatPlanName = (planName) => {
   if (!planName) return 'Gói cá nhân tháng';
   const lower = String(planName).toLowerCase().trim();
@@ -155,10 +173,8 @@ export const publicApi = {
       return res.data;
     } catch {
       return [
-        { id: 1, title: 'Hướng dẫn Cài đặt BIMAutomation & Kích hoạt 1-Click qua Google OAuth', duration: '04:15', level: 'Cơ bản', views: '2.5k', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-        { id: 2, title: 'Ra lệnh AI vẽ thép Dầm liên tục từ Bảng tính Excel', duration: '08:30', level: 'Nâng cao', views: '4.8k', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-        { id: 3, title: 'Kết nối Claude Desktop & Cursor IDE vào Revit qua giao thức MCP 57 Tools', duration: '11:45', level: 'Chuyên gia', views: '3.9k', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-        { id: 4, title: 'Quy trình Tự động Triển khai Sheet Dầm & Đài móng kèm Thống kê thép', duration: '07:20', level: 'Trung cấp', views: '5.1k', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+        { id: 'revit-mcp-beam-rebar', title: 'Revit MCP – Hướng dẫn vẽ thép dầm', level: 'Thực hành', videoUrl: 'https://www.youtube.com/embed/VmM6KdZ624Q' },
+        { id: 'revit-mcp-installation', title: 'Revit MCP – Hướng dẫn cài đặt BIMAutomation', level: 'Cơ bản', videoUrl: 'https://www.youtube.com/embed/DMfI2InIZAs' }
       ];
     }
   },
@@ -316,7 +332,7 @@ export const adminApi = {
       licenseStatus: c.license_status || null,
       totalSpent: typeof c.total_spent === 'number' ? `${c.total_spent.toLocaleString('vi-VN')}đ` : '0đ',
       status: c.is_active ? 'Active' : 'Inactive',
-      joinedAt: c.joined_at ? new Date(c.joined_at).toLocaleDateString('vi-VN') : '—'
+      joinedAt: c.joined_at ? formatAdminDateTime(c.joined_at) : '—'
     }));
   },
 

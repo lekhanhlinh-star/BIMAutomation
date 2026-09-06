@@ -35,6 +35,8 @@ export default function TutorialsPage() {
                   title={video.title}
                   className="w-full h-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
                   allowFullScreen
                 ></iframe>
               </div>
@@ -43,10 +45,12 @@ export default function TutorialsPage() {
                   <span className="border border-[var(--line)] bg-[var(--brand-soft)] px-2.5 py-1 font-mono font-bold uppercase tracking-wider text-[var(--brand)]">
                     {video.level}
                   </span>
-                  <div className="flex items-center gap-3 text-[var(--text-muted)] font-medium">
-                    <span className="flex items-center gap-1.5"><Clock size={16} strokeWidth={1.8} /> {video.duration}</span>
-                    <span className="flex items-center gap-1.5"><Eye size={16} strokeWidth={1.8} /> {video.views}</span>
-                  </div>
+                  {(video.duration || video.views) && (
+                    <div className="flex items-center gap-3 text-[var(--text-muted)] font-medium">
+                      {video.duration && <span className="flex items-center gap-1.5"><Clock size={16} strokeWidth={1.8} /> {video.duration}</span>}
+                      {video.views && <span className="flex items-center gap-1.5"><Eye size={16} strokeWidth={1.8} /> {video.views}</span>}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-start gap-3">
                   {(video.title.includes('Claude') || video.title.includes('Cursor')) && (

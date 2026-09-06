@@ -2,6 +2,31 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '../../api/services';
 import { Loader2 } from 'lucide-react';
+import { AdminSortableHeader, AdminTablePagination, AdminTableToolbar, useAdminTable } from '../../components/AdminTableTools';
+
+const REVENUE_SEARCH_ACCESSORS = ['month', 'orders', 'revenueLabel'];
+const REVENUE_FILTER_PREDICATES = {
+  activity: (item, value) => value === 'WITH_ORDERS' ? item.orders > 0 : item.orders === 0,
+};
+const REVENUE_FILTERS = [{
+  key: 'activity',
+  label: 'Lọc kỳ doanh thu',
+  options: [
+    { value: 'ALL', label: 'Mọi kỳ báo cáo' },
+    { value: 'WITH_ORDERS', label: 'Có đơn hàng' },
+    { value: 'NO_ORDERS', label: 'Chưa có đơn' },
+  ],
+}];
+const REVENUE_EXPORT_COLUMNS = [
+  { label: 'Tháng / kỳ báo cáo', value: 'month' },
+  { label: 'Số lượng đơn hàng', value: 'orders' },
+  { label: 'Tổng doanh thu', value: 'revenueLabel' },
+];
+const REVENUE_SORT_COLUMNS = [
+  { key: 'month', label: 'Tháng / kỳ báo cáo', value: 'month' },
+  { key: 'orders', label: 'Số lượng đơn hàng', value: 'orders' },
+  { key: 'revenue', label: 'Tổng doanh thu', value: 'revenue' },
+];
 
 export default function AdminRevenuePage() {
   const { data: revenueData = [], isLoading } = useQuery({
@@ -10,6 +35,14 @@ export default function AdminRevenuePage() {
   });
 
   const maxRevenue = Math.max(1, ...revenueData.map((d) => d.revenue));
+  const orderedRevenue = [...revenueData].reverse();
+  const table = useAdminTable({
+    rows: orderedRevenue,
+    searchAccessors: REVENUE_SEARCH_ACCESSORS,
+    filterPredicates: REVENUE_FILTER_PREDICATES,
+    initialFilters: { activity: 'ALL' },
+    sortColumns: REVENUE_SORT_COLUMNS,
+  });
 
   return (
     <div className="admin-page space-y-6">
@@ -44,25 +77,60 @@ export default function AdminRevenuePage() {
             </div>
           </div>
 
-          <div className="panel overflow-x-auto bg-[var(--surface-raised)] border border-[var(--line)] rounded-[var(--radius-panel)] shadow-xs">
-            <table className="w-full text-left text-xs">
+          <div className="space-y-3">
+            <AdminTableToolbar
+              searchQuery={table.searchQuery}
+              onSearchChange={table.setSearchQuery}
+              searchPlaceholder="Tìm tháng, số đơn hoặc doanh thu..."
+              filters={REVENUE_FILTERS}
+              filterValues={table.filterValues}
+              onFilterChange={table.setFilter}
+              sortOptions={table.sortColumns}
+              sortKey={table.sortKey}
+              sortDirection={table.sortDirection}
+              onSortChange={table.setSortKey}
+              onSortDirectionToggle={table.toggleSortDirection}
+              onReset={table.reset}
+              resultCount={table.filteredRows.length}
+              exportRows={table.filteredRows}
+              exportColumns={REVENUE_EXPORT_COLUMNS}
+              exportFilename="bao-cao-doanh-thu"
+            />
+            <div className="panel overflow-hidden bg-[var(--surface-raised)] border border-[var(--line)] rounded-[var(--radius-panel)] shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="admin-responsive-table w-full text-left text-xs">
               <thead className="text-[var(--text-secondary)] uppercase font-mono bg-[var(--surface-subtle)] border-b border-[var(--line)] font-bold">
                 <tr>
-                  <th className="px-4 py-3.5">Tháng / kỳ báo cáo</th>
-                  <th className="px-4 py-3.5">Số lượng đơn hàng</th>
-                  <th className="px-4 py-3.5">Tổng doanh thu</th>
+                  {REVENUE_SORT_COLUMNS.map((column) => (
+                    <AdminSortableHeader key={column.key} label={column.label} columnKey={column.key} activeSortKey={table.sortKey} sortDirection={table.sortDirection} onSort={table.requestSort} />
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--line)]">
-                {[...revenueData].reverse().map((r, i) => (
+                {table.pageRows.map((r, i) => (
                   <tr key={i} className="hover:bg-[var(--surface-subtle)]/50 transition-colors">
-                    <td className="px-4 py-3.5 font-bold text-[var(--text-primary)]">Tháng {r.month}</td>
-                    <td className="px-4 py-3.5 text-[var(--text-secondary)]">{r.orders} đơn hàng</td>
-                    <td className="px-4 py-3.5 font-mono font-bold text-[var(--brand)]">{r.revenueLabel}</td>
+                    <td data-label="Kỳ báo cáo" className="px-4 py-3.5 font-bold text-[var(--text-primary)]">Tháng {r.month}</td>
+                    <td data-label="Số đơn hàng" className="px-4 py-3.5 text-[var(--text-secondary)]">{r.orders} đơn hàng</td>
+                    <td data-label="Tổng doanh thu" data-span="full" className="px-4 py-3.5 font-mono font-bold text-[var(--brand)]">{r.revenueLabel}</td>
                   </tr>
                 ))}
+                {table.pageRows.length === 0 ? (
+                  <tr><td data-label="Kết quả" colSpan={3} className="px-4 py-10 text-center text-sm text-[var(--text-muted)]">Không tìm thấy kỳ báo cáo phù hợp.</td></tr>
+                ) : null}
               </tbody>
-            </table>
+                </table>
+              </div>
+              <AdminTablePagination
+                currentPage={table.currentPage}
+                totalPages={table.totalPages}
+                pageSize={table.pageSize}
+                totalRows={table.filteredRows.length}
+                startIndex={table.startIndex}
+                endIndex={table.endIndex}
+                onPageChange={table.setPage}
+                onPageSizeChange={table.setPageSize}
+              />
+            </div>
           </div>
         </>
       )}

@@ -144,7 +144,7 @@ async def send_password_reset_email(email: str, reset_url: str, settings: Settin
         </div>
         <div style="border-top: 1px solid #334155; padding-top: 18px; text-align: center;">
           <p style="color: #64748b; font-size: 12px; margin: 0;">
-            Hỗ trợ kỹ thuật: <a href="mailto:support@bimautomation.solutions" style="color: #38bdf8; text-decoration: none; font-weight: bold;">support@bimautomation.solutions</a> · Hotline: 0799 660 737
+            Hỗ trợ kỹ thuật: <a href="mailto:support@bimautomation.solutions" style="color: #38bdf8; text-decoration: none; font-weight: bold;">support@bimautomation.solutions</a> · Hotline: 0799 660 730
           </p>
         </div>
       </div>
@@ -220,7 +220,7 @@ async def send_order_success_email(
         </div>
         <div style="border-top: 1px solid #334155; padding-top: 18px; text-align: center;">
           <p style="color: #64748b; font-size: 12px; margin: 0;">
-            Cần hỗ trợ UltraViewer cài đặt từ xa? Gọi ngay: <strong style="color: #e2e8f0;">0799 660 737</strong> hoặc email <a href="mailto:support@bimautomation.solutions" style="color: #38bdf8; text-decoration: none; font-weight: bold;">support@bimautomation.solutions</a>
+            Cần hỗ trợ UltraViewer cài đặt từ xa? Gọi ngay: <strong style="color: #e2e8f0;">0799 660 730</strong> hoặc email <a href="mailto:support@bimautomation.solutions" style="color: #38bdf8; text-decoration: none; font-weight: bold;">support@bimautomation.solutions</a>
           </p>
         </div>
       </div>

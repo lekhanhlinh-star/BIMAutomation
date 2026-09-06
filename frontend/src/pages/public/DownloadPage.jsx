@@ -253,8 +253,8 @@ export default function DownloadPage() {
             Kỹ sư hỗ trợ sẵn sàng kết nối qua UltraViewer hoặc Google Meet để cài đặt giúp bạn.
           </p>
         </div>
-        <a href="tel:0799660737" className="secondary-button">
-          <PhoneCall size={15} aria-hidden="true" /> Gọi: 0799 660 737
+        <a href="tel:0799660730" className="secondary-button">
+          <PhoneCall size={15} aria-hidden="true" /> Gọi: 0799 660 730
         </a>
       </aside>
 

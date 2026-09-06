@@ -3,6 +3,73 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '../../api/services';
 import { CheckCircle2, Loader2, ShieldCheck, ShieldPlus } from 'lucide-react';
 import AccessibleDialog from '../../components/AccessibleDialog';
+import { AdminSortableHeader, AdminTablePagination, AdminTableToolbar, useAdminTable } from '../../components/AdminTableTools';
+
+const CUSTOMER_SEARCH_ACCESSORS = [
+  'fullName', 'email', 'phone', 'jobTitle', 'revitVersion', 'activePlan', 'totalSpent', 'joinedAt', 'status', 'role',
+];
+
+const CUSTOMER_FILTER_PREDICATES = {
+  status: (customer, value) => customer.status.toUpperCase() === value,
+  role: (customer, value) => customer.role === value,
+  account: (customer, value) => {
+    if (value === 'PAID') return Boolean(customer.activePlan) || customer.totalSpent !== '0đ';
+    if (value === 'TRIAL') return customer.isTrialRegistered && !customer.activePlan;
+    return !customer.activePlan && !customer.isTrialRegistered && customer.totalSpent === '0đ';
+  },
+};
+
+const CUSTOMER_FILTERS = [
+  {
+    key: 'status',
+    label: 'Lọc trạng thái khách hàng',
+    options: [
+      { value: 'ALL', label: 'Mọi trạng thái' },
+      { value: 'ACTIVE', label: 'Đang hoạt động' },
+      { value: 'INACTIVE', label: 'Ngừng hoạt động' },
+    ],
+  },
+  {
+    key: 'account',
+    label: 'Lọc loại tài khoản',
+    options: [
+      { value: 'ALL', label: 'Mọi loại tài khoản' },
+      { value: 'PAID', label: 'Đã thanh toán' },
+      { value: 'TRIAL', label: 'Dùng thử' },
+      { value: 'STANDARD', label: 'Standard' },
+    ],
+  },
+  {
+    key: 'role',
+    label: 'Lọc quyền hệ thống',
+    options: [
+      { value: 'ALL', label: 'Mọi quyền' },
+      { value: 'ADMIN', label: 'Admin' },
+      { value: 'USER', label: 'User' },
+    ],
+  },
+];
+
+const CUSTOMER_EXPORT_COLUMNS = [
+  { label: 'Khách hàng', value: 'fullName' },
+  { label: 'Email', value: 'email' },
+  { label: 'Số điện thoại', value: 'phone' },
+  { label: 'Chức danh', value: 'jobTitle' },
+  { label: 'Phiên bản Revit', value: (customer) => customer.revitVersion === '—' ? '—' : `Revit ${customer.revitVersion}` },
+  { label: 'Gói hiện tại', value: (customer) => customer.activePlan || (customer.isTrialRegistered ? '14-Day Trial' : 'Standard') },
+  { label: 'Tổng chi tiêu', value: 'totalSpent' },
+  { label: 'Ngày tham gia', value: 'joinedAt' },
+  { label: 'Trạng thái', value: 'status' },
+  { label: 'Quyền hệ thống', value: 'role' },
+];
+const CUSTOMER_SORT_COLUMNS = [
+  { key: 'name', label: 'Khách hàng', value: 'fullName' },
+  { key: 'environment', label: 'Môi trường', value: 'revitVersion' },
+  { key: 'plan', label: 'Gói & chi tiêu', value: (customer) => customer.totalSpent },
+  { key: 'joinedAt', label: 'Ngày tham gia', value: 'joinedAt' },
+  { key: 'status', label: 'Trạng thái', value: 'status' },
+  { key: 'role', label: 'Quyền hệ thống', value: 'role' },
+];
 
 export default function AdminCustomersPage() {
   const queryClient = useQueryClient();
@@ -12,6 +79,14 @@ export default function AdminCustomersPage() {
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['adminCustomers'],
     queryFn: adminApi.getCustomers,
+  });
+
+  const table = useAdminTable({
+    rows: customers,
+    searchAccessors: CUSTOMER_SEARCH_ACCESSORS,
+    filterPredicates: CUSTOMER_FILTER_PREDICATES,
+    initialFilters: { status: 'ALL', account: 'ALL', role: 'ALL' },
+    sortColumns: CUSTOMER_SORT_COLUMNS,
   });
 
   const grantAdmin = useMutation({
@@ -55,38 +130,64 @@ export default function AdminCustomersPage() {
           <Loader2 className="animate-spin" size={20} /> Đang tải danh sách khách hàng...
         </div>
       ) : (
-        <div className="panel overflow-x-auto bg-[var(--surface-raised)] border border-[var(--line)] rounded-[var(--radius-panel)] shadow-xs">
-          <table className="w-full text-left text-xs">
+        <div className="admin-table-section space-y-3">
+          <AdminTableToolbar
+            searchQuery={table.searchQuery}
+            onSearchChange={table.setSearchQuery}
+            searchPlaceholder="Tìm tên, email, điện thoại, Revit..."
+            filters={CUSTOMER_FILTERS}
+            filterValues={table.filterValues}
+            onFilterChange={table.setFilter}
+            sortOptions={table.sortColumns}
+            sortKey={table.sortKey}
+            sortDirection={table.sortDirection}
+            onSortChange={table.setSortKey}
+            onSortDirectionToggle={table.toggleSortDirection}
+            onReset={table.reset}
+            resultCount={table.filteredRows.length}
+            exportRows={table.filteredRows}
+            exportColumns={CUSTOMER_EXPORT_COLUMNS}
+            exportFilename="danh-sach-khach-hang"
+          />
+          <div className="panel overflow-hidden bg-[var(--surface-raised)] border border-[var(--line)] rounded-[var(--radius-panel)] shadow-xs">
+            <div className="admin-table-scroll">
+              <table className="admin-responsive-table customer-admin-table w-full text-left text-xs">
+            <colgroup>
+              <col className="customer-admin-table__index" />
+              <col className="customer-admin-table__customer" />
+              <col className="customer-admin-table__environment" />
+              <col className="customer-admin-table__account" />
+              <col className="customer-admin-table__joined" />
+              <col className="customer-admin-table__status" />
+              <col className="customer-admin-table__role" />
+            </colgroup>
             <thead className="text-[var(--text-secondary)] uppercase font-mono bg-[var(--surface-subtle)] border-b border-[var(--line)] font-bold">
               <tr>
-                <th className="px-4 py-3.5">ID</th>
-                <th className="px-4 py-3.5">Kỹ sư / Khách hàng</th>
-                <th className="px-4 py-3.5">Email</th>
-                <th className="px-4 py-3.5">Số điện thoại</th>
-                <th className="px-4 py-3.5">Phiên bản Revit</th>
-                <th className="px-4 py-3.5">Loại tài khoản</th>
-                <th className="px-4 py-3.5">Tổng chi tiêu</th>
-                <th className="px-4 py-3.5">Ngày tham gia</th>
-                <th className="px-4 py-3.5">Trạng thái</th>
-                <th className="px-4 py-3.5">Quyền hệ thống</th>
+                <th className="px-4 py-3.5">#</th>
+                <AdminSortableHeader label="Khách hàng & liên hệ" columnKey="name" activeSortKey={table.sortKey} sortDirection={table.sortDirection} onSort={table.requestSort} />
+                <AdminSortableHeader label="Môi trường" columnKey="environment" activeSortKey={table.sortKey} sortDirection={table.sortDirection} onSort={table.requestSort} />
+                <AdminSortableHeader label="Gói & chi tiêu" columnKey="plan" activeSortKey={table.sortKey} sortDirection={table.sortDirection} onSort={table.requestSort} />
+                <AdminSortableHeader label="Ngày tham gia" columnKey="joinedAt" activeSortKey={table.sortKey} sortDirection={table.sortDirection} onSort={table.requestSort} />
+                <AdminSortableHeader label="Trạng thái" columnKey="status" activeSortKey={table.sortKey} sortDirection={table.sortDirection} onSort={table.requestSort} />
+                <AdminSortableHeader label="Quyền hệ thống" columnKey="role" activeSortKey={table.sortKey} sortDirection={table.sortDirection} onSort={table.requestSort} />
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--line)]">
-              {customers.map((c, i) => (
+              {table.pageRows.map((c, i) => (
                 <tr key={c.id} className="hover:bg-[var(--surface-subtle)]/50 transition-colors">
-                  <td className="px-4 py-3.5 font-mono text-[var(--text-muted)] font-bold">{i + 1}</td>
-                  <td className="px-4 py-3.5">
+                  <td data-label="Bản ghi" className="px-4 py-3.5 font-mono text-[var(--text-muted)] font-bold">{table.startIndex + i + 1}</td>
+                  <td data-label="Khách hàng & liên hệ" data-span="full" className="px-4 py-3.5">
                     <p className="font-bold text-[var(--text-primary)]">{c.fullName}</p>
                     {c.jobTitle && c.jobTitle !== '—' && (
                       <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">{c.jobTitle}</p>
                     )}
+                    <p className="mt-1 truncate text-[11px] font-medium text-[var(--brand)]" title={c.email}>{c.email}</p>
                   </td>
-                  <td className="px-4 py-3.5 text-[var(--brand)] font-medium">{c.email}</td>
-                  <td className="px-4 py-3.5 text-[var(--text-secondary)]">{c.phone}</td>
-                  <td className="px-4 py-3.5 text-[var(--text-secondary)] font-mono">
-                    {c.revitVersion !== '—' ? `Revit ${c.revitVersion}` : '—'}
+                  <td data-label="Môi trường" className="px-4 py-3.5 text-[var(--text-secondary)]">
+                    <p className="font-mono">{c.revitVersion !== '—' ? `Revit ${c.revitVersion}` : 'Chưa có Revit'}</p>
+                    <p className="mt-1 text-[11px]">{c.phone}</p>
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td data-label="Gói & chi tiêu" className="px-4 py-3.5">
                     {c.activePlan ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                         {c.activePlan}
@@ -104,11 +205,11 @@ export default function AdminCustomersPage() {
                         Standard
                       </span>
                     )}
+                    <p className="mt-2 font-mono font-bold text-[var(--text-primary)]">{c.totalSpent}</p>
                   </td>
-                  <td className="px-4 py-3.5 font-mono font-bold text-[var(--text-primary)]">{c.totalSpent}</td>
-                  <td className="px-4 py-3.5 text-[var(--text-secondary)]">{c.joinedAt}</td>
-                  <td className="px-4 py-3.5"><span className="status-tag status-tag--ok">{c.status}</span></td>
-                  <td className="px-4 py-3.5">
+                  <td data-label="Ngày tham gia" className="px-4 py-3.5 whitespace-nowrap text-[11px] text-[var(--text-secondary)]">{c.joinedAt}</td>
+                  <td data-label="Trạng thái" className="px-4 py-3.5"><span className="status-tag status-tag--ok">{c.status}</span></td>
+                  <td data-label="Quyền hệ thống" data-span="full" className="px-4 py-3.5">
                     {c.role === 'ADMIN' ? (
                       <span className="inline-flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-control)] border border-amber-500/30 bg-amber-500/10 px-3 text-[11px] font-bold text-amber-700 dark:text-amber-300">
                         <ShieldCheck size={15} aria-hidden="true" />
@@ -128,8 +229,27 @@ export default function AdminCustomersPage() {
                   </td>
                 </tr>
               ))}
+              {table.pageRows.length === 0 ? (
+                <tr>
+                  <td data-label="Kết quả" colSpan={7} className="px-4 py-10 text-center text-sm text-[var(--text-muted)]">
+                    Không tìm thấy khách hàng phù hợp. Hãy thử từ khóa hoặc bộ lọc khác.
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
-          </table>
+              </table>
+            </div>
+            <AdminTablePagination
+              currentPage={table.currentPage}
+              totalPages={table.totalPages}
+              pageSize={table.pageSize}
+              totalRows={table.filteredRows.length}
+              startIndex={table.startIndex}
+              endIndex={table.endIndex}
+              onPageChange={table.setPage}
+              onPageSizeChange={table.setPageSize}
+            />
+          </div>
         </div>
       )}
 

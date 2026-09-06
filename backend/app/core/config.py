@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     port: int = 8000
     host: str = "0.0.0.0"
     secret_key: str = "CHANGE_THIS_SECRET_KEY_FOR_PRODUCTION_MIN_32_CHARS"
+    web_jwt_lifetime_seconds: int = 60 * 15
     database_url: str = "sqlite+aiosqlite:///./app.db"
     google_client_id: str = ""
     google_client_secret: str = ""

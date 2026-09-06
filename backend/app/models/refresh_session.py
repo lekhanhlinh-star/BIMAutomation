@@ -27,6 +27,9 @@ class RefreshSession(Base):
         ForeignKey("devices.id", ondelete="SET NULL"), nullable=True
     )
     family_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    client_type: Mapped[str] = mapped_column(
+        String(20), default="desktop", nullable=False, index=True
+    )
     token_hash: Mapped[str] = mapped_column(
         String(64), unique=True, index=True, nullable=False
     )

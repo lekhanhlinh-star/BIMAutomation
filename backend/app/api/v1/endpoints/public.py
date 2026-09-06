@@ -21,7 +21,32 @@ class PublicSystemInfo(BaseModel):
     active_plans_count: int = 0
 
 
+class PublicTutorial(BaseModel):
+    id: str
+    title: str
+    level: str
+    videoUrl: str
+
+
 router = APIRouter(prefix="/public", tags=["public"])
+
+
+@router.get("/tutorials", response_model=list[PublicTutorial])
+async def get_public_tutorials() -> list[PublicTutorial]:
+    return [
+        PublicTutorial(
+            id="revit-mcp-beam-rebar",
+            title="Revit MCP – Hướng dẫn vẽ thép dầm",
+            level="Thực hành",
+            videoUrl="https://www.youtube.com/embed/VmM6KdZ624Q",
+        ),
+        PublicTutorial(
+            id="revit-mcp-installation",
+            title="Revit MCP – Hướng dẫn cài đặt BIMAutomation",
+            level="Cơ bản",
+            videoUrl="https://www.youtube.com/embed/DMfI2InIZAs",
+        ),
+    ]
 
 
 @router.get("/info", response_model=PublicSystemInfo)

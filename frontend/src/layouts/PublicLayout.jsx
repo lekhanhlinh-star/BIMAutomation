@@ -109,8 +109,14 @@ export default function PublicLayout() {
             </div>
             {isAuthenticated ? (
               <div className="flex items-center gap-2">
+                {user?.role === 'ADMIN' ? (
+                  <Link to="/admin" className="site-header-admin">
+                    <ShieldCheck size={15} aria-hidden="true" />
+                    Quản trị
+                  </Link>
+                ) : null}
                 <Link to="/account" className="primary-button !min-h-10 !py-1.5 !px-4 text-xs font-semibold">
-                  <User size={15} />
+                  <User size={15} aria-hidden="true" />
                   {user?.name || user?.email?.split('@')[0] || 'Tài khoản'}
                 </Link>
                 <button
@@ -172,8 +178,13 @@ export default function PublicLayout() {
                 </button>
                 {isAuthenticated ? (
                   <>
+                    {user?.role === 'ADMIN' ? (
+                      <Link to="/admin" className="secondary-button justify-center font-bold text-[var(--brand)]">
+                        <ShieldCheck size={16} aria-hidden="true" /> Quản trị
+                      </Link>
+                    ) : null}
                     <Link to="/account" className="primary-button justify-center">
-                      <User size={16} /> Tài khoản của tôi
+                      <User size={16} aria-hidden="true" /> Tài khoản của tôi
                     </Link>
                     <button onClick={logout} className="secondary-button justify-center text-rose-500">
                       <LogOut size={16} /> Đăng xuất
@@ -226,7 +237,7 @@ export default function PublicLayout() {
               <div className="pt-2 space-y-2 text-xs text-[var(--text-secondary)]">
                 <p className="flex items-center gap-2">
                   <PhoneCall size={15} className="text-emerald-500 shrink-0" />
-                  <span>Hotline: <a href="tel:0799660737" className="hover:text-[var(--brand)] transition-colors font-bold">0799 660 737</a> (8:00 - 18:00)</span>
+                  <span>Hotline: <a href="tel:0799660730" className="hover:text-[var(--brand)] transition-colors font-bold">0799 660 730</a> (8:00 - 18:00)</span>
                 </p>
                 <p className="flex items-center gap-2">
                   <img src="/assets/brand/zalo-icon.png" alt="Zalo" width={15} height={15} className="rounded-[3px] shrink-0" />

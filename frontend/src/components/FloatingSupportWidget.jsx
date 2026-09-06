@@ -52,9 +52,9 @@ export default function FloatingSupportWidget({ onOpenConsultation }) {
         </a>
 
         <a
-          href="tel:0799660737"
+          href="tel:0799660730"
           className="support-dock__link"
-          title="Hotline tư vấn: 0799 660 737"
+          title="Hotline tư vấn: 0799 660 730"
           aria-label="Gọi hotline tư vấn"
         >
           <PhoneCall size={14} className="shrink-0 text-emerald-500" />

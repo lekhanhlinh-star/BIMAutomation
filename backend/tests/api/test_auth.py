@@ -1,9 +1,12 @@
 from fastapi.testclient import TestClient
+import time
 from unittest.mock import AsyncMock
 
+from app.api.v1.endpoints.auth import WEB_REFRESH_COOKIE, WEB_REFRESH_COOKIE_PATH
 from app.services import email_service
 from app.core.config import settings
 from app.core.config import Settings
+from app.core.security import get_jwt_strategy
 from fastapi_users.jwt import decode_jwt, generate_jwt
 
 
@@ -46,6 +49,95 @@ def test_user_login(client: TestClient) -> None:
     token_data = login_response.json()
     assert "access_token" in token_data
     assert token_data["token_type"] == "bearer"
+    assert token_data["expires_in"] == 900
+    assert get_jwt_strategy().lifetime_seconds == settings.web_jwt_lifetime_seconds
+    payload = decode_jwt(
+        token_data["access_token"],
+        settings.secret_key,
+        ["fastapi-users:auth"],
+    )
+    assert 895 <= payload["exp"] - int(time.time()) <= 900
+    assert client.cookies.get(WEB_REFRESH_COOKIE)
+
+
+def test_web_refresh_rotates_cookie_and_access_token(client: TestClient) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "refresh@example.com", "password": "mypassword123"},
+    )
+    login = client.post(
+        "/api/v1/auth/jwt/login",
+        data={"username": "refresh@example.com", "password": "mypassword123"},
+    )
+    first_refresh_token = client.cookies.get(WEB_REFRESH_COOKIE)
+    assert login.json()["access_token"]
+
+    refreshed = client.post("/api/v1/auth/jwt/refresh")
+
+    assert refreshed.status_code == 200
+    assert refreshed.json()["expires_in"] == 900
+    assert refreshed.json()["access_token"]
+    assert client.cookies.get(WEB_REFRESH_COOKIE) != first_refresh_token
+    profile = client.get(
+        "/api/v1/users/me",
+        headers={"Authorization": f"Bearer {refreshed.json()['access_token']}"},
+    )
+    assert profile.status_code == 200
+
+
+def test_web_refresh_reuse_revokes_token_family(client: TestClient) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "reuse@example.com", "password": "mypassword123"},
+    )
+    client.post(
+        "/api/v1/auth/jwt/login",
+        data={"username": "reuse@example.com", "password": "mypassword123"},
+    )
+    first_refresh_token = client.cookies.get(WEB_REFRESH_COOKIE)
+    assert client.post("/api/v1/auth/jwt/refresh").status_code == 200
+    second_refresh_token = client.cookies.get(WEB_REFRESH_COOKIE)
+
+    client.cookies.set(
+        WEB_REFRESH_COOKIE,
+        first_refresh_token,
+        path=WEB_REFRESH_COOKIE_PATH,
+    )
+    reused = client.post("/api/v1/auth/jwt/refresh")
+    assert reused.status_code == 401
+
+    client.cookies.set(
+        WEB_REFRESH_COOKIE,
+        second_refresh_token,
+        path=WEB_REFRESH_COOKIE_PATH,
+    )
+    revoked_family = client.post("/api/v1/auth/jwt/refresh")
+    assert revoked_family.status_code == 401
+
+
+def test_web_session_exchange_and_logout(client: TestClient) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "session@example.com", "password": "mypassword123"},
+    )
+    login = client.post(
+        "/api/v1/auth/jwt/login",
+        data={"username": "session@example.com", "password": "mypassword123"},
+    )
+    access_token = login.json()["access_token"]
+    client.cookies.clear()
+
+    session = client.post(
+        "/api/v1/auth/jwt/session",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert session.status_code == 200
+    assert client.cookies.get(WEB_REFRESH_COOKIE)
+
+    logout = client.post("/api/v1/auth/jwt/logout")
+    assert logout.status_code == 204
+    assert client.cookies.get(WEB_REFRESH_COOKIE) is None
+    assert client.post("/api/v1/auth/jwt/refresh").status_code == 401
 
 
 def test_protected_route_access(client: TestClient) -> None:

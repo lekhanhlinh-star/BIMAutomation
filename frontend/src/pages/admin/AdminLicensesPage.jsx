@@ -11,7 +11,6 @@ import {
   PlusCircle, 
   ShieldAlert, 
   RotateCcw, 
-  Search, 
   Laptop, 
   Clock, 
   Sparkles, 
@@ -20,11 +19,76 @@ import {
   CheckCircle2,
   Trash2
 } from 'lucide-react';
+import { AdminSortableHeader, AdminTablePagination, AdminTableToolbar, useAdminTable } from '../../components/AdminTableTools';
+
+const LICENSE_STATUS_FILTERS = [{
+  key: 'status',
+  label: 'Lọc trạng thái bản quyền',
+  options: [
+    { value: 'ALL', label: 'Mọi trạng thái' },
+    { value: 'ONLINE', label: 'Đang online' },
+    { value: 'ACTIVE', label: 'Đang hoạt động' },
+    { value: 'BLOCKED', label: 'Đã khóa' },
+    { value: 'EXPIRED', label: 'Hết hạn' },
+  ],
+}];
+const TRIAL_SEARCH_ACCESSORS = ['displayName', 'userEmail', 'fingerprintHash', 'revitVersion', 'status', 'lastSeenAt'];
+const LICENSE_SEARCH_ACCESSORS = ['customer', 'email', 'plan', 'device', 'key', 'revitVersion', 'status'];
+const TRIAL_FILTER_PREDICATES = {
+  status: (trial, value) => {
+    if (value === 'ONLINE') return trial.status === 'ACTIVE' && trial.isOnline;
+    return trial.status === value;
+  },
+};
+const LICENSE_FILTER_PREDICATES = {
+  status: (license, value) => {
+    if (value === 'ONLINE') return license.status === 'ACTIVE' && license.isOnline;
+    if (value === 'BLOCKED') return license.status === 'REVOKED' || license.status === 'SUSPENDED';
+    return license.status === value;
+  },
+};
+const TRIAL_EXPORT_COLUMNS = [
+  { label: 'Tên thiết bị', value: 'displayName' },
+  { label: 'Email kỹ sư', value: 'userEmail' },
+  { label: 'HWID', value: 'fingerprintHash' },
+  { label: 'Phiên bản Revit', value: 'revitVersion' },
+  { label: 'Bắt đầu dùng thử', value: 'firstTrialAt' },
+  { label: 'Hết hạn', value: 'trialExpiresAt' },
+  { label: 'Số ngày còn lại', value: 'remainingDays' },
+  { label: 'Trạng thái', value: 'status' },
+  { label: 'Online', value: (trial) => trial.isOnline ? 'Có' : 'Không' },
+  { label: 'Tín hiệu cuối', value: 'lastSeenAt' },
+];
+const LICENSE_EXPORT_COLUMNS = [
+  { label: 'Khách hàng', value: 'customer' },
+  { label: 'Email', value: 'email' },
+  { label: 'Gói dịch vụ', value: 'plan' },
+  { label: 'Thiết bị', value: 'device' },
+  { label: 'Phiên bản Revit', value: 'revitVersion' },
+  { label: 'Ngày kích hoạt', value: 'startsAt' },
+  { label: 'Ngày hết hạn', value: 'expiresAt' },
+  { label: 'Số ngày còn lại', value: 'remainingDays' },
+  { label: 'Trạng thái', value: 'status' },
+  { label: 'Online', value: (license) => license.isOnline ? 'Có' : 'Không' },
+  { label: 'Tín hiệu cuối', value: 'lastSeenAt' },
+];
+const TRIAL_SORT_COLUMNS = [
+  { key: 'device', label: 'Thiết bị', value: 'displayName' },
+  { key: 'engineer', label: 'Kỹ sư', value: 'userEmail' },
+  { key: 'environment', label: 'Môi trường', value: 'revitVersion' },
+  { key: 'remainingDays', label: 'Thời hạn', value: 'remainingDays' },
+  { key: 'status', label: 'Trạng thái', value: 'status' },
+];
+const LICENSE_SORT_COLUMNS = [
+  { key: 'customer', label: 'Khách hàng', value: 'customer' },
+  { key: 'plan', label: 'Gói dịch vụ', value: 'plan' },
+  { key: 'device', label: 'Thiết bị', value: 'device' },
+  { key: 'remainingDays', label: 'Thời hạn', value: 'remainingDays' },
+  { key: 'status', label: 'Trạng thái', value: 'status' },
+];
 
 export default function AdminLicensesPage() {
   const [activeTab, setActiveTab] = useState('trials'); // 'trials' | 'paid'
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'ONLINE' | 'ACTIVE' | 'BLOCKED' | 'EXPIRED'
   const queryClient = useQueryClient();
 
   const { data: licenses = [], isLoading: isLoadingLicenses } = useQuery({
@@ -96,47 +160,20 @@ export default function AdminLicensesPage() {
     [licenses]
   );
 
-  // Filtered Trials
-  const filteredTrials = useMemo(() => {
-    return deviceTrials.filter((t) => {
-      const q = searchQuery.toLowerCase().trim();
-      const matchSearch =
-        !q ||
-        t.displayName?.toLowerCase().includes(q) ||
-        t.userEmail?.toLowerCase().includes(q) ||
-        t.fingerprintHash?.toLowerCase().includes(q) ||
-        t.revitVersion?.toLowerCase().includes(q);
-
-      if (!matchSearch) return false;
-
-      if (statusFilter === 'ONLINE') return t.status === 'ACTIVE' && t.isOnline;
-      if (statusFilter === 'ACTIVE') return t.status === 'ACTIVE';
-      if (statusFilter === 'BLOCKED') return t.status === 'BLOCKED';
-      if (statusFilter === 'EXPIRED') return t.status === 'EXPIRED';
-      return true;
-    });
-  }, [deviceTrials, searchQuery, statusFilter]);
-
-  // Filtered Paid Licenses
-  const filteredLicenses = useMemo(() => {
-    return licenses.filter((l) => {
-      const q = searchQuery.toLowerCase().trim();
-      const matchSearch =
-        !q ||
-        l.customer?.toLowerCase().includes(q) ||
-        l.email?.toLowerCase().includes(q) ||
-        l.plan?.toLowerCase().includes(q) ||
-        l.device?.toLowerCase().includes(q);
-
-      if (!matchSearch) return false;
-
-      if (statusFilter === 'ONLINE') return l.status === 'ACTIVE' && l.isOnline;
-      if (statusFilter === 'ACTIVE') return l.status === 'ACTIVE';
-      if (statusFilter === 'BLOCKED') return l.status === 'REVOKED' || l.status === 'SUSPENDED';
-      if (statusFilter === 'EXPIRED') return l.status === 'EXPIRED';
-      return true;
-    });
-  }, [licenses, searchQuery, statusFilter]);
+  const trialsTable = useAdminTable({
+    rows: deviceTrials,
+    searchAccessors: TRIAL_SEARCH_ACCESSORS,
+    filterPredicates: TRIAL_FILTER_PREDICATES,
+    initialFilters: { status: 'ALL' },
+    sortColumns: TRIAL_SORT_COLUMNS,
+  });
+  const licensesTable = useAdminTable({
+    rows: licenses,
+    searchAccessors: LICENSE_SEARCH_ACCESSORS,
+    filterPredicates: LICENSE_FILTER_PREDICATES,
+    initialFilters: { status: 'ALL' },
+    sortColumns: LICENSE_SORT_COLUMNS,
+  });
 
   return (
     <div className="admin-page space-y-6">
@@ -160,11 +197,7 @@ export default function AdminLicensesPage() {
         {/* Tab Switcher */}
         <div className="flex items-center p-1 bg-[var(--surface-subtle)] rounded-xl border border-[var(--line)] self-start shadow-xs">
           <button
-            onClick={() => {
-              setActiveTab('trials');
-              setSearchQuery('');
-              setStatusFilter('ALL');
-            }}
+            onClick={() => setActiveTab('trials')}
             className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === 'trials'
                 ? 'bg-[var(--surface-raised)] text-[var(--brand)] shadow-sm'
@@ -178,11 +211,7 @@ export default function AdminLicensesPage() {
             </span>
           </button>
           <button
-            onClick={() => {
-              setActiveTab('paid');
-              setSearchQuery('');
-              setStatusFilter('ALL');
-            }}
+            onClick={() => setActiveTab('paid')}
             className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === 'paid'
                 ? 'bg-[var(--surface-raised)] text-[var(--brand)] shadow-sm'
@@ -240,51 +269,45 @@ export default function AdminLicensesPage() {
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-[var(--surface-raised)] border border-[var(--line)] rounded-xl shadow-xs">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
-          <input
-            type="text"
-            placeholder={activeTab === 'trials' ? "Tìm theo tên máy, email kỹ sư, HWID, Revit..." : "Tìm theo tên khách hàng, email, gói dịch vụ, HWID..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3.5 py-1.5 text-xs bg-[var(--surface)] border border-[var(--line)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--brand)] transition-colors"
-          />
-        </div>
-
-        <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto pb-1 sm:pb-0">
-          <span className="text-[11px] text-[var(--text-muted)] font-medium mr-1">Bộ lọc:</span>
-          {(activeTab === 'trials'
-            ? [
-                { id: 'ALL', label: 'Tất cả' },
-                { id: 'ONLINE', label: 'Đang Online' },
-                { id: 'ACTIVE', label: 'Còn hạn' },
-                { id: 'BLOCKED', label: 'Đã khóa' },
-                { id: 'EXPIRED', label: 'Hết hạn' },
-              ]
-            : [
-                { id: 'ALL', label: 'Tất cả' },
-                { id: 'ONLINE', label: 'Đang Online' },
-                { id: 'ACTIVE', label: 'Đang hoạt động' },
-                { id: 'BLOCKED', label: 'Đã khóa' },
-                { id: 'EXPIRED', label: 'Hết hạn' },
-              ]
-          ).map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setStatusFilter(f.id)}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-                statusFilter === f.id
-                  ? 'bg-[var(--brand)] text-white font-bold shadow-xs'
-                  : 'bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--line)]'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {activeTab === 'trials' ? (
+        <AdminTableToolbar
+          searchQuery={trialsTable.searchQuery}
+          onSearchChange={trialsTable.setSearchQuery}
+          searchPlaceholder="Tìm tên máy, email kỹ sư, HWID, Revit..."
+          filters={LICENSE_STATUS_FILTERS}
+          filterValues={trialsTable.filterValues}
+          onFilterChange={trialsTable.setFilter}
+          sortOptions={trialsTable.sortColumns}
+          sortKey={trialsTable.sortKey}
+          sortDirection={trialsTable.sortDirection}
+          onSortChange={trialsTable.setSortKey}
+          onSortDirectionToggle={trialsTable.toggleSortDirection}
+          onReset={trialsTable.reset}
+          resultCount={trialsTable.filteredRows.length}
+          exportRows={trialsTable.filteredRows}
+          exportColumns={TRIAL_EXPORT_COLUMNS}
+          exportFilename="thiet-bi-dung-thu"
+        />
+      ) : (
+        <AdminTableToolbar
+          searchQuery={licensesTable.searchQuery}
+          onSearchChange={licensesTable.setSearchQuery}
+          searchPlaceholder="Tìm khách hàng, email, gói dịch vụ, thiết bị..."
+          filters={LICENSE_STATUS_FILTERS}
+          filterValues={licensesTable.filterValues}
+          onFilterChange={licensesTable.setFilter}
+          sortOptions={licensesTable.sortColumns}
+          sortKey={licensesTable.sortKey}
+          sortDirection={licensesTable.sortDirection}
+          onSortChange={licensesTable.setSortKey}
+          onSortDirectionToggle={licensesTable.toggleSortDirection}
+          onReset={licensesTable.reset}
+          resultCount={licensesTable.filteredRows.length}
+          exportRows={licensesTable.filteredRows}
+          exportColumns={LICENSE_EXPORT_COLUMNS}
+          exportFilename="ban-quyen-tra-phi"
+        />
+      )}
 
       {/* TAB 1: THIẾT BỊ DÙNG THỬ 14 NGÀY */}
       {activeTab === 'trials' && (
@@ -294,11 +317,11 @@ export default function AdminLicensesPage() {
               <Loader2 className="animate-spin text-[var(--brand)]" size={24} />
               <p className="text-xs font-medium">Đang tải danh sách thiết bị dùng thử...</p>
             </div>
-          ) : filteredTrials.length === 0 ? (
+          ) : trialsTable.filteredRows.length === 0 ? (
             <div className="panel p-10 text-center bg-[var(--surface-raised)] border border-[var(--line)] rounded-xl shadow-xs space-y-3">
               <Laptop className="w-10 h-10 text-[var(--text-muted)] mx-auto opacity-50" />
               <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                {searchQuery ? "Không tìm thấy thiết bị phù hợp với bộ lọc" : "Chưa có thiết bị nào kích hoạt Dùng thử"}
+                {trialsTable.searchQuery || trialsTable.filterValues.status !== 'ALL' ? "Không tìm thấy thiết bị phù hợp với bộ lọc" : "Chưa có thiết bị nào kích hoạt Dùng thử"}
               </h3>
               <p className="text-xs text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
                 Khi kỹ sư bấm "Đăng nhập Google" trong Autodesk Revit, phần cứng máy tính sẽ tự động liên kết và cấp 14 ngày trải nghiệm tại đây.
@@ -307,26 +330,26 @@ export default function AdminLicensesPage() {
           ) : (
             <div className="panel overflow-hidden bg-[var(--surface-raised)] border border-[var(--line)] rounded-xl shadow-xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="admin-responsive-table w-full text-left text-xs">
                   <thead className="text-[11px] text-[var(--text-secondary)] uppercase font-mono bg-[var(--surface-subtle)] border-b border-[var(--line)] font-bold tracking-wider">
                     <tr>
                       <th className="px-4 py-3.5 w-12 text-center">#</th>
-                      <th className="px-4 py-3.5 min-w-[200px]">Thiết bị & Tên máy</th>
-                      <th className="px-4 py-3.5 min-w-[220px]">Kỹ sư (Google Account)</th>
-                      <th className="px-4 py-3.5 min-w-[140px]">Môi trường</th>
-                      <th className="px-4 py-3.5 min-w-[160px]">Thời hạn dùng thử</th>
-                      <th className="px-4 py-3.5 min-w-[150px]">Trạng thái</th>
+                      <AdminSortableHeader label="Thiết bị & Tên máy" columnKey="device" activeSortKey={trialsTable.sortKey} sortDirection={trialsTable.sortDirection} onSort={trialsTable.requestSort} className="min-w-[200px]" />
+                      <AdminSortableHeader label="Kỹ sư (Google Account)" columnKey="engineer" activeSortKey={trialsTable.sortKey} sortDirection={trialsTable.sortDirection} onSort={trialsTable.requestSort} className="min-w-[220px]" />
+                      <AdminSortableHeader label="Môi trường" columnKey="environment" activeSortKey={trialsTable.sortKey} sortDirection={trialsTable.sortDirection} onSort={trialsTable.requestSort} className="min-w-[140px]" />
+                      <AdminSortableHeader label="Thời hạn dùng thử" columnKey="remainingDays" activeSortKey={trialsTable.sortKey} sortDirection={trialsTable.sortDirection} onSort={trialsTable.requestSort} className="min-w-[160px]" />
+                      <AdminSortableHeader label="Trạng thái" columnKey="status" activeSortKey={trialsTable.sortKey} sortDirection={trialsTable.sortDirection} onSort={trialsTable.requestSort} className="min-w-[150px]" />
                       <th className="px-4 py-3.5 min-w-[200px] text-right">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--line)]">
-                    {filteredTrials.map((t, idx) => (
+                    {trialsTable.pageRows.map((t, idx) => (
                       <tr key={t.id} className="hover:bg-[var(--surface-subtle)]/60 transition-colors">
-                        <td className="px-4 py-3.5 font-mono text-[var(--text-muted)] text-center font-bold">
-                          {idx + 1}
+                        <td data-label="Bản ghi" className="px-4 py-3.5 font-mono text-[var(--text-muted)] text-center font-bold">
+                          {trialsTable.startIndex + idx + 1}
                         </td>
                         
-                        <td className="px-4 py-3.5">
+                        <td data-label="Thiết bị" data-span="full" className="px-4 py-3.5">
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-lg bg-[var(--brand-soft)] text-[var(--brand)] flex items-center justify-center shrink-0 border border-[var(--brand)]/20">
                               <Laptop className="w-4 h-4" />
@@ -345,7 +368,7 @@ export default function AdminLicensesPage() {
                           </div>
                         </td>
 
-                        <td className="px-4 py-3.5">
+                        <td data-label="Kỹ sư" data-span="full" className="px-4 py-3.5">
                           <p className="text-[var(--brand)] font-medium text-xs truncate max-w-[220px]">
                             {t.userEmail}
                           </p>
@@ -354,7 +377,7 @@ export default function AdminLicensesPage() {
                           </span>
                         </td>
 
-                        <td className="px-4 py-3.5">
+                        <td data-label="Môi trường" className="px-4 py-3.5">
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--surface-subtle)] border border-[var(--line)] text-[11px] font-mono font-medium text-[var(--text-secondary)] whitespace-nowrap">
                             <span>{t.revitVersion && t.revitVersion !== 'unknown' ? `Revit ${t.revitVersion}` : 'Revit 2025'}</span>
                             <span className="text-[var(--text-muted)]">•</span>
@@ -362,7 +385,7 @@ export default function AdminLicensesPage() {
                           </div>
                         </td>
 
-                        <td className="px-4 py-3.5 whitespace-nowrap">
+                        <td data-label="Thời hạn" className="px-4 py-3.5 whitespace-nowrap">
                           {t.status === 'ACTIVE' ? (
                             <div>
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -384,7 +407,7 @@ export default function AdminLicensesPage() {
                           )}
                         </td>
 
-                        <td className="px-4 py-3.5 whitespace-nowrap">
+                        <td data-label="Trạng thái" data-span="full" className="px-4 py-3.5 whitespace-nowrap">
                           <div>
                             {t.status === 'ACTIVE' ? (
                               t.isOnline ? (
@@ -425,7 +448,7 @@ export default function AdminLicensesPage() {
                           </div>
                         </td>
 
-                        <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                        <td data-label="Thao tác" data-span="full" className="px-4 py-3.5 text-right whitespace-nowrap">
                           <div className="inline-flex items-center justify-end gap-1.5">
                             {t.status === 'ACTIVE' ? (
                               <>
@@ -492,6 +515,16 @@ export default function AdminLicensesPage() {
                   </tbody>
                 </table>
               </div>
+              <AdminTablePagination
+                currentPage={trialsTable.currentPage}
+                totalPages={trialsTable.totalPages}
+                pageSize={trialsTable.pageSize}
+                totalRows={trialsTable.filteredRows.length}
+                startIndex={trialsTable.startIndex}
+                endIndex={trialsTable.endIndex}
+                onPageChange={trialsTable.setPage}
+                onPageSizeChange={trialsTable.setPageSize}
+              />
             </div>
           )}
         </>
@@ -505,11 +538,11 @@ export default function AdminLicensesPage() {
               <Loader2 className="animate-spin text-[var(--brand)]" size={24} />
               <p className="text-xs font-medium">Đang tải danh sách bản quyền trả phí...</p>
             </div>
-          ) : filteredLicenses.length === 0 ? (
+          ) : licensesTable.filteredRows.length === 0 ? (
             <div className="panel p-10 text-center bg-[var(--surface-raised)] border border-[var(--line)] rounded-xl shadow-xs space-y-3">
               <ShieldCheck className="w-10 h-10 text-[var(--text-muted)] mx-auto opacity-50" />
               <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                {searchQuery || statusFilter !== 'ALL' ? "Không tìm thấy bản quyền phù hợp với bộ lọc" : "Chưa có bản quyền trả phí nào"}
+                {licensesTable.searchQuery || licensesTable.filterValues.status !== 'ALL' ? "Không tìm thấy bản quyền phù hợp với bộ lọc" : "Chưa có bản quyền trả phí nào"}
               </h3>
               <p className="text-xs text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
                 Khi khách hàng đặt mua và hoàn tất thanh toán các gói bản quyền (Gói Tháng / Gói Năm), hệ thống sẽ tự động liên kết quyền vào tài khoản Google OAuth và quản lý tại đây.
@@ -518,26 +551,26 @@ export default function AdminLicensesPage() {
           ) : (
             <div className="panel overflow-hidden bg-[var(--surface-raised)] border border-[var(--line)] rounded-xl shadow-xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="admin-responsive-table w-full text-left text-xs">
                   <thead className="text-[11px] text-[var(--text-secondary)] uppercase font-mono bg-[var(--surface-subtle)] border-b border-[var(--line)] font-bold tracking-wider">
                     <tr>
                       <th className="px-4 py-3.5 w-12 text-center">#</th>
-                      <th className="px-4 py-3.5 min-w-[220px]">Khách hàng (Google Account)</th>
-                      <th className="px-4 py-3.5 min-w-[190px]">Gói dịch vụ</th>
-                      <th className="px-4 py-3.5 min-w-[180px]">Môi trường & Thiết bị</th>
-                      <th className="px-4 py-3.5 min-w-[160px]">Thời hạn bản quyền</th>
-                      <th className="px-4 py-3.5 min-w-[150px]">Trạng thái</th>
+                      <AdminSortableHeader label="Khách hàng (Google Account)" columnKey="customer" activeSortKey={licensesTable.sortKey} sortDirection={licensesTable.sortDirection} onSort={licensesTable.requestSort} className="min-w-[220px]" />
+                      <AdminSortableHeader label="Gói dịch vụ" columnKey="plan" activeSortKey={licensesTable.sortKey} sortDirection={licensesTable.sortDirection} onSort={licensesTable.requestSort} className="min-w-[190px]" />
+                      <AdminSortableHeader label="Môi trường & Thiết bị" columnKey="device" activeSortKey={licensesTable.sortKey} sortDirection={licensesTable.sortDirection} onSort={licensesTable.requestSort} className="min-w-[180px]" />
+                      <AdminSortableHeader label="Thời hạn bản quyền" columnKey="remainingDays" activeSortKey={licensesTable.sortKey} sortDirection={licensesTable.sortDirection} onSort={licensesTable.requestSort} className="min-w-[160px]" />
+                      <AdminSortableHeader label="Trạng thái" columnKey="status" activeSortKey={licensesTable.sortKey} sortDirection={licensesTable.sortDirection} onSort={licensesTable.requestSort} className="min-w-[150px]" />
                       <th className="px-4 py-3.5 min-w-[200px] text-right">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--line)]">
-                    {filteredLicenses.map((lic, idx) => (
+                    {licensesTable.pageRows.map((lic, idx) => (
                       <tr key={lic.id} className="hover:bg-[var(--surface-subtle)]/60 transition-colors">
-                        <td className="px-4 py-3.5 font-mono text-[var(--text-muted)] text-center font-bold">
-                          {idx + 1}
+                        <td data-label="Bản ghi" className="px-4 py-3.5 font-mono text-[var(--text-muted)] text-center font-bold">
+                          {licensesTable.startIndex + idx + 1}
                         </td>
 
-                        <td className="px-4 py-3.5">
+                        <td data-label="Khách hàng" data-span="full" className="px-4 py-3.5">
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
                               <UserCheck className="w-4 h-4" />
@@ -556,7 +589,7 @@ export default function AdminLicensesPage() {
                           </div>
                         </td>
 
-                        <td className="px-4 py-3.5">
+                        <td data-label="Gói dịch vụ" className="px-4 py-3.5">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                             {lic.plan}
                           </span>
@@ -565,7 +598,7 @@ export default function AdminLicensesPage() {
                           </span>
                         </td>
 
-                        <td className="px-4 py-3.5">
+                        <td data-label="Thiết bị" data-span="full" className="px-4 py-3.5">
                           <div className="min-w-0">
                             <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[var(--surface-subtle)] border border-[var(--line)] text-[11px] font-mono text-[var(--text-secondary)] truncate max-w-[170px]" title={lic.device}>
                               <Laptop className="w-3 h-3 text-[var(--text-muted)] shrink-0" />
@@ -579,7 +612,7 @@ export default function AdminLicensesPage() {
                           </div>
                         </td>
 
-                        <td className="px-4 py-3.5 whitespace-nowrap">
+                        <td data-label="Thời hạn" className="px-4 py-3.5 whitespace-nowrap">
                           {lic.status === 'ACTIVE' ? (
                             <div>
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -601,7 +634,7 @@ export default function AdminLicensesPage() {
                           )}
                         </td>
 
-                        <td className="px-4 py-3.5 whitespace-nowrap">
+                        <td data-label="Trạng thái" data-span="full" className="px-4 py-3.5 whitespace-nowrap">
                           <div>
                             {lic.status === 'ACTIVE' && lic.isOnline ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
@@ -633,7 +666,7 @@ export default function AdminLicensesPage() {
                           </div>
                         </td>
 
-                        <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                        <td data-label="Thao tác" data-span="full" className="px-4 py-3.5 text-right whitespace-nowrap">
                           <div className="inline-flex items-center justify-end gap-1.5">
                             {lic.status === 'ACTIVE' ? (
                               <button
@@ -674,6 +707,16 @@ export default function AdminLicensesPage() {
                   </tbody>
                 </table>
               </div>
+              <AdminTablePagination
+                currentPage={licensesTable.currentPage}
+                totalPages={licensesTable.totalPages}
+                pageSize={licensesTable.pageSize}
+                totalRows={licensesTable.filteredRows.length}
+                startIndex={licensesTable.startIndex}
+                endIndex={licensesTable.endIndex}
+                onPageChange={licensesTable.setPage}
+                onPageSizeChange={licensesTable.setPageSize}
+              />
             </div>
           )}
         </>

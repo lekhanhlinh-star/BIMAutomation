@@ -1,22 +1,30 @@
 import { create } from 'zustand';
-import { axiosClient } from '../api/axiosClient';
+import {
+  ACCESS_TOKEN_KEY,
+  AUTH_TOKEN_EVENT,
+  axiosClient,
+  publishAccessToken,
+} from '../api/axiosClient';
 
 export const useAuthStore = create((set, get) => ({
   user: null,
-  token: localStorage.getItem('bimautomation_token') || null,
-  isAuthenticated: !!localStorage.getItem('bimautomation_token'),
+  token: localStorage.getItem(ACCESS_TOKEN_KEY) || null,
+  isAuthenticated: !!localStorage.getItem(ACCESS_TOKEN_KEY),
   isLoading: false,
-  isProfileLoading: !!localStorage.getItem('bimautomation_token'),
+  isProfileLoading: !!localStorage.getItem(ACCESS_TOKEN_KEY),
   error: null,
 
   setToken: (token) => {
-    if (token) {
-      localStorage.setItem('bimautomation_token', token);
-      set({ token, isAuthenticated: true });
-    } else {
-      localStorage.removeItem('bimautomation_token');
-      set({ token: null, user: null, isAuthenticated: false });
-    }
+    publishAccessToken(token);
+    set(token
+      ? { token, isAuthenticated: true }
+      : { token: null, user: null, isAuthenticated: false });
+  },
+
+  establishWebSession: async () => {
+    const response = await axiosClient.post('/auth/jwt/session');
+    get().setToken(response.data.access_token);
+    return response.data;
   },
 
   login: async (username, password) => {
@@ -82,6 +90,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       get().setToken(token);
+      await get().establishWebSession();
       await get().fetchProfile();
       set({ isLoading: false });
       return { success: true };
@@ -101,6 +110,7 @@ export const useAuthStore = create((set, get) => ({
       });
       const token = response.data.access_token;
       get().setToken(token);
+      await get().establishWebSession();
       await get().fetchProfile();
       set({ isLoading: false });
       return { success: true };
@@ -141,7 +151,15 @@ export const useAuthStore = create((set, get) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('bimautomation_token');
+    void axiosClient.post('/auth/jwt/logout').catch(() => {});
+    publishAccessToken(null);
     set({ user: null, token: null, isAuthenticated: false, error: null });
   }
 }));
+
+window.addEventListener(AUTH_TOKEN_EVENT, (event) => {
+  const token = event.detail;
+  useAuthStore.setState(token
+    ? { token, isAuthenticated: true }
+    : { token: null, user: null, isAuthenticated: false });
+});

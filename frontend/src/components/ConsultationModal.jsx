@@ -67,7 +67,7 @@ export default function ConsultationModal({ isOpen, onClose, defaultTopic = 'Tư
             Cảm ơn bạn <strong className="text-[var(--text-primary)]">{formData.name}</strong>. Chúng tôi đã nhận được thông tin và sẽ liên hệ qua số điện thoại/email để gửi tài liệu giải pháp và kích hoạt bản quyền thử nghiệm cho đội ngũ.
           </p>
           <div className="p-4 bg-[var(--surface-subtle)] rounded-[var(--radius-control)] border border-[var(--line)] text-xs text-[var(--text-secondary)] text-left space-y-1">
-            <p><strong>Hotline hỗ trợ trực tiếp:</strong> <a href="tel:0799660737" className="hover:underline text-[var(--brand)] font-semibold">0799 660 737</a> (8:00 - 18:00)</p>
+            <p><strong>Hotline hỗ trợ trực tiếp:</strong> <a href="tel:0799660730" className="hover:underline text-[var(--brand)] font-semibold">0799 660 730</a> (8:00 - 18:00)</p>
             <p className="flex items-center gap-1.5">
               <img src="/assets/brand/zalo-icon.png" alt="Zalo" width={14} height={14} className="rounded-[3px] shrink-0" />
               <strong>Cộng đồng Zalo:</strong> <a href="https://zalo.me/g/euhwzpu6ouswooub16tl" target="_blank" rel="noopener noreferrer" className="hover:underline text-[var(--brand)] font-semibold">Tham gia nhóm Zalo hỗ trợ</a>
