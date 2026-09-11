@@ -1,0 +1,86 @@
+[
+  {
+    "case": "interior",
+    "variant": "before",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.3",
+    "visual_review": "partial",
+    "status": "success",
+    "dimensions": [
+      1195,
+      896
+    ],
+    "seconds": 15.42,
+    "observations": "Tự thêm chân đế dưới khối treo tường; khung cửa và bối cảnh ngoài cửa được diễn giải thêm."
+  },
+  {
+    "case": "interior",
+    "variant": "after",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.4",
+    "visual_review": "partial",
+    "status": "success",
+    "dimensions": [
+      1195,
+      896
+    ],
+    "seconds": 12.85,
+    "observations": "Giữ khối treo tường, không thêm chân đế; ánh sáng gián tiếp và bề mặt mềm hơn. Còn diễn giải khung cửa và công trình ngoài cửa không được chỉ định."
+  },
+  {
+    "case": "exterior",
+    "variant": "before",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.3",
+    "visual_review": "partial",
+    "status": "success",
+    "dimensions": [
+      1195,
+      896
+    ],
+    "seconds": 10.8,
+    "observations": "Giữ hai khối chính; tự phát triển chia khung và chi tiết phía sau kính. Chất lượng vẫn giống mô hình vì ảnh nguồn rất đơn giản."
+  },
+  {
+    "case": "exterior",
+    "variant": "after",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.4",
+    "visual_review": "partial",
+    "status": "success",
+    "dimensions": [
+      1195,
+      896
+    ],
+    "seconds": 15.42,
+    "observations": "Giữ bố cục; chia khung gọn hơn, bề mặt và kính rõ. Vẫn diễn giải không gian sau kính và nền; chưa đạt mức ảnh target."
+  },
+  {
+    "case": "roof",
+    "variant": "before",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.3",
+    "visual_review": "partial",
+    "status": "success",
+    "dimensions": [
+      1402,
+      768
+    ],
+    "seconds": 16.84,
+    "observations": "Giữ góc cao nhưng diện mạo còn giống mô hình xám. Cần kiểm tra hệ cửa và mặt mái."
+  },
+  {
+    "case": "roof",
+    "variant": "after",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.4",
+    "visual_review": "partial",
+    "status": "success",
+    "dimensions": [
+      1402,
+      768
+    ],
+    "seconds": 13.01,
+    "observations": "Ngói, phản xạ kính và chiều sâu bóng rõ hơn; giữ tổng thể góc cao và khối mái. Tự thêm mạch ốp ở tường nền và diễn giải bề mặt chưa chỉ định; cần đối chiếu hệ cửa."
+  }
+]

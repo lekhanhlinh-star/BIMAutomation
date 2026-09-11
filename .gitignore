@@ -28,9 +28,16 @@ data/
 # Editors / OS
 .vscode/
 .idea/
+.claude/
 .DS_Store
 *.swp
 
 # Misc project tooling
 .gstack/
 .codex-audit/
+
+# AI Architecture Rendering Storage
+ai/architecture_rendering/storage/inputs/*
+!ai/architecture_rendering/storage/inputs/.gitkeep
+ai/architecture_rendering/storage/outputs/*
+!ai/architecture_rendering/storage/outputs/.gitkeep

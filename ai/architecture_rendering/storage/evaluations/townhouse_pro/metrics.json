@@ -1,0 +1,27 @@
+{
+  "provider": "vertex_express",
+  "model": "gemini-3-pro-image",
+  "mock": false,
+  "runs": [
+    {
+      "name": "baseline",
+      "prompt_version": "2026-09-07.4",
+      "seconds": 31.66,
+      "dimensions": [
+        2208,
+        1920
+      ],
+      "http_status": 200
+    },
+    {
+      "name": "detailed",
+      "prompt_version": "2026-09-07.5",
+      "seconds": 49.35,
+      "dimensions": [
+        2208,
+        1920
+      ],
+      "http_status": 200
+    }
+  ]
+}

@@ -13,6 +13,11 @@ dependencies = [
     "fastapi-users[sqlalchemy]>=13.0.0",
     "aiosqlite>=0.20.0",
     "httpx-oauth>=0.14.0",
+    "pyjwt>=2.8.0",
+    "cryptography>=42.0.0",
+    "python-multipart>=0.0.9",
+    "celery[redis]>=5.4.0",
+    "redis>=5.0.0",
 ]
 
 [project.optional-dependencies]

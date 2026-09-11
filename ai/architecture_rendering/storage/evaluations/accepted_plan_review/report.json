@@ -1,0 +1,68 @@
+[
+  {
+    "case": "interior_strict",
+    "source_run": "20260907_160518",
+    "render_id": "rnd_20260907_160518_145d60d6",
+    "api_status": "success",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.3",
+    "duration_seconds": 13.36,
+    "visual_review": "partial",
+    "observations": "Giữ bố cục phòng, ô cửa và khối treo tường; không thêm đồ. Model tự diễn giải sàn thành gỗ và thêm cảnh mờ ngoài cửa, chưa được chỉ định."
+  },
+  {
+    "case": "interior_balanced",
+    "source_run": "20260907_160518",
+    "render_id": "rnd_20260907_160532_467c465b",
+    "api_status": "success",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.3",
+    "duration_seconds": 10.92,
+    "visual_review": "partial",
+    "observations": "Thêm một chậu cây bên trái, không còn sinh cửa mới. Khối treo tường bị đổi từ xám sang trắng dù không chỉ định vật liệu cho khối này."
+  },
+  {
+    "case": "exterior_strict",
+    "source_run": "20260907_160518",
+    "render_id": "rnd_20260907_160543_e199fee7",
+    "api_status": "success",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.3",
+    "duration_seconds": 10.75,
+    "visual_review": "partial",
+    "observations": "Giữ hai khối chính và bốn ô kính tầng trên, không tự thêm cửa vào. Các chi tiết không xác định trong sơ đồ vẫn được model diễn giải; chưa phải kiểm chứng hình học BIM."
+  },
+  {
+    "case": "exterior_balanced",
+    "source_run": "20260907_160714",
+    "render_id": "rnd_20260907_160714_ed202090",
+    "api_status": "success",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.3",
+    "duration_seconds": 11.54,
+    "visual_review": "fail",
+    "observations": "Thêm chậu cây nhưng đồng thời tạo cửa tầng dưới, tăng nền lát sân và diễn giải sơn trắng thành bề mặt bê tông. Vi phạm phạm vi cho phép."
+  },
+  {
+    "case": "roof_strict",
+    "source_run": "20260907_160518",
+    "render_id": "rnd_20260907_160605_a0ff7142",
+    "api_status": "success",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.3",
+    "duration_seconds": 16.77,
+    "visual_review": "partial",
+    "observations": "Giữ góc cao, các khối mái và sân; không thêm mái tiền cảnh hoặc bậc sân lớn như lần trước. Có sai khác chi tiết cửa và bề mặt cần đối chiếu kỹ."
+  },
+  {
+    "case": "roof_balanced",
+    "source_run": "20260907_160714",
+    "render_id": "rnd_20260907_160726_cf10d740",
+    "api_status": "success",
+    "model": "gemini-3.1-flash-image",
+    "prompt_version": "2026-09-07.3",
+    "duration_seconds": 13.42,
+    "visual_review": "partial",
+    "observations": "Giữ các khối mái chính, thêm một chậu cây ở sân trước. Vật liệu kim loại còn lan sang mái che hiên; cần chỉ định vùng chính xác hơn để đánh giá chi tiết."
+  }
+]

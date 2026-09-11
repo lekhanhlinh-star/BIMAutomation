@@ -2,6 +2,46 @@
 # Usage: docker compose -f docker-compose.dev.yml up --build
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: bimautomation_redis_dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    networks:
+      - bimautomation_dev_net
+
+  ai_rendering:
+    build:
+      context: ./ai/architecture_rendering
+      dockerfile: Dockerfile
+    container_name: bimautomation_ai_rendering_dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PORT=8010
+      - APP_NAME=BIMAutomation AI Visualizer Service
+      - HOST=0.0.0.0
+      - ENVIRONMENT=development
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - DEFAULT_IMAGE_MODEL=${DEFAULT_IMAGE_MODEL:-gemini-3.1-flash-image}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_BASE_URL=${LANGFUSE_BASE_URL:-https://us.cloud.langfuse.com}
+      - LANGFUSE_HOST=${LANGFUSE_BASE_URL:-https://us.cloud.langfuse.com}
+    ports:
+      - "8010:8010"
+    volumes:
+      - ./ai/architecture_rendering/app:/app/app
+      - ./ai/architecture_rendering/storage:/app/storage
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8010 --reload
+    networks:
+      - bimautomation_dev_net
+
   backend:
     build:
       context: ./backend
@@ -14,6 +54,8 @@ services:
       - ENVIRONMENT=development
       - DEBUG=True
       - DATABASE_URL=sqlite+aiosqlite:///./data/app.db
+      - REDIS_URL=redis://redis:6379/0
+      - RENDERING_SERVICE_URL=http://ai_rendering:8010
       - PYTHONUNBUFFERED=1
     ports:
       - "8000:8000"
@@ -21,6 +63,34 @@ services:
       - ./backend/app:/app/app
       - backend_data_dev:/app/data
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - redis
+      - ai_rendering
+    networks:
+      - bimautomation_dev_net
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bimautomation_celery_worker_dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=True
+      - DATABASE_URL=sqlite+aiosqlite:///./data/app.db
+      - REDIS_URL=redis://redis:6379/0
+      - RENDERING_SERVICE_URL=http://ai_rendering:8010
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend/app:/app/app
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=info --concurrency=2
+    depends_on:
+      - redis
+      - ai_rendering
+      - backend
     networks:
       - bimautomation_dev_net
 
@@ -42,6 +112,22 @@ services:
     networks:
       - bimautomation_dev_net
 
+  frontend_ai_rendering:
+    image: node:20-alpine
+    container_name: bimautomation_frontend_ai_rendering_dev
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./frontend_ai_rendering:/app
+      - /app/node_modules
+    ports:
+      - "5174:5174"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5174"
+    depends_on:
+      - ai_rendering
+    networks:
+      - bimautomation_dev_net
+
 networks:
   bimautomation_dev_net:
     name: bimautomation_dev_net
@@ -50,3 +136,6 @@ networks:
 volumes:
   backend_data_dev:
     name: bimautomation_backend_data_dev
+  redis_data_dev:
+    name: bimautomation_redis_data_dev
+

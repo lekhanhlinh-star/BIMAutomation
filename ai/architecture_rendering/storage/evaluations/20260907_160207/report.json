@@ -1,0 +1,56 @@
+[
+  {
+    "case": "interior_strict",
+    "status": "success",
+    "render_id": "rnd_20260907_160207_a4f86b95",
+    "seconds": 14.2,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  },
+  {
+    "case": "interior_balanced",
+    "status": "success",
+    "render_id": "rnd_20260907_160222_bf630f73",
+    "seconds": 10.4,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  },
+  {
+    "case": "exterior_strict",
+    "status": "success",
+    "render_id": "rnd_20260907_160232_bb0ca95d",
+    "seconds": 10.71,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  },
+  {
+    "case": "exterior_balanced",
+    "status": "success",
+    "render_id": "rnd_20260907_160243_107197c8",
+    "seconds": 10.4,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  },
+  {
+    "case": "roof_strict",
+    "status": "success",
+    "render_id": "rnd_20260907_160254_55b306ae",
+    "seconds": 12.71,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  },
+  {
+    "case": "roof_balanced",
+    "status": "success",
+    "render_id": "rnd_20260907_160307_c61390b4",
+    "seconds": 12.05,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  }
+]

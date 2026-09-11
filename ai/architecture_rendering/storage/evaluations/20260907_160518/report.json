@@ -1,0 +1,50 @@
+[
+  {
+    "case": "interior_strict",
+    "status": "success",
+    "render_id": "rnd_20260907_160518_145d60d6",
+    "seconds": 13.36,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  },
+  {
+    "case": "interior_balanced",
+    "status": "success",
+    "render_id": "rnd_20260907_160532_467c465b",
+    "seconds": 10.92,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  },
+  {
+    "case": "exterior_strict",
+    "status": "success",
+    "render_id": "rnd_20260907_160543_e199fee7",
+    "seconds": 10.75,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  },
+  {
+    "case": "exterior_balanced",
+    "status": "failed",
+    "error": "ValidationError",
+    "message": "1 validation error for RenderMetadata\nprompt_used\n  Value error, Nội dung quá dài (tối đa 4000 ký tự). [type=value_error, input_value='EXTERIOR REFERENCE\\nRend...cing them with objects.', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/value_error"
+  },
+  {
+    "case": "roof_strict",
+    "status": "success",
+    "render_id": "rnd_20260907_160605_a0ff7142",
+    "seconds": 16.77,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  },
+  {
+    "case": "roof_balanced",
+    "status": "failed",
+    "error": "ValidationError",
+    "message": "1 validation error for RenderMetadata\nprompt_used\n  Value error, Nội dung quá dài (tối đa 4000 ký tự). [type=value_error, input_value='EXTERIOR REFERENCE\\nRend...cing them with objects.', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/value_error"
+  }
+]

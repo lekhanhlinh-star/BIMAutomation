@@ -16,6 +16,7 @@ from app.api.v1.endpoints import (
     payments,
     plans,
     public,
+    rendering,
     users,
 )
 
@@ -36,3 +37,4 @@ api_router.include_router(plans.router)
 api_router.include_router(orders.router)
 api_router.include_router(payments.router)
 api_router.include_router(licenses.router)
+api_router.include_router(rendering.router)

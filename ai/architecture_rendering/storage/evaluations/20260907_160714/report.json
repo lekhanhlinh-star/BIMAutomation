@@ -1,0 +1,20 @@
+[
+  {
+    "case": "exterior_balanced",
+    "status": "success",
+    "render_id": "rnd_20260907_160714_ed202090",
+    "seconds": 11.54,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  },
+  {
+    "case": "roof_balanced",
+    "status": "success",
+    "render_id": "rnd_20260907_160726_cf10d740",
+    "seconds": 13.42,
+    "model": "gemini-3.1-flash-image",
+    "warnings": [],
+    "visual_review": "pending"
+  }
+]

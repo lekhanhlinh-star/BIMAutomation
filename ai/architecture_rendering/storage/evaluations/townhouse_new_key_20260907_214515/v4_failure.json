@@ -1,0 +1,7 @@
+{
+  "status": "failed",
+  "http_status": 502,
+  "model": "gemini-3.1-flash-image",
+  "variant": "v4",
+  "reason": "Requests to this API generativelanguage.googleapis.com method google.ai.generativelanguage.v1beta.GenerativeService.GenerateContent are blocked."
+}

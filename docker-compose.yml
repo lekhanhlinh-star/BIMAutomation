@@ -1,4 +1,52 @@
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: bimautomation_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - bimautomation_net
+
+  ai_rendering:
+    build:
+      context: ./ai/architecture_rendering
+      dockerfile: Dockerfile
+    container_name: bimautomation_ai_rendering
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    environment:
+      - PORT=8010
+      - APP_NAME=BIMAutomation AI Visualizer Service
+      - HOST=0.0.0.0
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - DEFAULT_IMAGE_MODEL=${DEFAULT_IMAGE_MODEL:-gemini-3.1-flash-image}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_BASE_URL=${LANGFUSE_BASE_URL:-https://us.cloud.langfuse.com}
+      - LANGFUSE_HOST=${LANGFUSE_BASE_URL:-https://us.cloud.langfuse.com}
+    ports:
+      - "8010:8010"
+    volumes:
+      - ai_rendering_storage:/app/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - bimautomation_net
+
   backend:
     build:
       context: ./backend
@@ -11,17 +59,51 @@ services:
     environment:
       # Keep SQLite database in the persistent named volume
       - DATABASE_URL=${DATABASE_URL:-sqlite+aiosqlite:///./data/app.db}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - RENDERING_SERVICE_URL=${RENDERING_SERVICE_URL:-http://ai_rendering:8010}
       - PYTHONUNBUFFERED=1
     ports:
       - "${PORT:-8000}:8000"
     volumes:
       - backend_data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+      ai_rendering:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - bimautomation_net
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bimautomation_celery_worker
+    restart: unless-stopped
+    init: true
+    healthcheck:
+      disable: true
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-sqlite+aiosqlite:///./data/app.db}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - RENDERING_SERVICE_URL=${RENDERING_SERVICE_URL:-http://ai_rendering:8010}
+      - PYTHONUNBUFFERED=1
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=info --concurrency=4
+    depends_on:
+      redis:
+        condition: service_healthy
+      ai_rendering:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
     networks:
       - bimautomation_net
 
@@ -36,6 +118,27 @@ services:
       - "${FRONTEND_PORT:-80}:80"
     depends_on:
       backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - bimautomation_net
+
+  frontend_ai_rendering:
+    build:
+      context: ./frontend_ai_rendering
+      dockerfile: Dockerfile
+    container_name: bimautomation_frontend_ai_rendering
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${AI_RENDERING_FRONTEND_PORT:-5174}:80"
+    depends_on:
+      ai_rendering:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/ || exit 1"]
@@ -67,3 +170,8 @@ networks:
 volumes:
   backend_data:
     name: bimautomation_backend_data
+  redis_data:
+    name: bimautomation_redis_data
+  ai_rendering_storage:
+    name: bimautomation_ai_rendering_storage
+

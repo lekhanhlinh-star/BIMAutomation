@@ -1,0 +1,30 @@
+[
+  {
+    "trial": 1,
+    "render_id": "rnd_20260907_094959_2a873f53",
+    "reference_render_id": "rnd_20260907_160518_145d60d6",
+    "status": "success",
+    "is_mock": false,
+    "changed_fields": [],
+    "dimensions": [
+      1195,
+      896
+    ],
+    "pixel_identical": false,
+    "visual_review": "Main room layout, opening and wall-mounted block maintained; small differences remain in floor grain and window/edge details. No new furniture observed. Not a pixel or BIM geometry guarantee."
+  },
+  {
+    "trial": 2,
+    "render_id": "rnd_20260907_095019_6c79baf8",
+    "reference_render_id": "rnd_20260907_160518_145d60d6",
+    "status": "success",
+    "is_mock": false,
+    "changed_fields": [],
+    "dimensions": [
+      1195,
+      896
+    ],
+    "pixel_identical": false,
+    "visual_review": "Main room layout, opening and wall-mounted block maintained; small differences remain in floor grain and window/edge details. No new furniture observed. Not a pixel or BIM geometry guarantee."
+  }
+]

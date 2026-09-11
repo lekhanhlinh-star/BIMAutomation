@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     license_rsa_private_key: str = ""
     license_rsa_private_key_path: str = ""
 
+    # AI Architecture Rendering Microservice & Celery Task Queue
+    redis_url: str = "redis://redis:6379/0"
+    rendering_service_url: str = "http://ai_rendering:8010"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
